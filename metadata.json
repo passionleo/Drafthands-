@@ -1,0 +1,9 @@
+{
+  "name": "Drafthands",
+  "description": "Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
