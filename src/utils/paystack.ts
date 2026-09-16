@@ -72,46 +72,60 @@ const PAYSTACK_INLINE_CDN = 'https://js.paystack.co/v1/inline.js';
  * Explicitly references `import.meta.env.VITE_PAYSTACK_PUBLIC_KEY`.
  */
 export const getPaystackPublicKey = (): string => {
-  const envKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-  if (envKey && typeof envKey === 'string' && envKey.trim().length > 0) {
-    return envKey.trim();
+  try {
+    const envKey = (import.meta as any)?.env?.VITE_PAYSTACK_PUBLIC_KEY;
+    if (envKey && typeof envKey === 'string' && envKey.trim().length > 0) {
+      return envKey.trim();
+    }
+  } catch (err) {
+    console.warn('Could not read VITE_PAYSTACK_PUBLIC_KEY:', err);
   }
   // Safe test fallback if environment variable is not yet injected
   return 'pk_test_4a03bc45c73206b87f98c784b02296ddd864fd9e';
 };
 
 /**
- * Ensures the Paystack inline script is loaded and window.PaystackPop is available.
+ * Ensures the Paystack inline script is loaded and (window as any)?.PaystackPop is available.
  */
 export const ensurePaystackScriptLoaded = (): Promise<boolean> => {
   if (typeof window === 'undefined') return Promise.resolve(false);
-  if (window.PaystackPop) return Promise.resolve(true);
+  if ((window as any)?.PaystackPop) return Promise.resolve(true);
 
   return new Promise((resolve) => {
-    const existing = document.querySelector(`script[src="${PAYSTACK_INLINE_CDN}"]`);
-    if (existing) {
-      existing.addEventListener('load', () => resolve(true));
-      existing.addEventListener('error', () => resolve(false));
-      // In case it already loaded
-      if (window.PaystackPop) resolve(true);
-      return;
-    }
+    try {
+      if ((window as any)?.PaystackPop) {
+        resolve(true);
+        return;
+      }
 
-    const script = document.createElement('script');
-    script.src = PAYSTACK_INLINE_CDN;
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => {
-      console.error('Failed to load official Paystack script from CDN');
+      const existing = document.querySelector(`script[src="${PAYSTACK_INLINE_CDN}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve(!!(window as any)?.PaystackPop));
+        existing.addEventListener('error', () => resolve(false));
+        // In case it already loaded
+        if ((window as any)?.PaystackPop) resolve(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = PAYSTACK_INLINE_CDN;
+      script.async = true;
+      script.onload = () => resolve(!!(window as any)?.PaystackPop);
+      script.onerror = () => {
+        console.warn('Official Paystack checkout script could not be loaded from CDN.');
+        resolve(false);
+      };
+      document.head.appendChild(script);
+    } catch (e) {
+      console.warn('Safe catch during Paystack script initialization:', e);
       resolve(false);
-    };
-    document.head.appendChild(script);
+    }
   });
 };
 
 /**
  * Reusable Paystack checkout trigger function.
- * Initializes the official Paystack popup iframe via `window.PaystackPop.setup`.
+ * Initializes the official Paystack popup iframe via `(window as any)?.PaystackPop?.setup`.
  */
 export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<void> => {
   const {
@@ -148,7 +162,8 @@ export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<
 
   // Ensure script is ready
   const isLoaded = await ensurePaystackScriptLoaded();
-  if (!isLoaded || !window.PaystackPop) {
+  const paystackInstance = (window as any)?.PaystackPop;
+  if (!isLoaded || !paystackInstance || typeof paystackInstance.setup !== 'function') {
     const err = new Error('Paystack inline checkout script could not be initialized. Please check your internet connection.');
     onError?.(err);
     alert(err.message);
@@ -191,7 +206,7 @@ export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<
   }
 
   try {
-    const handler = window.PaystackPop.setup({
+    const handler = (window as any)?.PaystackPop?.setup({
       key: publicKey,
       email: email.trim().toLowerCase(),
       amount: amountInKobo,
@@ -213,7 +228,11 @@ export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<
       }
     });
 
-    handler.openIframe();
+    if (handler && typeof handler.openIframe === 'function') {
+      handler.openIframe();
+    } else {
+      throw new Error('Paystack Pop checkout iframe could not be initialized.');
+    }
   } catch (err: any) {
     console.error('Error invoking official Paystack checkout:', err);
     onError?.(err instanceof Error ? err : new Error(String(err)));
