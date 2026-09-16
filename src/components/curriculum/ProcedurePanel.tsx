@@ -30,6 +30,7 @@ interface ProcedurePanelProps {
   onOpenTraditionalBoard?: () => void;
   onOpenCadWorkstation?: () => void;
   onOpenLiveClass?: () => void;
+  onOpenIsoDiagram?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -42,7 +43,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenTheory,
   onOpenTraditionalBoard,
   onOpenCadWorkstation,
-  onOpenLiveClass
+  onOpenLiveClass,
+  onOpenIsoDiagram
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -230,6 +232,25 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
             </button>
           )}
         </div>
+
+        {/* ISO 128 DIAGRAM VIEWER TRIGGER */}
+        {onOpenIsoDiagram && (
+          <button
+            onClick={onOpenIsoDiagram}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-950/80 via-blue-950/60 to-slate-900 hover:from-sky-900/90 hover:to-blue-900/80 border border-sky-500/40 text-xs font-bold text-sky-200 flex items-center justify-between transition-all shadow-md group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Compass className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <span className="block text-white font-bold text-xs">ISO Diagram Viewer</span>
+                <span className="block text-[10px] text-sky-400/90 font-mono">ISO 128 / ISO 5456 Technical Blueprint</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-sky-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
 
         {/* TEXTBOOK & SVG VECTOR BLUEPRINT BUTTON */}
         <button

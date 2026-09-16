@@ -28,17 +28,24 @@ import {
 import { getTextbookChapterForTopic } from '../../data/textbookData';
 import { DetailedTextbookModule } from '../textbook/DetailedTextbookModule';
 import { TextbookFigurePlate } from '../textbook/TextbookFigurePlate';
+import { IsoDiagramViewer } from '../common/IsoDiagramViewer';
 
 interface TheoryModalProps {
   topic: DrawingTopic;
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: TabType;
 }
 
-type TabType = 'TEXTBOOK' | 'PROCEDURE' | 'STANDARDS' | '3D_BLUEPRINT' | 'EXAM_PRACTICE';
+export type TabType = 'TEXTBOOK' | 'PROCEDURE' | 'STANDARDS' | 'ISO_DIAGRAM' | '3D_BLUEPRINT' | 'EXAM_PRACTICE';
 
-export const TheoryModal: React.FC<TheoryModalProps> = ({ topic, isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('TEXTBOOK');
+export const TheoryModal: React.FC<TheoryModalProps> = ({ 
+  topic, 
+  isOpen, 
+  onClose,
+  initialTab = 'TEXTBOOK'
+}) => {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [copiedNotification, setCopiedNotification] = useState<boolean>(false);
 
@@ -147,6 +154,21 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({ topic, isOpen, onClose
           </button>
 
           <button
+            onClick={() => setActiveTab('ISO_DIAGRAM')}
+            className={`px-3.5 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
+              activeTab === 'ISO_DIAGRAM'
+                ? 'border-cyan-400 text-cyan-300 bg-cyan-950/20'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+            }`}
+          >
+            <Compass className="w-4 h-4 text-cyan-400" />
+            <span>4. ISO Technical Blueprint</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-cyan-500/20 text-cyan-300">
+              Interactive CAD
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('3D_BLUEPRINT')}
             className={`px-3.5 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
               activeTab === '3D_BLUEPRINT'
@@ -155,7 +177,7 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({ topic, isOpen, onClose
             }`}
           >
             <Box className="w-4 h-4" />
-            <span>4. 3D & Axonometric Models</span>
+            <span>5. 3D & Axonometric Models</span>
             <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-cyan-500/20 text-cyan-300">
               3D Orbit
             </span>
@@ -170,7 +192,7 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({ topic, isOpen, onClose
             }`}
           >
             <Award className="w-4 h-4" />
-            <span>5. WAEC / NECO Exam Practice</span>
+            <span>6. WAEC / NECO Exam Practice</span>
           </button>
         </div>
 
@@ -736,11 +758,48 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({ topic, isOpen, onClose
                   Candidates are evaluated on: Baseline Accuracy (20%), Geometric Construction Loci (40%), Line Weight Hierarchy & Finish (25%), Dimensional Accuracy & Lettering (15%).
                 </p>
               </div>
+
+              {/* Quick Launch Button to Interactive ISO Blueprint */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-950/80 via-blue-950/70 to-slate-950 border border-cyan-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center border border-cyan-500/30 shrink-0">
+                    <Compass className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-xs sm:text-sm">
+                      Interactive ISO Vector Blueprint & Inspector
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Explore this topic in millimeter CAD precision with live coordinate measuring and ISO 128 layer toggles.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveTab('ISO_DIAGRAM')}
+                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs transition-colors shrink-0 flex items-center gap-2 shadow-lg shadow-cyan-600/30"
+                >
+                  <span>Open Blueprint View</span>
+                  <Compass className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 4: 3D AXONOMETRIC & DIMENSIONED BLUEPRINT ENGINE                      */}
+          {/* TAB 4: ISO 128 / ISO 5456 INTERACTIVE VECTOR BLUEPRINT VIEWER              */}
+          {/* ========================================================================= */}
+          {activeTab === 'ISO_DIAGRAM' && (
+            <div className="animate-in fade-in duration-150 h-[680px]">
+              <IsoDiagramViewer 
+                topic={topic}
+                viewMode="EMBEDDED"
+                className="h-full"
+              />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 5: 3D AXONOMETRIC & DIMENSIONED BLUEPRINT ENGINE                      */}
           {/* ========================================================================= */}
           {activeTab === '3D_BLUEPRINT' && (
             <div className="space-y-6 animate-in fade-in duration-150">

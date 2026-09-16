@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DrawingTopic } from '../../types/curriculum';
-import { X, Award, CheckCircle2, AlertCircle, HelpCircle, ArrowRight, RotateCcw } from 'lucide-react';
+import { X, Award, CheckCircle2, AlertCircle, HelpCircle, ArrowRight, RotateCcw, Compass } from 'lucide-react';
+import { IsoDiagramViewer } from '../common/IsoDiagramViewer';
 
 interface PracticeModalProps {
   topic: DrawingTopic;
@@ -94,6 +95,7 @@ export const PracticeModal: React.FC<PracticeModalProps> = ({ topic, isOpen, onC
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
+  const [showIsoDiagram, setShowIsoDiagram] = useState<boolean>(false);
 
   const currentQ = questions[currentQIndex];
 
@@ -129,7 +131,9 @@ export const PracticeModal: React.FC<PracticeModalProps> = ({ topic, isOpen, onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className={`bg-slate-900 border border-slate-700 rounded-2xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden transition-all duration-200 ${
+        showIsoDiagram ? 'max-w-4xl' : 'max-w-xl'
+      }`}>
         {/* Header */}
         <div className="p-4 border-b border-slate-800 bg-slate-950/70 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -145,16 +149,41 @@ export const PracticeModal: React.FC<PracticeModalProps> = ({ topic, isOpen, onC
               </h2>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowIsoDiagram(prev => !prev)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold border transition-colors flex items-center gap-1.5 ${
+                showIsoDiagram
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+              }`}
+              title="Toggle Official ISO Technical Diagram Reference"
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{showIsoDiagram ? 'Hide Diagram' : 'ISO Diagram'}</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6 flex-1 overflow-y-auto space-y-4">
+          {/* Collapsible ISO Technical Blueprint Reference Plate */}
+          {showIsoDiagram && (
+            <div className="h-72 rounded-xl overflow-hidden border border-cyan-500/30 shadow-lg animate-in fade-in duration-150">
+              <IsoDiagramViewer 
+                topic={topic}
+                viewMode="EMBEDDED"
+                className="h-full"
+              />
+            </div>
+          )}
+
           <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
             <p className="text-sm font-semibold text-slate-100 leading-relaxed">
               {currentQ.question}

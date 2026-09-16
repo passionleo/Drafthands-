@@ -9,6 +9,7 @@ import { DrawingCanvas } from './components/drafting/DrawingCanvas';
 import { GridMode } from './components/drafting/ToolDock';
 import { TheoryModal } from './components/theory/TheoryModal';
 import { PracticeModal } from './components/practice/PracticeModal';
+import { IsoDiagramViewer } from './components/common/IsoDiagramViewer';
 import { TeacherPortalModal } from './components/teacher/TeacherPortalModal';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
@@ -38,6 +39,7 @@ function AppContent() {
   // Modals & View Modes state
   const [isTheoryOpen, setIsTheoryOpen] = useState<boolean>(false);
   const [isPracticeOpen, setIsPracticeOpen] = useState<boolean>(false);
+  const [isIsoDiagramOpen, setIsIsoDiagramOpen] = useState<boolean>(false);
   const [isTeacherPortalOpen, setIsTeacherPortalOpen] = useState<boolean>(false);
   const [isParentPortalOpen, setIsParentPortalOpen] = useState<boolean>(false);
   const [isProjectionModeOpen, setIsProjectionModeOpen] = useState<boolean>(false);
@@ -282,6 +284,7 @@ function AppContent() {
         onSearchChange={setSearchQuery}
         onOpenTheory={() => setIsTheoryOpen(true)}
         onOpenPractice={() => setIsPracticeOpen(true)}
+        onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
         onOpenTeacherPortal={() => setIsTeacherPortalOpen(true)}
         onOpenParentPortal={() => setIsParentPortalOpen(true)}
         onOpenProjectionMode={() => setIsProjectionModeOpen(true)}
@@ -351,6 +354,7 @@ function AppContent() {
                 setIsWhiteboardStudioOpen(true);
               }}
               onOpenLiveClass={() => setIsJoinClassOpen(true)}
+              onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
             />
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
@@ -435,6 +439,14 @@ function AppContent() {
         topic={activeTopic}
         isOpen={isTheoryOpen}
         onClose={() => setIsTheoryOpen(false)}
+      />
+
+      {/* 8B. ISO 128 TECHNICAL VECTOR BLUEPRINT VIEWER MODAL */}
+      <IsoDiagramViewer
+        topic={activeTopic}
+        isOpen={isIsoDiagramOpen}
+        onClose={() => setIsIsoDiagramOpen(false)}
+        viewMode="MODAL"
       />
 
       {/* 9. PRACTICE & EXAM CHALLENGE MODAL */}

@@ -33,6 +33,7 @@ interface HeaderProps {
   onSearchChange: (q: string) => void;
   onOpenTheory: () => void;
   onOpenPractice: () => void;
+  onOpenIsoDiagram?: () => void;
   onOpenTeacherPortal: () => void;
   onOpenParentPortal: () => void;
   onOpenProjectionMode: () => void;
@@ -56,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   onOpenTheory,
   onOpenPractice,
+  onOpenIsoDiagram,
   onOpenTeacherPortal,
   onOpenParentPortal,
   onOpenProjectionMode,
@@ -266,6 +268,19 @@ export const Header: React.FC<HeaderProps> = ({
           <PenTool className="w-3.5 h-3.5 text-emerald-400" />
           <span className="hidden lg:inline">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
         </button>
+
+        {/* ISO 128 Blueprint Viewer Button */}
+        {onOpenIsoDiagram && (
+          <button
+            id="btn-open-iso-blueprint"
+            onClick={onOpenIsoDiagram}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/40 transition-colors shadow-sm"
+            title="Open Interactive ISO 128 Technical Vector Blueprint Viewer"
+          >
+            <Compass className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden lg:inline">ISO Blueprint</span>
+          </button>
+        )}
 
         {/* Theory Reference Button */}
         <button
