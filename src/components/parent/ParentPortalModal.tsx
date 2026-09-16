@@ -17,10 +17,14 @@ import {
   ArrowRight,
   ExternalLink,
   Lock,
-  MessageSquare
+  MessageSquare,
+  CreditCard,
+  Check
 } from 'lucide-react';
 import { SAMPLE_WARD_PROFILES, getWardProfile } from '../../data/parentData';
 import { StudentWardProfile } from '../../types/parent';
+import { useSubscription } from '../../context/SubscriptionContext';
+import { payForParentWardSponsorship, formatNaira } from '../../utils/paystack';
 
 interface ParentPortalModalProps {
   isOpen: boolean;
@@ -33,13 +37,21 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   onClose,
   onSelectTopic
 }) => {
+  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
+
   const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DH-2025-88');
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
     SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
   );
-  const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'teacherNotes' | 'reportCard'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'teacherNotes' | 'reportCard' | 'sponsorship'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
   const [isFeedbackSent, setIsFeedbackSent] = useState<boolean>(false);
+
+  // Paystack Ward Sponsorship State
+  const [parentEmail, setParentEmail] = useState<string>('folashade.b@parent.drafthands.edu');
+  const [sponsorshipPlan, setSponsorshipPlan] = useState<'STUDENT_TERMLY' | 'STUDENT_SESSION'>('STUDENT_SESSION');
+  const [isPayingSponsorship, setIsPayingSponsorship] = useState<boolean>(false);
+  const [sponsorshipReceiptRef, setSponsorshipReceiptRef] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -47,6 +59,28 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
     const code = codeToSearch || wardCodeInput;
     const profile = getWardProfile(code);
     setActiveProfile(profile);
+  };
+
+  const handleOfficialParentPaystackCheckout = () => {
+    setIsPayingSponsorship(true);
+    payForParentWardSponsorship({
+      parentEmail,
+      parentName: 'Parent of ' + activeProfile.studentName,
+      wardName: activeProfile.studentName,
+      wardCode: activeProfile.wardCode,
+      planType: sponsorshipPlan,
+      onSuccess: (res) => {
+        setIsPayingSponsorship(false);
+        subscribeToPlan(sponsorshipPlan, res.reference);
+        setSponsorshipReceiptRef(res.reference);
+      },
+      onClose: () => {
+        setIsPayingSponsorship(false);
+      },
+      onError: () => {
+        setIsPayingSponsorship(false);
+      }
+    });
   };
 
   const handleSendFeedback = (e: React.FormEvent) => {
@@ -169,11 +203,24 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 <span className="text-[10px] uppercase font-mono text-slate-500 block">Overall Score</span>
                 <span className="text-2xl font-black text-emerald-400 font-mono">{activeProfile.overallScore}%</span>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-mono text-slate-500 block">Status</span>
-                <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 inline-block mt-0.5">
+              <div className="text-right flex flex-col items-end gap-1">
+                <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 inline-block">
                   Distinction Track (WAEC A1)
                 </span>
+                {isSubscribed ? (
+                  <span className="text-[11px] font-mono text-emerald-300 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                    Curriculum Pass Active
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setActiveTab('sponsorship')}
+                    className="text-[11px] font-bold px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 shadow transition-colors"
+                  >
+                    <CreditCard className="w-3 h-3" />
+                    Sponsor with Paystack
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -234,6 +281,17 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
             >
               <Printer className="w-3.5 h-3.5 text-cyan-400" />
               <span>Official Report Card (PDF)</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('sponsorship')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'sponsorship'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sponsor Ward Pass (Paystack)</span>
             </button>
           </div>
 
@@ -578,6 +636,185 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB 6: PAYSTACK WARD SPONSORSHIP */}
+          {activeTab === 'sponsorship' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Header Banner */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-700/50 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase">
+                      Official Paystack Checkout
+                    </span>
+                    <span className="text-xs text-slate-400">Card • Bank Transfer • USSD • QR</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mt-1">
+                    Sponsor Curriculum & WAEC Pass for {activeProfile.studentName}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Unlock all 2nd & 3rd term Technical Drawing topics, interactive CAD canvas drills, and WAEC/NERDC marking schemes.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-800">
+                  <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
+                  <div className="text-left">
+                    <span className="text-[10px] uppercase font-mono text-slate-400 block">Recipient Ward</span>
+                    <span className="text-xs font-bold text-emerald-300 font-mono">
+                      {activeProfile.studentName} (#{activeProfile.admissionNo})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {sponsorshipReceiptRef ? (
+                /* Payment Success View */
+                <div className="p-6 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/60 space-y-4 text-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white">Payment Verified via Paystack!</h4>
+                    <p className="text-xs text-emerald-300 mt-1">
+                      Academic Pass for <span className="font-bold text-white">{activeProfile.studentName}</span> is now active.
+                    </p>
+                    <p className="text-[11px] font-mono text-slate-400 mt-2">
+                      Paystack Reference: <span className="text-emerald-400 font-bold">{sponsorshipReceiptRef}</span>
+                    </p>
+                  </div>
+                  <div className="pt-2 flex justify-center gap-3">
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+                    >
+                      View Student Dashboard
+                    </button>
+                    <button
+                      onClick={() => setSponsorshipReceiptRef(null)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors border border-slate-700"
+                    >
+                      Make Another Payment
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Plan Selection & Checkout Form */
+                <div className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Termly Option */}
+                    <div
+                      onClick={() => setSponsorshipPlan('STUDENT_TERMLY')}
+                      className={`p-5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                        sponsorshipPlan === 'STUDENT_TERMLY'
+                          ? 'bg-slate-800/90 border-emerald-500 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500'
+                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold font-mono uppercase text-slate-400">Termly Pass</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                            3 Months Access
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-white font-mono">{formatNaira(2500)}</span>
+                          <span className="text-xs text-slate-400">/ term</span>
+                        </div>
+                        <ul className="mt-3 space-y-2 text-xs text-slate-300">
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Complete SS1, SS2, or SS3 term syllabus</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>All 2nd & 3rd term geometric diagrams</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Interactive construction canvases</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Session Pass Option (Recommended) */}
+                    <div
+                      onClick={() => setSponsorshipPlan('STUDENT_SESSION')}
+                      className={`p-5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between relative overflow-hidden ${
+                        sponsorshipPlan === 'STUDENT_SESSION'
+                          ? 'bg-slate-800/90 border-emerald-500 shadow-lg shadow-emerald-500/15 ring-1 ring-emerald-500'
+                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-500 to-teal-500 text-slate-950 font-black text-[9px] uppercase tracking-wider px-3 py-0.5 rounded-bl-lg">
+                        Recommended • Save 40%
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold font-mono uppercase text-emerald-400">Full Academic Session</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            12 Months Access
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-white font-mono">{formatNaira(6000)}</span>
+                          <span className="text-xs text-slate-400">/ full session</span>
+                        </div>
+                        <ul className="mt-3 space-y-2 text-xs text-slate-300">
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>1st, 2nd & 3rd term full curriculum</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>WAEC & NECO 10-year past question archive</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Parent monthly continuous assessment reports</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Checkout Action Panel */}
+                  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                      <span className="text-xs text-slate-400 font-mono">Parent Email:</span>
+                      <input
+                        type="email"
+                        value={parentEmail}
+                        onChange={(e) => setParentEmail(e.target.value)}
+                        placeholder="parent@example.com"
+                        className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleOfficialParentPaystackCheckout}
+                      disabled={isPayingSponsorship}
+                      className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all"
+                    >
+                      {isPayingSponsorship ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Opening Paystack...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4" />
+                          <span>Pay with Paystack ({formatNaira(sponsorshipPlan === 'STUDENT_TERMLY' ? 2500 : 6000)})</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

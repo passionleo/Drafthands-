@@ -18,11 +18,16 @@ import {
   Sparkles,
   Layers,
   LayoutTemplate,
-  Calendar
+  Calendar,
+  CreditCard,
+  ShieldCheck,
+  Building
 } from 'lucide-react';
 import { DrawingTopic, CurriculumTier, CurriculumTerm } from '../../types/curriculum';
 import { generateLessonPlanForTopic } from '../../data/lessonNotesGenerator';
 import { TIER_CONFIG, TERM_CONFIG } from '../../data/curriculumData';
+import { useSubscription } from '../../context/SubscriptionContext';
+import { payForTeacherPro, payForInstitutionPass, formatNaira } from '../../utils/paystack';
 
 interface TeacherPortalModalProps {
   topics: DrawingTopic[];
@@ -43,16 +48,64 @@ export const TeacherPortalModal: React.FC<TeacherPortalModalProps> = ({
   onSelectTopic,
   onOpenWhiteboardForTopic
 }) => {
+  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
+
   if (!isOpen) return null;
+
+  const isTeacherActive = isSubscribed && (subscription.plan === 'TEACHER_PRO' || subscription.plan === 'INSTITUTION_PASS');
 
   const [activeTab, setActiveTab] = useState<TabType>('DOCUMENT');
   const [selectedTierFilter, setSelectedTierFilter] = useState<CurriculumTier | 'ALL'>('ALL');
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [isProcessingPaystack, setIsProcessingPaystack] = useState<boolean>(false);
+  const [teacherPaymentSuccessRef, setTeacherPaymentSuccessRef] = useState<string | null>(null);
 
   // Editable Teacher Metadata
   const [schoolName, setSchoolName] = useState<string>('Federal Science and Technical College (FSTC)');
   const [teacherName, setTeacherName] = useState<string>('Engr. Drafthands Faculty Lead');
+  const [teacherEmail, setTeacherEmail] = useState<string>('teacher@drafthands.edu.ng');
+
+  const handleTeacherProPaystack = () => {
+    setIsProcessingPaystack(true);
+    payForTeacherPro({
+      teacherEmail,
+      teacherName,
+      schoolName,
+      onSuccess: (res) => {
+        setIsProcessingPaystack(false);
+        subscribeToPlan('TEACHER_PRO', res.reference);
+        setTeacherPaymentSuccessRef(res.reference);
+      },
+      onClose: () => {
+        setIsProcessingPaystack(false);
+      },
+      onError: () => {
+        setIsProcessingPaystack(false);
+      }
+    });
+  };
+
+  const handleInstitutionPaystack = () => {
+    setIsProcessingPaystack(true);
+    payForInstitutionPass({
+      adminEmail: teacherEmail,
+      adminName: teacherName,
+      schoolName,
+      department: 'Technical & Engineering Graphics Department',
+      onSuccess: (res) => {
+        setIsProcessingPaystack(false);
+        subscribeToPlan('INSTITUTION_PASS', res.reference);
+        setTeacherPaymentSuccessRef(res.reference);
+      },
+      onClose: () => {
+        setIsProcessingPaystack(false);
+      },
+      onError: () => {
+        setIsProcessingPaystack(false);
+      }
+    });
+  };
   const [term, setTerm] = useState<string>(() => 
     activeTopic.termLabel || (activeTopic.term === 'TERM_2' ? 'Second Term' : activeTopic.term === 'TERM_3' ? 'Third Term' : 'First Term')
   );
@@ -244,6 +297,36 @@ ${lessonPlan.evaluationAndExamScheme.criteria.map(c => `- **${c.component} (${c.
               </button>
             )}
 
+            {/* Paystack Official License Trigger */}
+            {isTeacherActive ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/50 text-[11px] font-mono text-emerald-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">{subscription.plan === 'INSTITUTION_PASS' ? 'Institution Pass' : 'Teacher Pro'}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleTeacherProPaystack}
+                  disabled={isProcessingPaystack}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-900/40 transition-all border border-purple-400/30"
+                  title="Unlock Full WAEC Lesson Generator with Paystack"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Teacher Pro ({formatNaira(12500)})</span>
+                </button>
+
+                <button
+                  onClick={handleInstitutionPaystack}
+                  disabled={isProcessingPaystack}
+                  className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold transition-colors border border-amber-600/40"
+                  title="Procure School Multi-Seat Pass via Paystack"
+                >
+                  <Building className="w-3.5 h-3.5 text-amber-400" />
+                  <span>School ({formatNaira(45000)})</span>
+                </button>
+              </div>
+            )}
+
             <button
               onClick={onClose}
               className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-1"
@@ -252,6 +335,22 @@ ${lessonPlan.evaluationAndExamScheme.criteria.map(c => `- **${c.component} (${c.
             </button>
           </div>
         </div>
+
+        {/* Paystack Payment Success Notification Banner */}
+        {teacherPaymentSuccessRef && (
+          <div className="px-6 py-2.5 bg-emerald-950/90 border-b border-emerald-700 text-xs text-emerald-200 flex items-center justify-between animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>Official Paystack Payment Confirmed! Academic license reference: <strong>{teacherPaymentSuccessRef}</strong></span>
+            </div>
+            <button
+              onClick={() => setTeacherPaymentSuccessRef(null)}
+              className="text-[11px] text-emerald-400 underline font-mono hover:text-white"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Top Control Bar: Topic Selector & Meta Customizer */}
         <div className="p-3.5 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 text-xs">

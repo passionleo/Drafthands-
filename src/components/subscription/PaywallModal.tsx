@@ -23,7 +23,7 @@ import {
   FREE_TOPICS_PER_TIER 
 } from '../../types/subscription';
 import { useSubscription } from '../../context/SubscriptionContext';
-import { PaystackCheckoutModal } from './PaystackCheckoutModal';
+import { payWithPaystack, formatNaira } from '../../utils/paystack';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -39,7 +39,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   const { subscribeToPlan, redeemVoucherCode } = useSubscription();
 
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>('STUDENT_SESSION');
-  const [isPaystackCheckoutOpen, setIsPaystackCheckoutOpen] = useState<boolean>(false);
+  const [payerEmail, setPayerEmail] = useState<string>('student@drafthands.edu.ng');
+  const [isProcessingPaystack, setIsProcessingPaystack] = useState<boolean>(false);
   const [voucherInput, setVoucherInput] = useState<string>('');
   const [voucherFeedback, setVoucherFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -47,14 +48,27 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
   const selectedPlan = SUBSCRIPTION_PLANS[selectedPlanType];
 
-  const handleOpenPaystack = () => {
-    setIsPaystackCheckoutOpen(true);
-  };
-
-  const handlePaystackSuccess = (reference: string) => {
-    setIsPaystackCheckoutOpen(false);
-    subscribeToPlan(selectedPlanType, reference);
-    onClose();
+  const handleOfficialPaystackCheckout = () => {
+    setIsProcessingPaystack(true);
+    payWithPaystack({
+      email: payerEmail,
+      amount: selectedPlan.priceNGN,
+      planType: selectedPlanType,
+      planName: selectedPlan.name,
+      userRole: selectedPlan.audience === 'Teacher' ? 'TEACHER' : selectedPlan.audience === 'Institution' ? 'SCHOOL' : 'STUDENT',
+      customerName: payerEmail.split('@')[0],
+      onSuccess: (response) => {
+        setIsProcessingPaystack(false);
+        subscribeToPlan(selectedPlanType, response.reference);
+        onClose();
+      },
+      onClose: () => {
+        setIsProcessingPaystack(false);
+      },
+      onError: () => {
+        setIsProcessingPaystack(false);
+      }
+    });
   };
 
   const handleRedeemVoucher = (e: React.FormEvent) => {
@@ -298,16 +312,37 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
               <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-[11px] text-slate-400">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Instant Paystack Card, USSD, or Bank Transfer</span>
+                  <span>Official Paystack Checkout: Cards, Bank Transfer, USSD & QR</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 rounded-xl px-2.5 py-1.5">
+                    <span className="text-[10px] text-slate-400 font-mono">Receipt:</span>
+                    <input
+                      type="email"
+                      value={payerEmail}
+                      onChange={(e) => setPayerEmail(e.target.value)}
+                      placeholder="student@example.com"
+                      className="bg-transparent text-xs text-emerald-300 placeholder:text-slate-500 focus:outline-none w-44 font-mono"
+                    />
+                  </div>
+
                   <button
-                    onClick={handleOpenPaystack}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-colors"
+                    onClick={handleOfficialPaystackCheckout}
+                    disabled={isProcessingPaystack}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-colors"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Pay with Paystack (₦{selectedPlan.priceNGN.toLocaleString()})</span>
+                    {isProcessingPaystack ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Connecting to Paystack...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        <span>Pay with Paystack ({formatNaira(selectedPlan.priceNGN)})</span>
+                      </>
+                    )}
                   </button>
 
                   <button
@@ -360,14 +395,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Embedded Paystack Popup Modal */}
-      <PaystackCheckoutModal
-        plan={selectedPlan}
-        isOpen={isPaystackCheckoutOpen}
-        onClose={() => setIsPaystackCheckoutOpen(false)}
-        onSuccess={handlePaystackSuccess}
-      />
     </>
   );
 };
