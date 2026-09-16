@@ -19,7 +19,8 @@ import {
   Tv,
   PanelLeftClose,
   PanelLeftOpen,
-  Menu
+  Menu,
+  Box
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
@@ -34,6 +35,7 @@ interface HeaderProps {
   onOpenTheory: () => void;
   onOpenPractice: () => void;
   onOpenIsoDiagram?: () => void;
+  onOpenOrthographicViewport?: () => void;
   onOpenTeacherPortal: () => void;
   onOpenParentPortal: () => void;
   onOpenProjectionMode: () => void;
@@ -58,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenTheory,
   onOpenPractice,
   onOpenIsoDiagram,
+  onOpenOrthographicViewport,
   onOpenTeacherPortal,
   onOpenParentPortal,
   onOpenProjectionMode,
@@ -279,6 +282,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Compass className="w-3.5 h-3.5 text-sky-400" />
             <span className="hidden lg:inline">ISO Blueprint</span>
+          </button>
+        )}
+
+        {/* Orthographic Projection Viewport Button (ISO 5456 1st & 3rd Angle) */}
+        {onOpenOrthographicViewport && (
+          <button
+            id="btn-open-ortho-viewport"
+            onClick={onOpenOrthographicViewport}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-cyan-500/20 to-sky-500/20 hover:from-cyan-500/30 hover:to-sky-500/30 text-cyan-300 border border-cyan-500/40 transition-colors shadow-sm"
+            title="Open Interactive 3D Isometric & 2D Orthographic Viewport (ISO 5456 1st & 3rd Angle)"
+          >
+            <Box className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Ortho Viewport</span>
           </button>
         )}
 

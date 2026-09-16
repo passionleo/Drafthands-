@@ -16,7 +16,8 @@ import {
   PencilRuler,
   Terminal,
   Tv,
-  Radio
+  Radio,
+  Box
 } from 'lucide-react';
 
 interface ProcedurePanelProps {
@@ -31,6 +32,7 @@ interface ProcedurePanelProps {
   onOpenCadWorkstation?: () => void;
   onOpenLiveClass?: () => void;
   onOpenIsoDiagram?: () => void;
+  onOpenOrthographicViewport?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -44,7 +46,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenTraditionalBoard,
   onOpenCadWorkstation,
   onOpenLiveClass,
-  onOpenIsoDiagram
+  onOpenIsoDiagram,
+  onOpenOrthographicViewport
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -249,6 +252,29 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-sky-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+
+        {/* ORTHOGRAPHIC VIEWPORT TRIGGER (ISO 5456 1st & 3rd Angle) */}
+        {onOpenOrthographicViewport && (
+          <button
+            id="open-orthographic-viewport-btn"
+            onClick={onOpenOrthographicViewport}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-950/90 via-sky-950/70 to-slate-900 hover:from-cyan-900/90 hover:to-sky-900/80 border border-cyan-500/50 text-xs font-bold text-cyan-200 flex items-center justify-between transition-all shadow-md group relative overflow-hidden"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Box className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="block text-white font-bold text-xs">Orthographic Viewport</span>
+                  <span className="text-[9px] font-mono bg-cyan-500/20 text-cyan-300 px-1 rounded">1st & 3rd Angle</span>
+                </div>
+                <span className="block text-[10px] text-cyan-400/90 font-mono">3D Isometric ⇄ Dynamic 2D Multi-View</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
           </button>
         )}
 

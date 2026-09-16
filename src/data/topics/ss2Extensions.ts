@@ -467,6 +467,486 @@ export const ss2ExtensionTopics: DrawingTopic[] = [
     }
   },
 
+  // SS2 Term 2 Week 6: First-Angle Orthographic Projection (ISO 5456-2 / NERDC)
+  {
+    id: 'ss2-orthographic-first-angle',
+    tier: 'SS2',
+    term: 'TERM_2',
+    termLabel: 'Second Term',
+    week: 6,
+    moduleCode: 'TD-SS2-T2-W06',
+    title: 'First-Angle Orthographic Projection (ISO 5456-2 / NERDC)',
+    shortDescription: 'Project Front Elevation, Plan (below Front), and Left End Elevation (on Right) of a mechanical component using ISO 5456-2 and ISO 128 standards.',
+    category: 'ORTHOGRAPHIC_PROJECTION',
+    standards: {
+      nerdcRef: 'SS2 TD Unit 6: Orthographic Projections (First-Angle ISO Standard)',
+      waecRef: 'WAEC Syllabus Section B: Compulsory Orthographic Drawing Question',
+      isoRef: 'ISO 5456-2 & ISO 128: Technical Product Documentation'
+    },
+    theory: {
+      overview: 'In First-Angle Projection (ISO 5456-2 / British & NERDC standard), the object is positioned between the observer and the plane of projection. The views are projected THROUGH the object onto the plane behind it. Consequently: the Front Elevation is drawn in the upper left; the Plan (viewed from ABOVE) is projected BELOW the Front Elevation; and the End Elevation viewed from the LEFT is projected onto the profile plane to the RIGHT of the Front Elevation.',
+      historyAndApplication: 'Adopted throughout Commonwealth nations, Europe, and Nigeria (NERDC/WAEC). Fundamental across structural, aerospace, and mechanical engineering drawings.',
+      waecAndNERDCNotes: 'WAEC Section B strictly penalizes incorrect view arrangement. The Plan must NEVER be placed above the Front Elevation in First-Angle questions. Centerlines (Chain Thin) and hidden detail (Dashed Thin) must be precisely shown, and the truncated cone projection symbol must be drawn in the title block.',
+      keyPrinciples: [
+        {
+          title: 'Spatial Principle of First Angle',
+          description: 'The object lies between the eye of the observer and the plane of projection. What you see from the top is drawn on the bottom.',
+          keyRule: 'Observer → Object → Projection Plane (Plan below Front)'
+        },
+        {
+          title: '45° Mitre Line Depth Transfer',
+          description: 'Depths from the Plan view are accurately transferred to the End Elevation via horizontal projection rays reflected off a 45° mitre line.',
+          keyRule: 'Plan Depth = End Elevation Depth (via 45° line)'
+        },
+        {
+          title: 'ISO 128 Line Hierarchy',
+          description: 'Continuous Thick (0.5mm HB) for visible edges; Dashed Thin (0.25mm 2H) for hidden internal details; Chain Thin (0.25mm 2H) for axes of symmetry.',
+          keyRule: 'Outlines (0.5mm) > Hidden (0.25mm dashed) > Centerlines (chain)'
+        }
+      ],
+      formulas: [
+        { latex: 'X_{end} = X_{origin} + Y_{plan} \\quad (\\text{via } 45^\\circ \\text{ mitre})', description: 'Coordinate transfer relationship between orthogonal planes' },
+        { latex: 'H_{front} = H_{end}, \\quad W_{front} = W_{plan}', description: 'Dimensional conservation across adjacent elevations' }
+      ],
+      standardConventions: [
+        { lineName: 'Continuous Thick (0.50mm)', weightMm: '0.5mm', pencilGrade: 'HB', application: 'Finished visible outlines of all orthographic views' },
+        { lineName: 'Continuous Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Projection rays, 45° mitre transfer lines, and dimension lines' },
+        { lineName: 'Dashed Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Hidden internal holes, keyways, and stepped shoulders' },
+        { lineName: 'Chain Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Centerlines of circular bores and symmetric axes' }
+      ]
+    },
+    parameters: [
+      {
+        id: 'compW',
+        label: 'Component Width (W)',
+        symbol: 'W',
+        defaultValue: 90,
+        min: 70,
+        max: 120,
+        step: 5,
+        unit: 'mm',
+        description: 'Overall horizontal width of the component'
+      },
+      {
+        id: 'compH',
+        label: 'Component Height (H)',
+        symbol: 'H',
+        defaultValue: 80,
+        min: 60,
+        max: 100,
+        step: 5,
+        unit: 'mm',
+        description: 'Overall vertical height of the upright step'
+      },
+      {
+        id: 'compD',
+        label: 'Component Depth (D)',
+        symbol: 'D',
+        defaultValue: 60,
+        min: 45,
+        max: 80,
+        step: 5,
+        unit: 'mm',
+        description: 'Overall depth from front to rear'
+      }
+    ],
+    defaultViewBox: {
+      width: 800,
+      height: 600,
+      defaultGrid: 'MILLIMETER'
+    },
+    generateSteps: (params) => {
+      const W = params.compW || 90;
+      const H = params.compH || 80;
+      const D = params.compD || 60;
+      const scale = 2.0;
+
+      const sW = W * scale;
+      const sH = H * scale;
+      const sD = D * scale;
+      const baseH = 20 * scale;
+      const upW = 25 * scale;
+      const holeR = 12 * scale;
+      const holeCX = sW - 35 * scale;
+
+      // Layout origin points
+      const originX = 180;
+      const originY = 240;
+      const planTopY = originY + 40;
+      const endLeftX = originX + sW + 50;
+
+      return [
+        {
+          stepIndex: 1,
+          title: 'Establish Reference Datum Axes (X-Y and X1-Y1) and 45° Mitre Ray',
+          instruction: 'Draw horizontal reference line X-Y and vertical ground line X1-Y1 intersecting at the origin. Draw the 45° mitre line through the origin into the lower right quadrant.',
+          detailedNotes: 'The 45° mitre line ensures exact geometrical depth transfer between the Plan and the End Elevation without manual measurement.',
+          technicalPrinciple: 'Datum lines: Chain Thin (0.25mm); 45° Mitre ray: Continuous Thin (0.25mm 2H).',
+          activeInstrument: { toolType: 'SET_SQUARE_45', x: endLeftX, y: planTopY, visible: true },
+          elements: [
+            // Principal horizontal datum line X-Y
+            { id: 'datum-xy', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 60, y1: originY, x2: 740, y2: originY },
+            { id: 'lbl-x', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: 70, cy: originY - 10, label: 'X' },
+            { id: 'lbl-y', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: 730, cy: originY - 10, label: 'Y' },
+            // Principal vertical datum line X1-Y1
+            { id: 'datum-x1y1', type: 'LINE', lineWeight: 'CENTER_LINE', x1: endLeftX - 25, y1: 40, x2: endLeftX - 25, y2: 560 },
+            { id: 'lbl-x1', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: endLeftX - 25, cy: 50, label: 'X1' },
+            { id: 'lbl-y1', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: endLeftX - 25, cy: 550, label: 'Y1' },
+            // 45 degree mitre line in bottom-right quadrant
+            { id: 'mitre-line', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: endLeftX - 25, y1: planTopY, x2: endLeftX - 25 + sD + 40, y2: planTopY + sD + 40 },
+            { id: 'lbl-mitre', type: 'TEXT_LABEL', lineWeight: 'CONSTRUCTION_2H', cx: endLeftX + 30, cy: planTopY + 50, label: '45° MITRE LINE' }
+          ]
+        },
+        {
+          stepIndex: 2,
+          title: 'Project Front Elevation in Top-Left Quadrant',
+          instruction: 'Draw the stepped L-profile of the front elevation resting on the horizontal datum. Insert hidden lines and centerline for the Ø24mm cylindrical hole.',
+          detailedNotes: 'Front Elevation shows full width W and full height H. The vertical upright has thickness 25mm, base step has thickness 20mm.',
+          technicalPrinciple: 'Visible outlines: Continuous Thick (0.50mm HB); Hidden hole edges: Dashed Thin (0.25mm 2H).',
+          activeInstrument: { toolType: 'TEE_SQUARE', x: originX, y: originY, visible: true },
+          elements: [
+            { id: 'datum-xy', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 60, y1: originY, x2: 740, y2: originY },
+            // Front Elevation Outlines
+            {
+              id: 'front-outline',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [originX, originY],
+                [originX + sW, originY],
+                [originX + sW, originY - baseH],
+                [originX + upW, originY - baseH],
+                [originX + upW, originY - sH],
+                [originX, originY - sH]
+              ]
+            },
+            // Hidden lines for through-hole in base
+            { id: 'front-hole-hid1', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: originX + holeCX - holeR, y1: originY - baseH, x2: originX + holeCX - holeR, y2: originY },
+            { id: 'front-hole-hid2', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: originX + holeCX + holeR, y1: originY - baseH, x2: originX + holeCX + holeR, y2: originY },
+            // Hole Centerline
+            { id: 'front-hole-cl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX, y1: originY - baseH - 10, x2: originX + holeCX, y2: originY + 10 },
+            { id: 'lbl-front-title', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: originX + sW / 2, cy: originY - sH - 15, label: 'FRONT ELEVATION' }
+          ]
+        },
+        {
+          stepIndex: 3,
+          title: 'Project Plan View Directly Below Front Elevation',
+          instruction: 'Drop vertical thin projection rays down from every edge of the Front Elevation. Construct the rectangular Plan with through-hole circle and centerlines.',
+          detailedNotes: 'In First-Angle projection, the Plan MUST lie directly below the Front Elevation. The circular hole appears true shape in the Plan.',
+          technicalPrinciple: 'Vertical projectors: Continuous Thin (0.25mm); Circle: Continuous Thick (0.5mm HB).',
+          activeInstrument: { toolType: 'COMPASS', x: originX + holeCX, y: planTopY + sD / 2, visible: true },
+          elements: [
+            // Vertical Projectors from Front to Plan
+            { id: 'proj-v1', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX, y1: originY, x2: originX, y2: planTopY + sD },
+            { id: 'proj-v2', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + upW, y1: originY - baseH, x2: originX + upW, y2: planTopY + sD },
+            { id: 'proj-v3', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + sW, y1: originY, x2: originX + sW, y2: planTopY + sD },
+            // Plan Outlines
+            { id: 'plan-box', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: originX, y: planTopY, width: sW, height: sD },
+            { id: 'plan-step-line', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: originX + upW, y1: planTopY, x2: originX + upW, y2: planTopY + sD },
+            // Circular hole in plan
+            { id: 'plan-hole', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: originX + holeCX, cy: planTopY + sD / 2, r: holeR },
+            // Centerlines for hole
+            { id: 'plan-cl-h', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX - holeR - 15, y1: planTopY + sD / 2, x2: originX + holeCX + holeR + 15, y2: planTopY + sD / 2 },
+            { id: 'plan-cl-v', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX, y1: planTopY + sD / 2 - holeR - 15, x2: originX + holeCX, y2: planTopY + sD / 2 + holeR + 15 },
+            { id: 'lbl-plan-title', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: originX + sW / 2, cy: planTopY + sD + 25, label: 'PLAN (TOP VIEW)' }
+          ]
+        },
+        {
+          stepIndex: 4,
+          title: 'Transfer Depths via 45° Mitre Ray and Construct Left End Elevation',
+          instruction: 'Project horizontal rays from the Plan to the 45° mitre line, reflect them vertically into the profile plane, and combine with horizontal rays from the Front Elevation.',
+          detailedNotes: 'Viewed from the left, the End Elevation shows the profile with upright at rear, step at front, and hidden hole lines.',
+          technicalPrinciple: 'Mitre reflection: exact 45° ray direction reversal; Outlines: 0.50mm HB.',
+          activeInstrument: { toolType: 'SET_SQUARE_45', x: endLeftX, y: originY, visible: true },
+          elements: [
+            // Horizontal rays from Plan to Mitre
+            { id: 'ray-m1', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + sW, y1: planTopY, x2: endLeftX - 25, y2: planTopY },
+            { id: 'ray-m2', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + sW, y1: planTopY + sD, x2: endLeftX - 25 + sD, y2: planTopY + sD },
+            // Vertical rays up from Mitre to End Elevation
+            { id: 'ray-up1', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: endLeftX, y1: planTopY, x2: endLeftX, y2: originY - sH },
+            { id: 'ray-up2', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: endLeftX + sD, y1: planTopY + sD, x2: endLeftX + sD, y2: originY - sH },
+            // End Elevation Outlines
+            {
+              id: 'end-outline',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [endLeftX, originY],
+                [endLeftX + sD, originY],
+                [endLeftX + sD, originY - sH],
+                [endLeftX + sD - upW, originY - sH],
+                [endLeftX + sD - upW, originY - baseH],
+                [endLeftX, originY - baseH]
+              ],
+              isFinalResult: true
+            },
+            // Hidden detail lines in End Elevation for hole
+            { id: 'end-hole-hid1', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: endLeftX + sD / 2 - holeR, y1: originY - baseH, x2: endLeftX + sD / 2 - holeR, y2: originY },
+            { id: 'end-hole-hid2', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: endLeftX + sD / 2 + holeR, y1: originY - baseH, x2: endLeftX + sD / 2 + holeR, y2: originY },
+            { id: 'end-hole-cl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: endLeftX + sD / 2, y1: originY - baseH - 10, x2: endLeftX + sD / 2, y2: originY + 10 },
+            { id: 'lbl-end-title', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: endLeftX + sD / 2, cy: originY - sH - 15, label: 'LEFT END ELEVATION' }
+          ]
+        },
+        {
+          stepIndex: 5,
+          title: 'Render ISO 5456 Truncated Cone Projection Symbol in Standard Title Block',
+          instruction: 'Draw the standard First-Angle projection symbol: the frustum of a cone with small face on the left, followed by concentric circles on the right.',
+          detailedNotes: 'WAEC criteria award critical marks for the correct orientation of this symbol in the bottom right corner of technical drawing sheets.',
+          technicalPrinciple: 'Cone frustum left, circles right: First-Angle ISO 5456-2 symbol.',
+          activeInstrument: { toolType: 'PENCIL_HB', x: 650, y: 530, visible: true },
+          elements: [
+            // Title block box in bottom right
+            { id: 'tb-box', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: 520, y: 480, width: 220, height: 80 },
+            { id: 'tb-title', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: 630, cy: 498, label: 'ISO 5456-2 PROJECTION SYMBOL' },
+            // Centerline through symbol
+            { id: 'sym-cl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 540, y1: 535, x2: 720, y2: 535 },
+            // Frustum on Left
+            {
+              id: 'sym-frustum',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [555, 545],
+                [585, 553],
+                [585, 517],
+                [555, 525]
+              ]
+            },
+            { id: 'sym-frust-l', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: 555, y1: 525, x2: 555, y2: 545 },
+            { id: 'sym-frust-r', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: 585, y1: 517, x2: 585, y2: 553 },
+            // Concentric Circles on Right
+            { id: 'sym-c-outer', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: 645, cy: 535, r: 18 },
+            { id: 'sym-c-inner', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: 645, cy: 535, r: 10 },
+            { id: 'sym-c-vcl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 645, y1: 510, x2: 645, y2: 560 },
+            { id: 'lbl-1st-ang', type: 'TEXT_LABEL', lineWeight: 'CONSTRUCTION_2H', cx: 630, cy: 570, label: 'FIRST ANGLE (NERDC / WAEC)' }
+          ]
+        }
+      ];
+    }
+  },
+
+  // SS2 Term 2 Week 8: Third-Angle Orthographic Projection (ANSI / ISO 5456-3)
+  {
+    id: 'ss2-orthographic-third-angle',
+    tier: 'SS2',
+    term: 'TERM_2',
+    termLabel: 'Second Term',
+    week: 8,
+    moduleCode: 'TD-SS2-T2-W08',
+    title: 'Third-Angle Orthographic Projection & Conversion (ANSI / ISO 5456-3)',
+    shortDescription: 'Construct the Plan (above Front), Front Elevation, and Right End Elevation with ANSI/ISO 5456-3 layout rules and truncated cone symbol.',
+    category: 'ORTHOGRAPHIC_PROJECTION',
+    standards: {
+      nerdcRef: 'SS2 TD Unit 6.2: Third-Angle Projection Principles',
+      waecRef: 'WAEC Section B: Alternative Projection Systems & International Standards',
+      isoRef: 'ISO 5456-3 & ANSI Y14.3: Multi-View Projections'
+    },
+    theory: {
+      overview: 'In Third-Angle Projection (ANSI Y14.3 / ISO 5456-3), the projection plane lies between the observer and the object. The projection plane is imagined as a transparent glass box. The observer looks at the top of the object THROUGH the top glass plane, so the Plan is drawn ABOVE the Front Elevation. The Right End Elevation is projected onto the right glass plane, drawn to the RIGHT of the Front Elevation.',
+      historyAndApplication: 'Standard engineering convention in the United States, Canada, Japan, and internationally across automotive and heavy machinery manufacturing.',
+      waecAndNERDCNotes: 'A frequent exam question asks candidates to convert a given First-Angle drawing into Third-Angle or identify the projection angle from the symbol. Note the inverted layout: Plan is at TOP; Front is below Plan.',
+      keyPrinciples: [
+        {
+          title: 'Glass Box Analogy',
+          description: 'The plane of projection is between the observer and the object. Looking from the top draws on the top.',
+          keyRule: 'Observer → Plane → Object (Plan ABOVE Front)'
+        },
+        {
+          title: 'Direct View Placement',
+          description: 'Right view is on the right; left view is on the left; top view is on the top.',
+          keyRule: 'Natural alignment of line of sight and drawing sheet'
+        },
+        {
+          title: 'Symbol Reversal',
+          description: 'In the Third-Angle symbol, the concentric circles are on the LEFT, and the truncated cone frustum is on the RIGHT.',
+          keyRule: 'Circles Left, Frustum Right = Third-Angle'
+        }
+      ],
+      formulas: [
+        { latex: 'Y_{plan} < Y_{front} \\quad (\\text{Invert vertical axis for Plan above Front})', description: 'Third-Angle vertical sheet allocation rule' }
+      ],
+      standardConventions: [
+        { lineName: 'Continuous Thick (0.50mm)', weightMm: '0.5mm', pencilGrade: 'HB', application: 'Finished visible outlines of all orthographic views' },
+        { lineName: 'Dashed Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Hidden internal details' },
+        { lineName: 'Chain Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Centerlines' }
+      ]
+    },
+    parameters: [
+      {
+        id: 'compW',
+        label: 'Component Width (W)',
+        symbol: 'W',
+        defaultValue: 90,
+        min: 70,
+        max: 120,
+        step: 5,
+        unit: 'mm',
+        description: 'Overall width'
+      },
+      {
+        id: 'compH',
+        label: 'Component Height (H)',
+        symbol: 'H',
+        defaultValue: 80,
+        min: 60,
+        max: 100,
+        step: 5,
+        unit: 'mm',
+        description: 'Overall height'
+      }
+    ],
+    defaultViewBox: {
+      width: 800,
+      height: 600,
+      defaultGrid: 'MILLIMETER'
+    },
+    generateSteps: (params) => {
+      const W = params.compW || 90;
+      const H = params.compH || 80;
+      const scale = 2.0;
+
+      const sW = W * scale;
+      const sH = H * scale;
+      const sD = 60 * scale;
+      const baseH = 20 * scale;
+      const upW = 25 * scale;
+      const holeR = 12 * scale;
+      const holeCX = sW - 35 * scale;
+
+      const originX = 180;
+      const planTopY = 80;
+      const frontTopY = planTopY + sD + 40;
+      const endLeftX = originX + sW + 50;
+
+      return [
+        {
+          stepIndex: 1,
+          title: 'Establish Layout Planes with Plan ABOVE Front Elevation',
+          instruction: 'Allocate the upper region of the drawing sheet for the Plan View and the lower region for the Front Elevation. Draw reference projection guides.',
+          detailedNotes: 'Third-Angle places the Plan View on the top sheet zone because the observer looks down through the top glass pane.',
+          technicalPrinciple: 'Third-Angle datum positioning: Plan above Front.',
+          activeInstrument: { toolType: 'TEE_SQUARE', x: originX, y: frontTopY, visible: true },
+          elements: [
+            { id: 'plan-box-guide', type: 'RECTANGLE', lineWeight: 'CONSTRUCTION_2H', x: originX, y: planTopY, width: sW, height: sD },
+            { id: 'front-box-guide', type: 'RECTANGLE', lineWeight: 'CONSTRUCTION_2H', x: originX, y: frontTopY, width: sW, height: sH },
+            { id: 'lbl-guide-p', type: 'TEXT_LABEL', lineWeight: 'CONSTRUCTION_2H', cx: originX + sW / 2, cy: planTopY - 10, label: 'PLAN VIEW ZONE (TOP)' },
+            { id: 'lbl-guide-f', type: 'TEXT_LABEL', lineWeight: 'CONSTRUCTION_2H', cx: originX + sW / 2, cy: frontTopY - 10, label: 'FRONT ELEVATION ZONE (BELOW)' }
+          ]
+        },
+        {
+          stepIndex: 2,
+          title: 'Construct the Plan View in the Top Zone',
+          instruction: 'Draw the finished outlines of the Plan View in the top zone with upright crest, base step, and Ø24mm circular bore.',
+          detailedNotes: 'Outlines drawn in Continuous Thick (0.5mm HB). The bore is centered at 35mm from the right edge.',
+          technicalPrinciple: 'Plan features projected onto top horizontal plane.',
+          activeInstrument: { toolType: 'COMPASS', x: originX + holeCX, y: planTopY + sD / 2, visible: true },
+          elements: [
+            { id: 'plan-box', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: originX, y: planTopY, width: sW, height: sD },
+            { id: 'plan-step-line', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: originX + upW, y1: planTopY, x2: originX + upW, y2: planTopY + sD },
+            { id: 'plan-hole', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: originX + holeCX, cy: planTopY + sD / 2, r: holeR },
+            { id: 'plan-cl-h', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX - holeR - 15, y1: planTopY + sD / 2, x2: originX + holeCX + holeR + 15, y2: planTopY + sD / 2 },
+            { id: 'plan-cl-v', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX, y1: planTopY + sD / 2 - holeR - 15, x2: originX + holeCX, y2: planTopY + sD / 2 + holeR + 15 },
+            { id: 'lbl-plan', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: originX + sW / 2, cy: planTopY + sD + 20, label: 'PLAN (TOP VIEW)' }
+          ]
+        },
+        {
+          stepIndex: 3,
+          title: 'Project Front Elevation Directly Below Plan View',
+          instruction: 'Drop projection rays down from the Plan View to construct the Front Elevation below it, showing the L-profile and hidden hole lines.',
+          detailedNotes: 'Projectors maintain perfect 1:1 alignment between Plan and Front Elevation.',
+          technicalPrinciple: 'Front Elevation placed directly under Plan view.',
+          activeInstrument: { toolType: 'SET_SQUARE_30_60', x: originX + holeCX, y: frontTopY, visible: true },
+          elements: [
+            // Vertical projection rays
+            { id: 'proj-1', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX, y1: planTopY + sD, x2: originX, y2: frontTopY + sH },
+            { id: 'proj-2', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + upW, y1: planTopY + sD, x2: originX + upW, y2: frontTopY + sH },
+            { id: 'proj-3', type: 'LINE', lineWeight: 'CONSTRUCTION_2H', x1: originX + sW, y1: planTopY + sD, x2: originX + sW, y2: frontTopY + sH },
+            // Front Outlines
+            {
+              id: 'front-outline',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [originX, frontTopY + sH],
+                [originX + sW, frontTopY + sH],
+                [originX + sW, frontTopY + sH - baseH],
+                [originX + upW, frontTopY + sH - baseH],
+                [originX + upW, frontTopY],
+                [originX, frontTopY]
+              ]
+            },
+            // Hidden hole details
+            { id: 'front-hid-1', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: originX + holeCX - holeR, y1: frontTopY + sH - baseH, x2: originX + holeCX - holeR, y2: frontTopY + sH },
+            { id: 'front-hid-2', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: originX + holeCX + holeR, y1: frontTopY + sH - baseH, x2: originX + holeCX + holeR, y2: frontTopY + sH },
+            { id: 'front-cl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: originX + holeCX, y1: frontTopY + sH - baseH - 10, x2: originX + holeCX, y2: frontTopY + sH + 10 },
+            { id: 'lbl-front', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: originX + sW / 2, cy: frontTopY + sH + 25, label: 'FRONT ELEVATION' }
+          ]
+        },
+        {
+          stepIndex: 4,
+          title: 'Construct Right End Elevation on the Right Side of Front Elevation',
+          instruction: 'Viewed from the right, project horizontal rays across from the Front Elevation and transfer depths to complete the Right End Elevation.',
+          detailedNotes: 'In Third-Angle, the view from the right is placed to the right of the front elevation.',
+          technicalPrinciple: 'Right view on Right side of Front view.',
+          activeInstrument: { toolType: 'TEE_SQUARE', x: endLeftX, y: frontTopY + sH, visible: true },
+          elements: [
+            // End Elevation Outlines
+            {
+              id: 'end-outline',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [endLeftX, frontTopY + sH],
+                [endLeftX + sD, frontTopY + sH],
+                [endLeftX + sD, frontTopY],
+                [endLeftX + sD - upW, frontTopY],
+                [endLeftX + sD - upW, frontTopY + sH - baseH],
+                [endLeftX, frontTopY + sH - baseH]
+              ],
+              isFinalResult: true
+            },
+            { id: 'end-hid-1', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: endLeftX + sD / 2 - holeR, y1: frontTopY + sH - baseH, x2: endLeftX + sD / 2 - holeR, y2: frontTopY + sH },
+            { id: 'end-hid-2', type: 'LINE', lineWeight: 'HIDDEN_DETAIL', x1: endLeftX + sD / 2 + holeR, y1: frontTopY + sH - baseH, x2: endLeftX + sD / 2 + holeR, y2: frontTopY + sH },
+            { id: 'end-cl', type: 'LINE', lineWeight: 'CENTER_LINE', x1: endLeftX + sD / 2, y1: frontTopY - 10, x2: endLeftX + sD / 2, y2: frontTopY + sH + 10 },
+            { id: 'lbl-end', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: endLeftX + sD / 2, cy: frontTopY + sH + 25, label: 'RIGHT END ELEVATION' }
+          ]
+        },
+        {
+          stepIndex: 5,
+          title: 'Render ANSI / ISO 5456-3 Third-Angle Projection Symbol in Title Box',
+          instruction: 'Draw the standard Third-Angle projection symbol: concentric circles on the left and truncated cone frustum on the right.',
+          detailedNotes: 'The Third-Angle symbol is the exact horizontal mirror-concept of First-Angle.',
+          technicalPrinciple: 'Concentric circles left, frustum right: ANSI / ISO 5456-3 symbol.',
+          activeInstrument: { toolType: 'PENCIL_HB', x: 650, y: 530, visible: true },
+          elements: [
+            { id: 'tb-box-3', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: 520, y: 480, width: 220, height: 80 },
+            { id: 'tb-title-3', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: 630, cy: 498, label: 'ISO 5456-3 / ANSI SYMBOL' },
+            { id: 'sym-cl-3', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 540, y1: 535, x2: 720, y2: 535 },
+            // Concentric Circles on Left
+            { id: 'sym-c-outer-3', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: 580, cy: 535, r: 18 },
+            { id: 'sym-c-inner-3', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: 580, cy: 535, r: 10 },
+            { id: 'sym-c-vcl-3', type: 'LINE', lineWeight: 'CENTER_LINE', x1: 580, y1: 510, x2: 580, y2: 560 },
+            // Frustum on Right
+            {
+              id: 'sym-frustum-3',
+              type: 'POLYGON',
+              lineWeight: 'THICK_CONTINUOUS',
+              points: [
+                [640, 553],
+                [670, 545],
+                [670, 525],
+                [640, 517]
+              ]
+            },
+            { id: 'sym-frust-l-3', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: 640, y1: 517, x2: 640, y2: 553 },
+            { id: 'sym-frust-r-3', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: 670, y1: 525, x2: 670, y2: 545 },
+            { id: 'lbl-3rd-ang', type: 'TEXT_LABEL', lineWeight: 'CONSTRUCTION_2H', cx: 630, cy: 570, label: 'THIRD ANGLE (ANSI / NORTH AMERICAN)' }
+          ]
+        }
+      ];
+    }
+  },
+
   // SS2 Term 3 Week 1: Auxiliary Projections
   {
     id: 'ss2-auxiliary-projections',

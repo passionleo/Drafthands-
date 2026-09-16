@@ -10,6 +10,7 @@ import { GridMode } from './components/drafting/ToolDock';
 import { TheoryModal } from './components/theory/TheoryModal';
 import { PracticeModal } from './components/practice/PracticeModal';
 import { IsoDiagramViewer } from './components/common/IsoDiagramViewer';
+import { OrthographicViewport } from './components/tools/OrthographicViewport';
 import { TeacherPortalModal } from './components/teacher/TeacherPortalModal';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
@@ -40,6 +41,7 @@ function AppContent() {
   const [isTheoryOpen, setIsTheoryOpen] = useState<boolean>(false);
   const [isPracticeOpen, setIsPracticeOpen] = useState<boolean>(false);
   const [isIsoDiagramOpen, setIsIsoDiagramOpen] = useState<boolean>(false);
+  const [isOrthographicViewportOpen, setIsOrthographicViewportOpen] = useState<boolean>(false);
   const [isTeacherPortalOpen, setIsTeacherPortalOpen] = useState<boolean>(false);
   const [isParentPortalOpen, setIsParentPortalOpen] = useState<boolean>(false);
   const [isProjectionModeOpen, setIsProjectionModeOpen] = useState<boolean>(false);
@@ -285,6 +287,7 @@ function AppContent() {
         onOpenTheory={() => setIsTheoryOpen(true)}
         onOpenPractice={() => setIsPracticeOpen(true)}
         onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
+        onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
         onOpenTeacherPortal={() => setIsTeacherPortalOpen(true)}
         onOpenParentPortal={() => setIsParentPortalOpen(true)}
         onOpenProjectionMode={() => setIsProjectionModeOpen(true)}
@@ -355,6 +358,7 @@ function AppContent() {
               }}
               onOpenLiveClass={() => setIsJoinClassOpen(true)}
               onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
+              onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
             />
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
@@ -448,6 +452,19 @@ function AppContent() {
         onClose={() => setIsIsoDiagramOpen(false)}
         viewMode="MODAL"
       />
+
+      {/* 8C. ISO 5456 ORTHOGRAPHIC PROJECTION VIEWPORT MODAL */}
+      {isOrthographicViewportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-6xl h-[92vh] max-h-[860px] shadow-2xl rounded-2xl overflow-hidden flex flex-col border border-slate-700">
+            <OrthographicViewport
+              viewMode="MODAL"
+              isOpen={isOrthographicViewportOpen}
+              onClose={() => setIsOrthographicViewportOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 9. PRACTICE & EXAM CHALLENGE MODAL */}
       <PracticeModal
