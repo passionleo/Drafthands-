@@ -305,14 +305,14 @@ export const ss3ExtensionTopics: DrawingTopic[] = [
     }
   },
 
-  // SS3 Term 3 Week 1: Surface Development - Parallel Line Method (Truncated Prism & Cylinder)
+  // SS3 Term 1 Week 6: Surface Development - Parallel Line Method (Truncated Prism & Cylinder)
   {
     id: 'ss3-surface-development-prisms',
     tier: 'SS3',
-    term: 'TERM_3',
-    termLabel: 'Third Term',
-    week: 1,
-    moduleCode: 'TD-SS3-T3-W01',
+    term: 'TERM_1',
+    termLabel: 'First Term',
+    week: 6,
+    moduleCode: 'TD-SS3-T1-W06',
     title: 'Parallel Line Surface Development (Truncated Hexagonal Prism & Cylinder)',
     shortDescription: 'Construct the full stretch-out pattern development of a truncated prism or cylinder using the parallel line projection method.',
     category: 'DEVELOPMENTS_AND_INTERPENETRATION',
@@ -471,14 +471,14 @@ export const ss3ExtensionTopics: DrawingTopic[] = [
     }
   },
 
-  // SS3 Term 3 Week 2: Radial Line Surface Development (Truncated Right Cone & Pyramid)
+  // SS3 Term 1 Week 7: Radial Line Surface Development (Truncated Right Cone & Pyramid)
   {
     id: 'ss3-surface-development-radial',
     tier: 'SS3',
-    term: 'TERM_3',
-    termLabel: 'Third Term',
-    week: 2,
-    moduleCode: 'TD-SS3-T3-W02',
+    term: 'TERM_1',
+    termLabel: 'First Term',
+    week: 7,
+    moduleCode: 'TD-SS3-T1-W07',
     title: 'Radial Line Surface Development (Truncated Right Cone & Pyramids)',
     shortDescription: 'Construct the sector development pattern of a truncated cone or pyramid using true slant height (R = L) as the radiating compass radius.',
     category: 'DEVELOPMENTS_AND_INTERPENETRATION',
@@ -606,14 +606,14 @@ export const ss3ExtensionTopics: DrawingTopic[] = [
     }
   },
 
-  // SS3 Term 3 Week 3: Triangulation Development for Transition Pieces (Square-to-Round)
+  // SS3 Term 1 Week 8: Triangulation Development for Transition Pieces (Square-to-Round)
   {
     id: 'ss3-surface-development-triangulation',
     tier: 'SS3',
-    term: 'TERM_3',
-    termLabel: 'Third Term',
-    week: 3,
-    moduleCode: 'TD-SS3-T3-W03',
+    term: 'TERM_1',
+    termLabel: 'First Term',
+    week: 8,
+    moduleCode: 'TD-SS3-T1-W08',
     title: 'Triangulation Surface Development: Transition Pieces (Square-to-Round Duct)',
     shortDescription: 'Construct true lengths and the flat surface pattern development of a sheet metal transition piece converting a square base into a circular duct opening.',
     category: 'DEVELOPMENTS_AND_INTERPENETRATION',
@@ -751,14 +751,14 @@ export const ss3ExtensionTopics: DrawingTopic[] = [
     }
   },
 
-  // SS3 Term 3 Week 4: Interpenetration of Dissimilar Cylinders (Intersecting at 90°)
+  // SS3 Term 1 Week 9: Interpenetration of Dissimilar Cylinders (Intersecting at 90°)
   {
     id: 'ss3-interpenetration-solids',
     tier: 'SS3',
-    term: 'TERM_3',
-    termLabel: 'Third Term',
-    week: 4,
-    moduleCode: 'TD-SS3-T3-W04',
+    term: 'TERM_1',
+    termLabel: 'First Term',
+    week: 9,
+    moduleCode: 'TD-SS3-T1-W09',
     title: 'Interpenetration of Dissimilar Cylinders (Perpendicular T-Junction at 90°)',
     shortDescription: 'Construct the line of intersection (interpenetration curve) between two unequal cylinders meeting at right angles using horizontal cutting plane slices.',
     category: 'DEVELOPMENTS_AND_INTERPENETRATION',

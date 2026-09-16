@@ -36,6 +36,7 @@ interface HeaderProps {
   onOpenPractice: () => void;
   onOpenIsoDiagram?: () => void;
   onOpenOrthographicViewport?: () => void;
+  onOpenSurfaceDevelopment?: () => void;
   onOpenTeacherPortal: () => void;
   onOpenParentPortal: () => void;
   onOpenProjectionMode: () => void;
@@ -61,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPractice,
   onOpenIsoDiagram,
   onOpenOrthographicViewport,
+  onOpenSurfaceDevelopment,
   onOpenTeacherPortal,
   onOpenParentPortal,
   onOpenProjectionMode,
@@ -295,6 +297,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Box className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden md:inline">Ortho Viewport</span>
+          </button>
+        )}
+
+        {/* Surface Development 3D Interactive Viewer Button (ISO 128 Unfolding) */}
+        {onOpenSurfaceDevelopment && (
+          <button
+            id="btn-open-surface-development"
+            onClick={onOpenSurfaceDevelopment}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 transition-colors shadow-sm"
+            title="Open Interactive 3D Surface Development & Interpenetration Viewer (ISO 128 Unfolding)"
+          >
+            <Layers className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Surface Dev 3D</span>
           </button>
         )}
 

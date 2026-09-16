@@ -17,7 +17,8 @@ import {
   Terminal,
   Tv,
   Radio,
-  Box
+  Box,
+  Layers
 } from 'lucide-react';
 
 interface ProcedurePanelProps {
@@ -33,6 +34,7 @@ interface ProcedurePanelProps {
   onOpenLiveClass?: () => void;
   onOpenIsoDiagram?: () => void;
   onOpenOrthographicViewport?: () => void;
+  onOpenSurfaceDevelopment?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -47,7 +49,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenCadWorkstation,
   onOpenLiveClass,
   onOpenIsoDiagram,
-  onOpenOrthographicViewport
+  onOpenOrthographicViewport,
+  onOpenSurfaceDevelopment
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -275,6 +278,29 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+
+        {/* SURFACE DEVELOPMENT & INTERPENETRATION VIEWER BUTTON */}
+        {onOpenSurfaceDevelopment && (
+          <button
+            id="open-surface-development-btn"
+            onClick={onOpenSurfaceDevelopment}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-950/80 via-emerald-950/70 to-slate-900 hover:from-amber-900/80 hover:to-emerald-900/70 border border-emerald-500/50 text-xs font-bold text-emerald-200 flex items-center justify-between transition-all shadow-md group relative overflow-hidden"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Layers className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="block text-white font-bold text-xs">Surface Development 3D</span>
+                  <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-1 rounded">ISO 128 Unfolding</span>
+                </div>
+                <span className="block text-[10px] text-emerald-400/90 font-mono">Cylinder • Cone Frustum • T-Junction Pipe</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
           </button>
         )}
 
