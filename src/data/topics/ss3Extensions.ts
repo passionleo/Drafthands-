@@ -893,5 +893,287 @@ export const ss3ExtensionTopics: DrawingTopic[] = [
         }
       ];
     }
+  },
+
+  // SS3 Term 2 Week 6: Mechanical Sectional Views & Assembly Drafting
+  {
+    id: 'ss3-sectional-assembly-mechanical',
+    tier: 'SS3',
+    term: 'TERM_2',
+    termLabel: 'Second Term',
+    week: 6,
+    moduleCode: 'TD-SS3-T2-W06',
+    title: 'Mechanical Sectional Views & Assembly Drafting (Full & Half Sections per ISO 128-40)',
+    shortDescription: 'Construct full, half, and unsectioned views of standard mechanical assemblies (Nut & Bolt joint, Flanged Coupling, Plummer Block) enforcing ISO 128-40 sectioning conventions.',
+    category: 'FASTENERS_AND_ASSEMBLY',
+    standards: {
+      nerdcRef: 'SS3 TD Unit 3: Mechanical Assembly & Sectional Elevations (Term 2)',
+      waecRef: 'WAEC TD Paper 2 Section B (Mechanical Option): Compulsory 50-Mark Assembly Question',
+      isoRef: 'ISO 128-40: Basic conventions for cutting planes and sections / BS 8888'
+    },
+    theory: {
+      overview: 'Sectional views reveal internal assembly details by hypothetically slicing through components with an imaginary cutting plane (A-A). A Full Section cuts completely through the axis of symmetry. A Half Section cuts only halfway, displaying one half in section and the other in outside elevation, divided by a thin chain centerline. Key ISO 128-40 sectioning rules must be strictly observed: section lines are drawn as Continuous Thin lines (0.25mm) at 45° spaced 2–3mm apart; adjacent parts in contact must have their hatching directions reversed (+45° vs -45°); solid shafts, bolts, studs, nuts, washers, pins, and keys are NEVER sectioned longitudinally along their axis.',
+      historyAndApplication: 'J.N. Green Chapter 15 & Pickup & Parker Plate 32. Universal mechanical engineering convention across automotive powertrains, marine propulsion, aerospace turbines, and manufacturing machinery.',
+      waecAndNERDCNotes: 'A major source of lost marks in WAEC: Candidates who cross-hatch solid shafts, bolts, or keys lose up to 10 marks instantly. Adjacent components must clearly alternate hatching direction. Centerlines must extend 10mm beyond part boundaries.',
+      keyPrinciples: [
+        {
+          title: 'Unsectioned Parts Rule (ISO 128-40)',
+          description: 'Solid cylindrical shafts, bolts, studs, nuts, washers, keys, pins, gear teeth, and thin webs/ribs cut along their longitudinal axis are drawn in full solid elevation without section hatching.',
+          keyRule: 'Shafts, bolts, nuts & keys = NEVER hatched longitudinally'
+        },
+        {
+          title: 'Reversed Hatching Rule',
+          description: 'Adjacent components in contact must reverse hatching angle (typically +45° for one part and -45°/135° for mating part). Bronze/brass uses 60° fine pitch.',
+          keyRule: 'Adjacent parts = Opposite 45° angles'
+        },
+        {
+          title: 'Half Section Symmetrical Boundary',
+          description: 'In a half section, the boundary separating the sectioned half from the exterior unsectioned half is always a Thin Chain centerline (0.25mm), never a solid continuous line.',
+          keyRule: 'Centerline divides half section from outside elevation'
+        }
+      ],
+      formulas: [
+        { latex: '\\text{Hatch Spacing} = 2\\text{ to }3\\text{ mm}', description: 'Continuous Thin lines (0.25mm) at 45°' },
+        { latex: 'C_{corners} = 2D, \\quad H_{head} = 0.7D, \\quad T_{nut} = 0.8D', description: 'ISO Metric Hex Bolt & Nut proportions' }
+      ],
+      standardConventions: [
+        { lineName: 'Continuous Thick (0.5mm)', weightMm: '0.5mm', pencilGrade: 'HB', application: 'Cut part profiles and visible external contours' },
+        { lineName: 'Continuous Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: '45° Section hatching and dimension lines' },
+        { lineName: 'Thin Chain (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Axes of symmetry, centerlines, and cutting plane center' }
+      ]
+    },
+    parameters: [
+      {
+        id: 'boltDiameter',
+        label: 'Nominal Bolt Diameter (D)',
+        symbol: 'D',
+        defaultValue: 24,
+        min: 16,
+        max: 36,
+        step: 4,
+        unit: 'mm',
+        description: 'Nominal diameter of metric assembly bolt'
+      },
+      {
+        id: 'plateThickness',
+        label: 'Joint Plate Thickness (T)',
+        symbol: 'T',
+        defaultValue: 20,
+        min: 15,
+        max: 30,
+        step: 5,
+        unit: 'mm',
+        description: 'Thickness of upper and lower joint plates'
+      }
+    ],
+    defaultViewBox: {
+      width: 800,
+      height: 600,
+      defaultGrid: 'MILLIMETER'
+    },
+    generateSteps: (params) => {
+      const D = params.boltDiameter || 24;
+      const T = params.plateThickness || 20;
+      const cx = 400;
+      const cy = 280;
+
+      const scale = 2.4;
+      const d = D * scale;
+      const t = T * scale;
+      const wPlates = 340;
+      const hHead = 0.7 * d;
+      const tNut = 0.8 * d;
+      const wCorners = 2 * d;
+
+      return [
+        {
+          stepIndex: 1,
+          title: 'Draw Axis Centerline and Upper/Lower Joint Plates (20mm) in Section',
+          instruction: `Construct vertical centerline through O. Draw Upper Plate (thickness ${T}mm) hatched at +45° and Lower Plate (thickness ${T}mm) hatched in reverse direction at -45°.`,
+          detailedNotes: 'Adjacent plates must have opposite hatching directions per ISO 128-40 to distinguish the interface line.',
+          technicalPrinciple: 'Continuous Thick (HB) plate boundaries with Continuous Thin (2H) reversed hatching.',
+          activeInstrument: { toolType: 'SET_SQUARE_45', x: cx - 120, y: cy, visible: true },
+          elements: [
+            { id: 'cl-axis', type: 'LINE', lineWeight: 'CENTER_LINE', x1: cx, y1: cy - hHead - 50, x2: cx, y2: cy + t * 2 + tNut + 60 },
+            // Upper plate left & right
+            { id: 'p1-rect-l', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - wPlates / 2, y: cy - t, width: wPlates / 2 - d / 2 - 2, height: t, isFinalResult: true },
+            { id: 'p1-rect-r', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx + d / 2 + 2, y: cy - t, width: wPlates / 2 - d / 2 - 2, height: t, isFinalResult: true },
+            // Lower plate left & right
+            { id: 'p2-rect-l', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - wPlates / 2, y: cy, width: wPlates / 2 - d / 2 - 2, height: t, isFinalResult: true },
+            { id: 'p2-rect-r', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx + d / 2 + 2, y: cy, width: wPlates / 2 - d / 2 - 2, height: t, isFinalResult: true },
+            { id: 'lbl-p1', type: 'TEXT_LABEL', lineWeight: 'THIN_CONTINUOUS', cx: cx - 110, cy: cy - t / 2, label: 'PLATE 1 (+45° HATCH)' },
+            { id: 'lbl-p2', type: 'TEXT_LABEL', lineWeight: 'THIN_CONTINUOUS', cx: cx - 110, cy: cy + t / 2, label: 'PLATE 2 (-45° HATCH)' }
+          ]
+        },
+        {
+          stepIndex: 2,
+          title: 'Insert Solid Hexagonal Bolt (M24) - Strictly UNSECTIONED per ISO 128',
+          instruction: 'Insert M24 bolt shank through the clearance hole. Draw the bolt head (across corners = 2D = 48mm) and shank in solid elevation. Do NOT hatch the bolt.',
+          detailedNotes: 'Solid shafts and bolts are left unsectioned in longitudinal elevation according to ISO 128-40 standards.',
+          technicalPrinciple: 'Bolt shank and head: Continuous Thick (0.5mm HB) exterior elevation.',
+          activeInstrument: { toolType: 'TEE_SQUARE', x: cx, y: cy - t - hHead, visible: true },
+          elements: [
+            // Bolt head
+            { id: 'bolt-head-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - wCorners / 2, y: cy - t - hHead, width: wCorners, height: hHead, isFinalResult: true },
+            // Solid plain shank
+            { id: 'bolt-shank', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - d / 2, y: cy - t, width: d, height: t * 2 + 60, isFinalResult: true },
+            { id: 'lbl-unsectioned', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx + d / 2 + 25, cy: cy - t / 2, label: 'SOLID BOLT: UNSECTIONED' }
+          ]
+        },
+        {
+          stepIndex: 3,
+          title: 'Assemble Plain Washer, Spring Washer, and Hex Nut (0.8D = 19mm)',
+          instruction: 'Draw washer and hex nut screwed onto the threaded shank below the lower plate. Mark thread root lines with thin continuous lines (0.85D).',
+          detailedNotes: 'Show 30° chamfer arcs on the nut faces with R = 1.5D compass radii.',
+          technicalPrinciple: 'Complete assembly: Continuous Thick outlines with ISO 128 compliance.',
+          activeInstrument: { toolType: 'PENCIL_HB', x: cx, y: cy + t + tNut, visible: true },
+          elements: [
+            // Washer
+            { id: 'washer-el', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - (wCorners * 1.1) / 2, y: cy + t, width: wCorners * 1.1, height: 0.15 * d, isFinalResult: true },
+            // Hex nut
+            { id: 'nut-el', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - wCorners / 2, y: cy + t + 0.15 * d, width: wCorners, height: tNut, isFinalResult: true },
+            { id: 'dim-total', type: 'DIMENSION', lineWeight: 'DIMENSION_LINE', x1: cx - wPlates / 2 - 20, y1: cy - t, x2: cx - wPlates / 2 - 20, y2: cy + t, dimensionText: `2T = ${2 * T}mm` },
+            { id: 'lbl-title-sec', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy - t - hHead - 30, label: 'M24 BOLT & NUT JOINT (FULL SECTIONAL ELEVATION)' }
+          ]
+        }
+      ];
+    }
+  },
+
+  // SS3 Term 3 Week 2: Architectural Working Drawings & Residential Floor Plans
+  {
+    id: 'ss3-architectural-working-drawings',
+    tier: 'SS3',
+    term: 'TERM_3',
+    termLabel: 'Third Term',
+    week: 2,
+    moduleCode: 'TD-SS3-T3-W02',
+    title: 'Architectural Working Drawings & Residential Floor Plans (ISO 4157 Layers & Wall Section)',
+    shortDescription: 'Construct a complete residential floor plan with multi-service layers (dimensions, walls, electrical symbols, plumbing fixtures) and detailed foundation-to-eaves wall section.',
+    category: 'BUILDING_AND_ARCHITECTURAL',
+    standards: {
+      nerdcRef: 'SS3 TD Unit 2: Building Construction Details & Working Drawings (Term 3)',
+      waecRef: 'WAEC TD Paper 2 Section B (Building Option): Compulsory 50-Mark Working Drawing Question',
+      isoRef: 'ISO 4157: Building drawings - Construction documentation / ISO 128-23'
+    },
+    theory: {
+      overview: 'Architectural working drawings provide contractor-ready documentation for building construction. The Ground Floor Plan (Scale 1:50) shows room dimensions, wall thicknesses (225mm external sandcrete, 150mm internal partitions), door swings (90° arcs), window schedules, and multi-service layers: electrical symbols (ceiling points, switches, 13A sockets, distribution board per ISO 60617) and plumbing fixtures (WC with cistern, wash hand basin, kitchen sink, inspection chamber). The Detailed Wall Section X-X (Scale 1:20) illustrates sub-structure and super-structure: 675x225mm concrete strip footing (3T x T), 225mm foundation wall, 200mm compacted hardcore, sand blinding, 1000g polythene DPM, 150mm concrete floor slab, 25mm screed, DPC minimum 150mm above Ground Level, precast weathered cill with drip groove, reinforced concrete lintel (225x150mm), ring beam (225x225mm), timber wall plate (100x75mm with ragbolt), and roof truss with 600mm eaves overhang.',
+      historyAndApplication: 'J.N. Green Chapter 14, pp. 210–235 & BS 1192 / ISO 4157. Standard building drawing submission format required by Town Planning Authorities across West Africa.',
+      waecAndNERDCNotes: 'Compulsory 25–50 mark question in WAEC Technical Drawing Paper 2 (Building Option). Candidates are awarded marks for: DPC positioned ≥150mm above GL (4 marks), Strip footing proportion 3T x T (5 marks), Material hatching symbols (5 marks), Ring beam and wall plate anchoring (4 marks), and Line weight hierarchy (4 marks).',
+      keyPrinciples: [
+        {
+          title: 'Footing 3T Proportional Rule',
+          description: 'The mass concrete strip foundation footing width must be 3 times the wall thickness (3T = 675mm for a 225mm wall) and footing depth equals wall thickness (T = 225mm).',
+          keyRule: 'Footing Width = 3T = 675mm; Footing Depth = T = 225mm'
+        },
+        {
+          title: 'DPC Elevation Standard',
+          description: 'The Damp Proof Course (DPC) must be installed at minimum 150mm above the Finished Ground Level (GL) to prevent rising damp into masonry.',
+          keyRule: 'DPC Height ≥ 150mm above Ground Line'
+        },
+        {
+          title: 'ISO 4157 Layer Management',
+          description: 'Architectural drawings maintain separate coordinated layers: structural walls, architectural openings, electrical installations, and sanitary plumbing.',
+          keyRule: 'Coordinated structural, electrical, and plumbing layers'
+        }
+      ],
+      formulas: [
+        { latex: 'W_{footing} = 3 \\cdot W_{wall} = 3 \\cdot 225 = 675\\text{ mm}', description: 'Standard strip footing width' },
+        { latex: 'D_{footing} = W_{wall} = 225\\text{ mm}', description: 'Standard strip footing depth' },
+        { latex: 'h_{DPC} \\ge 150\\text{ mm}', description: 'Minimum height of DPC above finished ground level' }
+      ],
+      standardConventions: [
+        { lineName: 'Continuous Thick (0.6mm)', weightMm: '0.6mm', pencilGrade: 'HB', application: 'Cut masonry walls, floor slab, footing, and lintel profiles' },
+        { lineName: 'Continuous Thin (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Material hatching, dimension lines, and grid axes' },
+        { lineName: 'Thin Dashed (0.25mm)', weightMm: '0.25mm', pencilGrade: '2H', application: 'Door swing arcs, electrical switch lines, and DPM membrane' }
+      ]
+    },
+    parameters: [
+      {
+        id: 'wallThickness',
+        label: 'External Wall Thickness (T)',
+        symbol: 'T',
+        defaultValue: 225,
+        min: 150,
+        max: 300,
+        step: 25,
+        unit: 'mm',
+        description: 'Nominal thickness of load-bearing masonry wall'
+      },
+      {
+        id: 'eavesOverhang',
+        label: 'Roof Eaves Overhang',
+        symbol: 'E',
+        defaultValue: 600,
+        min: 450,
+        max: 750,
+        step: 50,
+        unit: 'mm',
+        description: 'Horizontal projection of roof rafters beyond wall face'
+      }
+    ],
+    defaultViewBox: {
+      width: 800,
+      height: 600,
+      defaultGrid: 'MILLIMETER'
+    },
+    generateSteps: (params) => {
+      const T = params.wallThickness || 225;
+      const eaves = params.eavesOverhang || 600;
+      const cx = 360;
+      const cy = 280;
+
+      return [
+        {
+          stepIndex: 1,
+          title: 'Establish Grid Lines and Draw Mass Concrete Strip Footing (675 x 225mm)',
+          instruction: `Draw foundation centerline. Construct mass concrete strip footing of width 3T = ${3 * T}mm and depth T = ${T}mm.`,
+          detailedNotes: 'Footing rests on undisturbed natural earth. Render with concrete triangular aggregates and sand stipple.',
+          technicalPrinciple: 'Footing geometry: Continuous Thick (0.6mm HB) with concrete mix hatching.',
+          activeInstrument: { toolType: 'TEE_SQUARE', x: cx, y: cy + 180, visible: true },
+          elements: [
+            { id: 'cl-fnd', type: 'LINE', lineWeight: 'CENTER_LINE', x1: cx, y1: cy - 200, x2: cx, y2: cy + 260 },
+            { id: 'footing-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - (3 * T) / 4, y: cy + 160, width: (3 * T) / 2, height: T / 2, isFinalResult: true },
+            { id: 'dim-f-w', type: 'DIMENSION', lineWeight: 'DIMENSION_LINE', x1: cx - (3 * T) / 4, y1: cy + 240, x2: cx + (3 * T) / 4, y2: cy + 240, dimensionText: `3T = ${3 * T}mm` },
+            { id: 'lbl-footing', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy + 195, label: 'CONCRETE STRIP FOOTING (1:3:6)' }
+          ]
+        },
+        {
+          stepIndex: 2,
+          title: 'Erect Foundation Wall, Compacted Hardcore, DPM, Floor Slab & DPC',
+          instruction: `Erect 225mm sandcrete foundation wall, 200mm hardcore bed, sand blinding, 1000g DPM, 150mm concrete floor slab, and DPC at ≥150mm above GL.`,
+          detailedNotes: 'The DPC is a solid impervious asphaltic line preventing rising damp. Ground Level GL is marked with an inverted triangle.',
+          technicalPrinciple: 'Substructure & DPC detail: Continuous Thick outlines with hardcore and concrete hatching.',
+          activeInstrument: { toolType: 'SET_SQUARE_45', x: cx, y: cy + 60, visible: true },
+          elements: [
+            { id: 'fnd-wall', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - T / 4, y: cy + 40, width: T / 2, height: 120, isFinalResult: true },
+            { id: 'slab-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx + T / 4, y: cy + 40, width: 180, height: 35, isFinalResult: true },
+            { id: 'hardcore-rect', type: 'RECTANGLE', lineWeight: 'THIN_CONTINUOUS', x: cx + T / 4, y: cy + 85, width: 180, height: 75 },
+            // DPC solid bar
+            { id: 'dpc-bar', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - T / 4 - 2, y: cy + 38, width: T / 2 + 4, height: 5, isFinalResult: true },
+            { id: 'gl-line', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: cx - 180, y1: cy + 70, x2: cx - T / 4, y2: cy + 70 },
+            { id: 'lbl-gl', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx - 120, cy: cy + 65, label: 'GL ±0.000' },
+            { id: 'lbl-dpc', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx + T / 4 + 30, cy: cy + 30, label: 'DPC (≥150mm ABOVE GL)' }
+          ]
+        },
+        {
+          stepIndex: 3,
+          title: 'Add Superstructure Wall, Window Cill, Lintel, Ring Beam, Wall Plate & Roof Eaves',
+          instruction: `Draw 225mm superstructure wall with weathered cill, reinforced concrete lintel, ring beam at eaves, 100x75mm wall plate with ragbolt, and roof truss with ${eaves}mm eaves.`,
+          detailedNotes: 'Timber wall plate is anchored securely into the ring beam. Fascia board (250x25mm) finishes the eaves overhang.',
+          technicalPrinciple: 'Superstructure & roof connection: Continuous Thick and Medium line weights.',
+          activeInstrument: { toolType: 'PENCIL_HB', x: cx, y: cy - 140, visible: true },
+          elements: [
+            { id: 'super-wall', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - T / 4, y: cy - 140, width: T / 2, height: 178, isFinalResult: true },
+            { id: 'ring-beam-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - T / 4, y: cy - 185, width: T / 2, height: 45, isFinalResult: true },
+            { id: 'wall-plate-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x: cx - 12, y: cy - 200, width: 24, height: 15, isFinalResult: true },
+            { id: 'rafter-line', type: 'LINE', lineWeight: 'THICK_CONTINUOUS', x1: cx - 140, y1: cy - 160, x2: cx + 180, y2: cy - 250, isFinalResult: true },
+            { id: 'fascia-rect', type: 'RECTANGLE', lineWeight: 'THICK_CONTINUOUS', x1: cx - 142, y: cy - 170, width: 5, height: 35, isFinalResult: true },
+            { id: 'dim-eaves', type: 'DIMENSION', lineWeight: 'DIMENSION_LINE', x1: cx - 140, y1: cy - 130, x2: cx - T / 4, y2: cy - 130, dimensionText: `Eaves ${eaves}mm` },
+            { id: 'lbl-title-arch', type: 'TEXT_LABEL', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy - 220, label: 'SECTION THROUGH EXTERNAL WALL TO EAVES (SCALE 1:20)' }
+          ]
+        }
+      ];
+    }
   }
 ];

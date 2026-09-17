@@ -20,7 +20,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
-  Box
+  Box,
+  Split,
+  Building
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
@@ -37,6 +39,8 @@ interface HeaderProps {
   onOpenIsoDiagram?: () => void;
   onOpenOrthographicViewport?: () => void;
   onOpenSurfaceDevelopment?: () => void;
+  onOpenSectionalAssembly?: () => void;
+  onOpenArchitecturalPlan?: () => void;
   onOpenTeacherPortal: () => void;
   onOpenParentPortal: () => void;
   onOpenProjectionMode: () => void;
@@ -63,6 +67,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenIsoDiagram,
   onOpenOrthographicViewport,
   onOpenSurfaceDevelopment,
+  onOpenSectionalAssembly,
+  onOpenArchitecturalPlan,
   onOpenTeacherPortal,
   onOpenParentPortal,
   onOpenProjectionMode,
@@ -310,6 +316,32 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Layers className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Surface Dev 3D</span>
+          </button>
+        )}
+
+        {/* Sectional Assembly Viewer Button (ISO 128-40) */}
+        {onOpenSectionalAssembly && (
+          <button
+            id="btn-open-sectional-assembly"
+            onClick={onOpenSectionalAssembly}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/40 transition-colors shadow-sm"
+            title="Open Mechanical Sectional Assembly Viewer (ISO 128-40 Full, Half & Unsectioned Views)"
+          >
+            <Split className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">Sectional Assembly</span>
+          </button>
+        )}
+
+        {/* Architectural Working Drawings & Plan Viewer (ISO 4157) */}
+        {onOpenArchitecturalPlan && (
+          <button
+            id="btn-open-architectural-plan"
+            onClick={onOpenArchitecturalPlan}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 text-blue-300 border border-blue-500/40 transition-colors shadow-sm"
+            title="Open Architectural Working Drawings & Floor Plan Viewer (ISO 4157 Layers & Wall Section)"
+          >
+            <Building className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden lg:inline">Arch Plans</span>
           </button>
         )}
 

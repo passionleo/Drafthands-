@@ -18,7 +18,9 @@ import {
   Tv,
   Radio,
   Box,
-  Layers
+  Layers,
+  Split,
+  Building
 } from 'lucide-react';
 
 interface ProcedurePanelProps {
@@ -35,6 +37,8 @@ interface ProcedurePanelProps {
   onOpenIsoDiagram?: () => void;
   onOpenOrthographicViewport?: () => void;
   onOpenSurfaceDevelopment?: () => void;
+  onOpenSectionalAssembly?: () => void;
+  onOpenArchitecturalPlan?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -50,7 +54,9 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenLiveClass,
   onOpenIsoDiagram,
   onOpenOrthographicViewport,
-  onOpenSurfaceDevelopment
+  onOpenSurfaceDevelopment,
+  onOpenSectionalAssembly,
+  onOpenArchitecturalPlan
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -301,6 +307,60 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+
+        {/* SECTIONAL ASSEMBLY VIEWER BUTTON */}
+        {onOpenSectionalAssembly && (
+          <button
+            id="open-sectional-assembly-btn"
+            onClick={onOpenSectionalAssembly}
+            className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-between transition-all shadow-md group relative overflow-hidden ${
+              topic.category === 'FASTENERS_AND_ASSEMBLY' || topic.category === 'MACHINE_DRAWING_AND_ASSEMBLY' || topic.id.includes('sectional') || topic.id.includes('bolt')
+                ? 'bg-gradient-to-r from-amber-950/90 via-orange-950/70 to-slate-900 border-amber-500/60 text-amber-200 hover:from-amber-900/90 hover:to-orange-900/70'
+                : 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Split className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="block text-white font-bold text-xs">Sectional Assembly</span>
+                  <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1 rounded">ISO 128-40</span>
+                </div>
+                <span className="block text-[10px] text-amber-400/90 font-mono">Full • Half • Unsectioned Views</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
+
+        {/* ARCHITECTURAL PLAN VIEWER BUTTON */}
+        {onOpenArchitecturalPlan && (
+          <button
+            id="open-architectural-plan-btn"
+            onClick={onOpenArchitecturalPlan}
+            className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-between transition-all shadow-md group relative overflow-hidden ${
+              topic.category === 'BUILDING_AND_ARCHITECTURAL' || topic.id.includes('building') || topic.id.includes('arch')
+                ? 'bg-gradient-to-r from-blue-950/90 via-indigo-950/70 to-slate-900 border-blue-500/60 text-blue-200 hover:from-blue-900/90 hover:to-indigo-900/70'
+                : 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Building className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="block text-white font-bold text-xs">Architectural Plan & Section</span>
+                  <span className="text-[9px] font-mono bg-blue-500/20 text-blue-300 px-1 rounded">ISO 4157</span>
+                </div>
+                <span className="block text-[10px] text-blue-400/90 font-mono">Floor Plan Layers • Wall Section (3T x T)</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
           </button>
         )}
 

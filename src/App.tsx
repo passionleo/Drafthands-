@@ -12,6 +12,8 @@ import { PracticeModal } from './components/practice/PracticeModal';
 import { IsoDiagramViewer } from './components/common/IsoDiagramViewer';
 import { OrthographicViewport } from './components/tools/OrthographicViewport';
 import { SurfaceDevelopmentViewer, SolidShapeType } from './components/tools/SurfaceDevelopmentViewer';
+import { SectionalAssemblyViewer } from './components/tools/SectionalAssemblyViewer';
+import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanViewer';
 import { TeacherPortalModal } from './components/teacher/TeacherPortalModal';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
@@ -44,6 +46,8 @@ function AppContent() {
   const [isIsoDiagramOpen, setIsIsoDiagramOpen] = useState<boolean>(false);
   const [isOrthographicViewportOpen, setIsOrthographicViewportOpen] = useState<boolean>(false);
   const [isSurfaceDevelopmentViewerOpen, setIsSurfaceDevelopmentViewerOpen] = useState<boolean>(false);
+  const [isSectionalAssemblyViewerOpen, setIsSectionalAssemblyViewerOpen] = useState<boolean>(false);
+  const [isArchitecturalPlanViewerOpen, setIsArchitecturalPlanViewerOpen] = useState<boolean>(false);
   const [isTeacherPortalOpen, setIsTeacherPortalOpen] = useState<boolean>(false);
   const [isParentPortalOpen, setIsParentPortalOpen] = useState<boolean>(false);
   const [isProjectionModeOpen, setIsProjectionModeOpen] = useState<boolean>(false);
@@ -298,6 +302,8 @@ function AppContent() {
         onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
         onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
         onOpenSurfaceDevelopment={() => setIsSurfaceDevelopmentViewerOpen(true)}
+        onOpenSectionalAssembly={() => setIsSectionalAssemblyViewerOpen(true)}
+        onOpenArchitecturalPlan={() => setIsArchitecturalPlanViewerOpen(true)}
         onOpenTeacherPortal={() => setIsTeacherPortalOpen(true)}
         onOpenParentPortal={() => setIsParentPortalOpen(true)}
         onOpenProjectionMode={() => setIsProjectionModeOpen(true)}
@@ -370,6 +376,8 @@ function AppContent() {
               onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
               onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
               onOpenSurfaceDevelopment={() => setIsSurfaceDevelopmentViewerOpen(true)}
+              onOpenSectionalAssembly={() => setIsSectionalAssemblyViewerOpen(true)}
+              onOpenArchitecturalPlan={() => setIsArchitecturalPlanViewerOpen(true)}
             />
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
@@ -486,6 +494,32 @@ function AppContent() {
               isOpen={isSurfaceDevelopmentViewerOpen}
               initialShape={surfaceDevInitialShape}
               onClose={() => setIsSurfaceDevelopmentViewerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 8E. ISO 128-40 SECTIONAL ASSEMBLY VIEWER MODAL */}
+      {isSectionalAssemblyViewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-6xl h-[92vh] max-h-[880px] shadow-2xl rounded-2xl overflow-hidden flex flex-col border border-slate-700">
+            <SectionalAssemblyViewer
+              viewMode="MODAL"
+              isOpen={isSectionalAssemblyViewerOpen}
+              onClose={() => setIsSectionalAssemblyViewerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 8F. ISO 4157 ARCHITECTURAL PLAN & WALL SECTION VIEWER MODAL */}
+      {isArchitecturalPlanViewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-6xl h-[92vh] max-h-[880px] shadow-2xl rounded-2xl overflow-hidden flex flex-col border border-slate-700">
+            <ArchitecturalPlanViewer
+              viewMode="MODAL"
+              isOpen={isArchitecturalPlanViewerOpen}
+              onClose={() => setIsArchitecturalPlanViewerOpen(false)}
             />
           </div>
         </div>
