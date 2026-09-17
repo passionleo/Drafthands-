@@ -333,7 +333,11 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                   {/* Render Accumulated Step Elements (Shows exact construction progression) */}
                   {activeQuestion.steps.slice(0, currentStepIndex + 1).map((step, idx) => (
                     <g key={step.stepNumber} opacity={idx === currentStepIndex ? 1 : 0.85}>
-                      {step.svgElements}
+                      {step.svgElements ? (
+                        step.svgElements
+                      ) : step.svgData ? (
+                        <g dangerouslySetInnerHTML={{ __html: step.svgData }} />
+                      ) : null}
                     </g>
                   ))}
 
@@ -359,11 +363,11 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                       Step {currentStep.stepNumber} of {totalSteps}
                     </span>
                     <h4 className="text-sm font-bold text-white">
-                      {currentStep.title}
+                      {currentStep.title || currentStep.label}
                     </h4>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    {currentStep.instruction}
+                    {currentStep.instruction || currentStep.label}
                   </p>
                 </div>
 

@@ -21,7 +21,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { ExamBody, PaperType, PastPaperItem } from '../../types/pastQuestions';
-import { ALL_YEARS, PAST_PAPERS_DATABASE } from '../../data/pastQuestionsDatabase';
+import { ALL_YEARS, PAST_PAPERS_DATABASE } from '../../data/pastQuestionsData';
 import { Paper1QuizEngine } from './Paper1QuizEngine';
 import { Paper23DrawingEngine } from './Paper23DrawingEngine';
 import { useSubscription } from '../../context/SubscriptionContext';

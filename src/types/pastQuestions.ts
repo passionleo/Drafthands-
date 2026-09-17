@@ -24,12 +24,14 @@ export interface MCQuestion {
 export interface ConstructionStep {
   stepNumber: number;
   title: string;
+  label?: string; // alias for title ("Draw base line...")
   instruction: string;
-  pencilGrade: string; // e.g. "3H/2H (Continuous Thin)" or "HB (Continuous Thick)"
-  lineTypeISO: string; // e.g. "ISO 128 Type B (0.25mm)"
+  pencilGrade?: string; // e.g. "3H/2H (Continuous Thin)" or "HB (Continuous Thick)"
+  lineTypeISO?: string; // e.g. "ISO 128 Type B (0.25mm)"
   compassSetting?: string;
   markAllocation?: string; // e.g. "2 Marks for locus arcs"
-  svgElements: React.ReactNode;
+  svgData?: string; // Raw SVG element string
+  svgElements?: React.ReactNode;
 }
 
 export interface TheoryQuestion {
