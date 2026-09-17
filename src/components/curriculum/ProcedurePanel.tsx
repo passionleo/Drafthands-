@@ -20,7 +20,8 @@ import {
   Box,
   Layers,
   Split,
-  Building
+  Building,
+  Award
 } from 'lucide-react';
 
 interface ProcedurePanelProps {
@@ -39,6 +40,7 @@ interface ProcedurePanelProps {
   onOpenSurfaceDevelopment?: () => void;
   onOpenSectionalAssembly?: () => void;
   onOpenArchitecturalPlan?: () => void;
+  onOpenPastQuestions?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -56,7 +58,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenOrthographicViewport,
   onOpenSurfaceDevelopment,
   onOpenSectionalAssembly,
-  onOpenArchitecturalPlan
+  onOpenArchitecturalPlan,
+  onOpenPastQuestions
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -378,6 +381,29 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
           </div>
           <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
         </button>
+
+        {/* 10-YEAR PAST QUESTIONS & STEP-BY-STEP VECTOR HUB (WAEC, NECO, NABTEB) */}
+        {onOpenPastQuestions && (
+          <button
+            id="procedure-panel-past-questions-btn"
+            onClick={onOpenPastQuestions}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-950/80 via-teal-950/70 to-slate-900 hover:from-emerald-900/90 hover:to-teal-900/80 border border-emerald-500/50 text-xs font-bold text-emerald-300 flex items-center justify-between transition-all shadow-md shadow-emerald-950/30 group"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Award className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="block text-white font-bold text-xs">Past Questions & Solutions</span>
+                  <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-1 rounded">2016–26</span>
+                </div>
+                <span className="block text-[10px] text-emerald-400/90 font-mono">WAEC • NECO • NABTEB Papers 1, 2, 3</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
       </div>
     </div>
   );

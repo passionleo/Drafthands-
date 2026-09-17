@@ -55,6 +55,7 @@ interface HeaderProps {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   onReturnToLanding?: () => void;
+  onOpenPastQuestions?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -82,7 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentTopicTitle,
   isSidebarCollapsed = false,
   onToggleSidebar,
-  onReturnToLanding
+  onReturnToLanding,
+  onOpenPastQuestions
 }) => {
   const tiers: CurriculumTier[] = ['SS1', 'SS2', 'SS3', 'HIGHER_INSTITUTION'];
   const { subscription, isSubscribed, openPaywall } = useSubscription();
@@ -366,6 +368,20 @@ export const Header: React.FC<HeaderProps> = ({
           <Award className="w-3.5 h-3.5 text-amber-400" />
           <span className="hidden xl:inline">Practice</span>
         </button>
+
+        {/* Dedicated Past Questions & Solutions Hub (2016–2026 WAEC, NECO, NABTEB) */}
+        {onOpenPastQuestions && (
+          <button
+            id="btn-header-past-questions"
+            onClick={onOpenPastQuestions}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 transition-colors shadow-sm"
+            title="Open WAEC, NECO & NABTEB Past Questions & Step-by-Step Drawing Solutions Hub (2016-2026 Archive)"
+          >
+            <Award className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Past Papers</span>
+            <span className="text-[9px] font-mono bg-emerald-500/30 px-1 py-0.5 rounded text-emerald-200">2016–26</span>
+          </button>
+        )}
 
         {/* Export Drawing */}
         <button

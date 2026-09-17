@@ -19,11 +19,13 @@ import { PastQuestionsPortal } from '../archive/PastQuestionsPortal';
 interface ExamArchiveSectionProps {
   onLaunchTopic: (topicId: string) => void;
   onOpenAuth: (mode?: 'SIGN_IN' | 'REGISTER') => void;
+  onOpenPastQuestionsHub?: () => void;
 }
 
 export const ExamArchiveSection: React.FC<ExamArchiveSectionProps> = ({
   onLaunchTopic,
-  onOpenAuth
+  onOpenAuth,
+  onOpenPastQuestionsHub
 }) => {
   const { isSubscribed, openPaywall } = useSubscription();
   const userTier: 'free' | 'pro' = isSubscribed ? 'pro' : 'free';
@@ -91,6 +93,39 @@ export const ExamArchiveSection: React.FC<ExamArchiveSectionProps> = ({
             Never lose marks to faint construction arcs, wrong line weights, or forgotten centerlines.
           </p>
         </div>
+
+        {/* Highlighted Launch Banner for the Interactive Hub */}
+        {onOpenPastQuestionsHub && (
+          <div className="mb-10 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-teal-950/70 to-slate-900 border border-emerald-500/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-2xl shadow-emerald-950/30">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <Award className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Interactive Past Questions & Vector Solutions Hub
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold">
+                    2016–2026 Archive
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  Interactive Paper 1 MCQ Quiz Engine with real-time score tally & timer, plus Paper 2 & Paper 3 Step-by-Step SVG Construction Sliders from blank drawing board to finished thick outlines.
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="btn-landing-open-past-questions"
+              onClick={onOpenPastQuestionsHub}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-bold text-xs sm:text-sm shrink-0 flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 group"
+            >
+              <span>Launch Interactive Hub</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
 
         {/* 3 Exam Tier Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">

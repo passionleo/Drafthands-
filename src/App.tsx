@@ -29,10 +29,29 @@ import { JoinClassModal } from './components/live/JoinClassModal';
 import { ParticipantRole } from './types/liveClass';
 import { LandingPage } from './components/landing/LandingPage';
 import { UserRoleType } from './components/landing/AuthModal';
+import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 
 function AppContent() {
-  // Master View: Landing Page (Public / Pre-Auth) vs Studio Workspace
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO'>('LANDING');
+  // Master View: Landing Page (Public / Pre-Auth) vs Studio Workspace vs Past Questions Hub
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS'>('LANDING');
+
+  // URL Hash Listener for dedicated routing (#past-questions, #studio, #landing)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
+        setCurrentView('PAST_QUESTIONS');
+      } else if (hash === '#studio') {
+        setCurrentView('STUDIO');
+      } else if (hash === '#landing') {
+        setCurrentView('LANDING');
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Navigation & Tier state (Default to official SS1 start: Week 1 Intro to Technical Drawing)
   const [activeTier, setActiveTier] = useState<CurriculumTier>('SS1');
@@ -255,7 +274,7 @@ function AppContent() {
     setIsPlaying(false);
   }, [activeTopic]);
 
-  // Transition from Public Landing Page into Active Studio Workspace
+  // Transition from Public Landing Page into Active Studio Workspace or Past Questions
   const handleEnterStudioFromLanding = useCallback((options?: {
     tier?: CurriculumTier;
     topicId?: string;
@@ -263,7 +282,13 @@ function AppContent() {
     openTeacher?: boolean;
     openParent?: boolean;
     openLive?: boolean;
+    openPastQuestions?: boolean;
   }) => {
+    if (options?.openPastQuestions) {
+      window.location.hash = '#past-questions';
+      setCurrentView('PAST_QUESTIONS');
+      return;
+    }
     if (options?.tier) {
       handleSelectTier(options.tier);
     }
@@ -279,8 +304,32 @@ function AppContent() {
     if (options?.openLive) {
       setIsJoinClassOpen(true);
     }
+    window.location.hash = '#studio';
     setCurrentView('STUDIO');
   }, [handleSelectTier, handleSelectTopic]);
+
+  // Dedicated Past Questions & Step-by-Step Solutions Hub Route View
+  if (currentView === 'PAST_QUESTIONS') {
+    return (
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950 font-sans text-slate-100">
+        <PastQuestionsHub
+          onBackToStudio={() => {
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+          onReturnToLanding={() => {
+            window.location.hash = '';
+            setCurrentView('LANDING');
+          }}
+        />
+        <PaywallModal
+          isOpen={isPaywallOpen}
+          onClose={closePaywall}
+          targetTopic={paywallTargetTopic}
+        />
+      </div>
+    );
+  }
 
   // If on public landing page view, render high-impact landing page
   if (currentView === 'LANDING') {
@@ -321,6 +370,10 @@ function AppContent() {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
         onReturnToLanding={() => setCurrentView('LANDING')}
+        onOpenPastQuestions={() => {
+          window.location.hash = '#past-questions';
+          setCurrentView('PAST_QUESTIONS');
+        }}
       />
 
       {/* 2. BODY CONTENT: SIDEBAR + WORKSPACE */}
@@ -378,6 +431,10 @@ function AppContent() {
               onOpenSurfaceDevelopment={() => setIsSurfaceDevelopmentViewerOpen(true)}
               onOpenSectionalAssembly={() => setIsSectionalAssemblyViewerOpen(true)}
               onOpenArchitecturalPlan={() => setIsArchitecturalPlanViewerOpen(true)}
+              onOpenPastQuestions={() => {
+                window.location.hash = '#past-questions';
+                setCurrentView('PAST_QUESTIONS');
+              }}
             />
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}

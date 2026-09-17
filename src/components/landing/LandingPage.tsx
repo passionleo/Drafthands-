@@ -12,7 +12,15 @@ import { AuthModal, UserRoleType } from './AuthModal';
 import { CurriculumTier } from '../../types/curriculum';
 
 interface LandingPageProps {
-  onEnterStudio: (options?: { tier?: CurriculumTier; topicId?: string; role?: UserRoleType; openTeacher?: boolean; openParent?: boolean; openLive?: boolean }) => void;
+  onEnterStudio: (options?: { 
+    tier?: CurriculumTier; 
+    topicId?: string; 
+    role?: UserRoleType; 
+    openTeacher?: boolean; 
+    openParent?: boolean; 
+    openLive?: boolean;
+    openPastQuestions?: boolean;
+  }) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
@@ -91,6 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
       <ExamArchiveSection
         onLaunchTopic={handleLaunchTopic}
         onOpenAuth={handleOpenAuth}
+        onOpenPastQuestionsHub={() => onEnterStudio({ openPastQuestions: true })}
       />
 
       {/* 6. Real-Time Virtual Classroom Spotlight */}
