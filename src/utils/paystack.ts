@@ -3,10 +3,13 @@
  * 
  * Production-ready Paystack Pop Inline Checkout Trigger
  * Configured with `import.meta.env.VITE_PAYSTACK_PUBLIC_KEY`
+ * Live Public Key: pk_live_471bce6179279093b5f31fcc7e0a099210aa72c1
  * Serves all user roles: Students, Teachers, Parents, and Schools/Institutions.
  */
 
 import { SubscriptionPlanType, SUBSCRIPTION_PLANS } from '../types/subscription';
+
+export const PAYSTACK_LIVE_PUBLIC_KEY = 'pk_live_471bce6179279093b5f31fcc7e0a099210aa72c1';
 
 export interface PaystackSuccessResponse {
   reference: string;
@@ -68,20 +71,42 @@ declare global {
 const PAYSTACK_INLINE_CDN = 'https://js.paystack.co/v1/inline.js';
 
 /**
+ * Safe notification helper that handles iframe sandbox restrictions without crashing.
+ */
+const safeNotify = (message: string) => {
+  console.warn('[Paystack]', message);
+  if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+    try {
+      window.alert(message);
+    } catch {
+      // Ignored if window.alert is disallowed in sandboxed iframes
+    }
+  }
+};
+
+/**
  * Retrieves the configured Paystack public key from environment variables.
  * Explicitly references `import.meta.env.VITE_PAYSTACK_PUBLIC_KEY`.
+ * Wrapped safely in quotation marks as a string.
  */
 export const getPaystackPublicKey = (): string => {
   try {
-    const envKey = (import.meta as any)?.env?.VITE_PAYSTACK_PUBLIC_KEY;
-    if (envKey && typeof envKey === 'string' && envKey.trim().length > 0) {
-      return envKey.trim();
+    if (
+      typeof import.meta !== 'undefined' &&
+      import.meta?.env?.VITE_PAYSTACK_PUBLIC_KEY &&
+      typeof import.meta.env.VITE_PAYSTACK_PUBLIC_KEY === 'string'
+    ) {
+      const envKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY.trim();
+      if (envKey.length > 0) {
+        return envKey;
+      }
     }
   } catch (err) {
-    console.warn('Could not read VITE_PAYSTACK_PUBLIC_KEY:', err);
+    console.warn('Could not read VITE_PAYSTACK_PUBLIC_KEY from import.meta.env:', err);
   }
-  // Configured live key (or via VITE_PAYSTACK_PUBLIC_KEY env variable)
-  return 'pk_live_471bce6179279093b5f31fcc7e0a099210aa72c1';
+
+  // Active verified live key correctly wrapped in quotation marks as a string literal
+  return PAYSTACK_LIVE_PUBLIC_KEY;
 };
 
 /**
@@ -115,7 +140,13 @@ export const ensurePaystackScriptLoaded = (): Promise<boolean> => {
         console.warn('Official Paystack checkout script could not be loaded from CDN.');
         resolve(false);
       };
-      document.head.appendChild(script);
+
+      const targetParent = document.head || document.body || document.documentElement;
+      if (targetParent) {
+        targetParent.appendChild(script);
+      } else {
+        resolve(false);
+      }
     } catch (e) {
       console.warn('Safe catch during Paystack script initialization:', e);
       resolve(false);
@@ -149,14 +180,14 @@ export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<
   if (!email || !email.includes('@')) {
     const err = new Error('A valid email address is required for Paystack receipt issuance.');
     onError?.(err);
-    alert(err.message);
+    safeNotify(err.message);
     return;
   }
 
   if (!amount || amount <= 0) {
     const err = new Error('Invalid payment amount specified.');
     onError?.(err);
-    alert(err.message);
+    safeNotify(err.message);
     return;
   }
 
@@ -166,7 +197,7 @@ export const payWithPaystack = async (options: PaystackPaymentOptions): Promise<
   if (!isLoaded || !paystackInstance || typeof paystackInstance.setup !== 'function') {
     const err = new Error('Paystack inline checkout script could not be initialized. Please check your internet connection.');
     onError?.(err);
-    alert(err.message);
+    safeNotify(err.message);
     return;
   }
 
@@ -255,9 +286,9 @@ export const payForStudentSubscription = async (params: {
   const plan = SUBSCRIPTION_PLANS[params.planType];
   return payWithPaystack({
     email: params.email,
-    amount: plan.priceNGN,
+    amount: plan?.priceNGN ?? 2500,
     planType: params.planType,
-    planName: plan.name,
+    planName: plan?.name ?? 'Student Termly Pass',
     userRole: 'STUDENT',
     customerName: params.studentName,
     schoolName: params.schoolName,
@@ -285,9 +316,9 @@ export const payForParentWardSponsorship = async (params: {
   const plan = SUBSCRIPTION_PLANS[params.planType];
   return payWithPaystack({
     email: params.parentEmail,
-    amount: plan.priceNGN,
+    amount: plan?.priceNGN ?? 2500,
     planType: params.planType,
-    planName: `Ward Sponsorship: ${plan.name} (${params.wardName})`,
+    planName: `Ward Sponsorship: ${plan?.name ?? 'Student Pass'} (${params.wardName})`,
     userRole: 'PARENT',
     customerName: params.parentName || 'Parent / Guardian',
     phone: params.phone,
@@ -317,9 +348,9 @@ export const payForTeacherPro = async (params: {
   const plan = SUBSCRIPTION_PLANS.TEACHER_PRO;
   return payWithPaystack({
     email: params.teacherEmail,
-    amount: plan.priceNGN,
+    amount: plan?.priceNGN ?? 5000,
     planType: 'TEACHER_PRO',
-    planName: plan.name,
+    planName: plan?.name ?? 'Teacher Pro License',
     userRole: 'TEACHER',
     customerName: params.teacherName,
     schoolName: params.schoolName,
@@ -346,9 +377,9 @@ export const payForInstitutionPass = async (params: {
   const plan = SUBSCRIPTION_PLANS.INSTITUTION_PASS;
   return payWithPaystack({
     email: params.adminEmail,
-    amount: plan.priceNGN,
+    amount: plan?.priceNGN ?? 35000,
     planType: 'INSTITUTION_PASS',
-    planName: plan.name,
+    planName: plan?.name ?? 'Institution Annual Pass',
     userRole: 'SCHOOL',
     customerName: params.adminName || 'School Administrator',
     schoolName: params.schoolName,
@@ -364,8 +395,12 @@ export const payForInstitutionPass = async (params: {
 };
 
 /**
- * Formats pricing into standard Nigerian Naira display string
+ * Formats pricing into standard Nigerian Naira display string.
+ * Guarded against undefined or null to prevent blank white screen render crashes.
  */
-export const formatNaira = (amountInNaira: number): string => {
+export const formatNaira = (amountInNaira?: number | null): string => {
+  if (typeof amountInNaira !== 'number' || isNaN(amountInNaira)) {
+    return '₦0';
+  }
   return `₦${amountInNaira.toLocaleString('en-NG')}`;
 };
