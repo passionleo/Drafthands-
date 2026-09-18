@@ -90,22 +90,44 @@ const safeNotify = (message: string) => {
  * Wrapped safely in quotation marks as a string.
  */
 export const getPaystackPublicKey = (): string => {
+  // 1. Check process.env (for Webpack, Next.js, CRA, or Node server environments)
   try {
-    if (
-      typeof import.meta !== 'undefined' &&
-      import.meta?.env?.VITE_PAYSTACK_PUBLIC_KEY &&
-      typeof import.meta.env.VITE_PAYSTACK_PUBLIC_KEY === 'string'
-    ) {
-      const envKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY.trim();
-      if (envKey.length > 0) {
-        return envKey;
+    if (typeof process !== 'undefined' && process?.env?.VITE_PAYSTACK_PUBLIC_KEY) {
+      const key = String(process.env.VITE_PAYSTACK_PUBLIC_KEY).trim();
+      if (key.startsWith('pk_')) {
+        return key;
       }
     }
-  } catch (err) {
-    console.warn('Could not read VITE_PAYSTACK_PUBLIC_KEY from import.meta.env:', err);
+  } catch {
+    // Ignore errors in environments where process is undefined
   }
 
-  // Active verified live key correctly wrapped in quotation marks as a string literal
+  // 2. Check window runtime config (if injected in index.html via window.__ENV__)
+  try {
+    if (typeof window !== 'undefined') {
+      const winKey = (window as any)?.__ENV__?.VITE_PAYSTACK_PUBLIC_KEY || (window as any)?.VITE_PAYSTACK_PUBLIC_KEY;
+      if (typeof winKey === 'string' && winKey.trim().startsWith('pk_')) {
+        return winKey.trim();
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  // 3. Check Vite static replacement (import.meta.env)
+  try {
+    const metaKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (typeof metaKey === 'string') {
+      const trimmed = metaKey.trim();
+      if (trimmed.startsWith('pk_')) {
+        return trimmed;
+      }
+    }
+  } catch {
+    // Ignore errors if import.meta is unavailable
+  }
+
+  // 4. Default to verified official production live key
   return PAYSTACK_LIVE_PUBLIC_KEY;
 };
 

@@ -123,7 +123,7 @@ export const IsoDiagramViewer: React.FC<IsoDiagramViewerProps> = ({
   }, [viewMode, onClose]);
 
   // Coordinate tracking from mouse
-  const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleSvgMouseMove = (e: React.MouseEvent<HTMLElement | SVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const viewBox = activeDiagram.viewBox || { width: 800, height: 550 };

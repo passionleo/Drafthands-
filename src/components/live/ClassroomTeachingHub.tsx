@@ -446,7 +446,10 @@ export const ClassroomTeachingHub: React.FC<ClassroomTeachingHubProps> = ({
                   key={idx}
                   className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between group"
                 >
-                  <div className="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer" onClick={() => setSelectedPlate(plate)}>
+                  <div 
+                    className="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer" 
+                    onClick={() => setSelectedPlate({ title: plate.title, description: plate.desc, img: plate.img, standards: plate.standards })}
+                  >
                     <img
                       src={plate.img}
                       alt={plate.title}
@@ -464,7 +467,7 @@ export const ClassroomTeachingHub: React.FC<ClassroomTeachingHubProps> = ({
                     <div className="mt-2.5 flex items-center justify-between">
                       <span className="text-[9px] text-slate-500 font-mono">{plate.standards}</span>
                       <button
-                        onClick={() => setSelectedPlate(plate)}
+                        onClick={() => setSelectedPlate({ title: plate.title, description: plate.desc, img: plate.img, standards: plate.standards })}
                         className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1"
                       >
                         <Eye className="w-3 h-3 text-cyan-400" />

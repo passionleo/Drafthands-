@@ -51,7 +51,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...DEFAULT_STATE,
+            ...parsed
+          };
+        }
       }
     } catch (e) {
       console.warn('Failed to load subscription from localStorage', e);
@@ -71,8 +77,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [subscription]);
 
-  const isSubscribed = subscription.isSubscribed && subscription.plan !== 'FREE';
-  const isTeacherOrAdmin = isSubscribed && (subscription.plan === 'TEACHER_PRO' || subscription.plan === 'INSTITUTION_PASS');
+  const isSubscribed = Boolean(subscription?.isSubscribed && subscription?.plan !== 'FREE');
+  const isTeacherOrAdmin = Boolean(isSubscribed && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'));
 
   const checkTopicAccess = (topic: DrawingTopic, topicsInTier: DrawingTopic[]) => {
     // If user has an active premium subscription, everything is unlocked
@@ -80,8 +86,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return { isAllowed: true, isFreeTier: false, tierIndex: 0 };
     }
 
+    if (!topicsInTier || !Array.isArray(topicsInTier) || !topic) {
+      return { isAllowed: true, isFreeTier: true, tierIndex: 0 };
+    }
+
     // Find the index of this topic within its class level
-    const tierIndex = topicsInTier.findIndex(t => t.id === topic.id);
+    const tierIndex = topicsInTier.findIndex(t => t?.id === topic?.id);
     const isFreeTier = tierIndex >= 0 && tierIndex < FREE_TOPICS_PER_TIER;
 
     return {
@@ -133,7 +143,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return {
         success: true,
         message: 'School Institutional Access Code verified! Full session unlocked.',
-        plan: 'STUDENT_SESSION'
+        plan: 'STUDENT_SESSION' as SubscriptionPlanType
       };
     }
 

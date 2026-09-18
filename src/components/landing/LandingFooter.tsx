@@ -141,7 +141,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('TEACHER')} className="hover:text-cyan-300 transition-colors">
+                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   Teacher Lesson Generator
                 </button>
               </li>
@@ -155,22 +155,22 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
             </div>
             <ul className="space-y-1.5 text-xs">
               <li>
-                <button onClick={() => onOpenAuth('STUDENT')} className="hover:text-cyan-300 transition-colors">
+                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   Student Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('TEACHER')} className="hover:text-cyan-300 transition-colors">
+                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   Technical Teacher Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('PARENT')} className="hover:text-cyan-300 transition-colors">
+                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   Parent Monitoring Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('ADMIN')} className="hover:text-cyan-300 transition-colors">
+                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   School Admin Licensing
                 </button>
               </li>

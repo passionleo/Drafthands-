@@ -13,7 +13,7 @@ import {
   Tv
 } from 'lucide-react';
 
-export type GridMode = 'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'NONE';
+export type GridMode = 'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'NONE' | 'ENGINEERING_5MM';
 
 interface ToolDockProps {
   gridMode: GridMode;
