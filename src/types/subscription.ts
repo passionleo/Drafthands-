@@ -19,12 +19,24 @@ export interface SubscriptionPlan {
   paystackPlanCode?: string;
 }
 
+export type UserRoleType = 'STUDENT' | 'TEACHER' | 'PARENT' | 'ADMIN';
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  institution?: string;
+  role: UserRoleType;
+  isEmailVerified: boolean;
+  registeredAt?: string;
+}
+
 export interface UserSubscriptionState {
   plan: SubscriptionPlanType;
   isSubscribed: boolean;
   activeUntil: string | null; // ISO Date string
   licenseKey?: string;
-  userRole: 'STUDENT' | 'TEACHER' | 'ADMIN';
+  userRole: UserRoleType;
+  userProfile?: UserProfile;
   unlockedTopicIds: string[];
 }
 

@@ -30,6 +30,8 @@ import { ParticipantRole } from './types/liveClass';
 import { LandingPage } from './components/landing/LandingPage';
 import { UserRoleType } from './components/landing/AuthModal';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
+import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
+import { Mail, CheckCircle2 } from 'lucide-react';
 
 function AppContent() {
   // Master View: Landing Page (Public / Pre-Auth) vs Studio Workspace vs Past Questions Hub
@@ -73,6 +75,7 @@ function AppContent() {
   const [isWhiteboardStudioOpen, setIsWhiteboardStudioOpen] = useState<boolean>(false);
   const [isTeacherAssignmentsOpen, setIsTeacherAssignmentsOpen] = useState<boolean>(false);
   const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
+  const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
   const [activeAssignmentForStudio, setActiveAssignmentForStudio] = useState<TeacherAssignment | undefined>(undefined);
   const [studioInitialMode, setStudioInitialMode] = useState<WorkspaceMode>('TRADITIONAL_BOARD');
 
@@ -97,7 +100,23 @@ function AppContent() {
     initialVideoOff: false
   });
 
-  const { isPaywallOpen, closePaywall, paywallTargetTopic, checkTopicAccess, openPaywall } = useSubscription();
+  const {
+    isPaywallOpen,
+    closePaywall,
+    paywallTargetTopic,
+    checkTopicAccess,
+    openPaywall,
+    userRole,
+    userProfile,
+    isSubscribed,
+    isEmailVerified,
+    setUserRole,
+    verifyEmail
+  } = useSubscription();
+
+  // Code entry state for verification modal if unverified student is active
+  const [verificationCodeInput, setVerificationCodeInput] = useState<string>('');
+  const [verificationError, setVerificationError] = useState<string>('');
 
   // Active topic object
   const activeTopic = useMemo(() => {
@@ -274,6 +293,85 @@ function AppContent() {
     setIsPlaying(false);
   }, [activeTopic]);
 
+  // RBAC & Subscription guarded open handlers
+  const handleOpenTheory = useCallback(() => {
+    setIsTheoryOpen(true);
+  }, []);
+
+  const handleOpenPractice = useCallback(() => {
+    setIsPracticeOpen(true);
+  }, []);
+
+  const handleOpenIsoDiagram = useCallback(() => {
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsIsoDiagramOpen(true);
+  }, [isSubscribed, openPaywall]);
+
+  const handleOpenOrthographicViewport = useCallback(() => {
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsOrthographicViewportOpen(true);
+  }, [isSubscribed, openPaywall]);
+
+  const handleOpenSurfaceDevelopment = useCallback(() => {
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsSurfaceDevelopmentViewerOpen(true);
+  }, [isSubscribed, openPaywall]);
+
+  const handleOpenSectionalAssembly = useCallback(() => {
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsSectionalAssemblyViewerOpen(true);
+  }, [isSubscribed, openPaywall]);
+
+  const handleOpenArchitecturalPlan = useCallback(() => {
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsArchitecturalPlanViewerOpen(true);
+  }, [isSubscribed, openPaywall]);
+
+  const handleOpenProjectionMode = useCallback(() => {
+    // Hide and restrict educator tools when in Student role
+    if (userRole === 'STUDENT') return;
+    if (!isSubscribed) {
+      openPaywall();
+      return;
+    }
+    setIsProjectionModeOpen(true);
+  }, [userRole, isSubscribed, openPaywall]);
+
+  const handleOpenTeacherPortal = useCallback(() => {
+    if (userRole === 'STUDENT') return;
+    setIsTeacherPortalOpen(true);
+  }, [userRole]);
+
+  const handleOpenTeacherAssignments = useCallback(() => {
+    if (userRole === 'STUDENT') return;
+    setIsTeacherAssignmentsOpen(true);
+  }, [userRole]);
+
+  const handleOpenParentPortal = useCallback(() => {
+    if (userRole === 'STUDENT') return;
+    setIsParentPortalOpen(true);
+  }, [userRole]);
+
+  const handleOpenAdminConsole = useCallback(() => {
+    if (userRole !== 'ADMIN') return;
+    setIsAdminConsoleOpen(true);
+  }, [userRole]);
+
   // Transition from Public Landing Page into Active Studio Workspace or Past Questions
   const handleEnterStudioFromLanding = useCallback((options?: {
     tier?: CurriculumTier;
@@ -284,6 +382,11 @@ function AppContent() {
     openLive?: boolean;
     openPastQuestions?: boolean;
   }) => {
+    if (options?.role) {
+      setUserRole(options.role);
+    }
+    const activeRole = options?.role || userRole;
+
     if (options?.openPastQuestions) {
       window.location.hash = '#past-questions';
       setCurrentView('PAST_QUESTIONS');
@@ -295,10 +398,11 @@ function AppContent() {
     if (options?.topicId) {
       handleSelectTopic(options.topicId);
     }
-    if (options?.openTeacher) {
+    // Only open educator tools if role is educator/admin
+    if (options?.openTeacher && activeRole !== 'STUDENT') {
       setIsTeacherPortalOpen(true);
     }
-    if (options?.openParent) {
+    if (options?.openParent && activeRole !== 'STUDENT') {
       setIsParentPortalOpen(true);
     }
     if (options?.openLive) {
@@ -306,7 +410,7 @@ function AppContent() {
     }
     window.location.hash = '#studio';
     setCurrentView('STUDIO');
-  }, [handleSelectTier, handleSelectTopic]);
+  }, [handleSelectTier, handleSelectTopic, setUserRole, userRole]);
 
   // Dedicated Past Questions & Step-by-Step Solutions Hub Route View
   if (currentView === 'PAST_QUESTIONS') {
@@ -346,18 +450,19 @@ function AppContent() {
         onSelectTier={handleSelectTier}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onOpenTheory={() => setIsTheoryOpen(true)}
-        onOpenPractice={() => setIsPracticeOpen(true)}
-        onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
-        onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
-        onOpenSurfaceDevelopment={() => setIsSurfaceDevelopmentViewerOpen(true)}
-        onOpenSectionalAssembly={() => setIsSectionalAssemblyViewerOpen(true)}
-        onOpenArchitecturalPlan={() => setIsArchitecturalPlanViewerOpen(true)}
-        onOpenTeacherPortal={() => setIsTeacherPortalOpen(true)}
-        onOpenParentPortal={() => setIsParentPortalOpen(true)}
-        onOpenProjectionMode={() => setIsProjectionModeOpen(true)}
-        onOpenTeacherAssignments={() => setIsTeacherAssignmentsOpen(true)}
+        onOpenTheory={handleOpenTheory}
+        onOpenPractice={handleOpenPractice}
+        onOpenIsoDiagram={handleOpenIsoDiagram}
+        onOpenOrthographicViewport={handleOpenOrthographicViewport}
+        onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
+        onOpenSectionalAssembly={handleOpenSectionalAssembly}
+        onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
+        onOpenTeacherPortal={handleOpenTeacherPortal}
+        onOpenParentPortal={handleOpenParentPortal}
+        onOpenProjectionMode={handleOpenProjectionMode}
+        onOpenTeacherAssignments={handleOpenTeacherAssignments}
         onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
+        onOpenAdminConsole={handleOpenAdminConsole}
         onOpenLiveClass={() => setIsJoinClassOpen(true)}
         onToggleWhiteboardStudio={() => {
           setActiveAssignmentForStudio(undefined);
@@ -414,7 +519,7 @@ function AppContent() {
               totalSteps={totalSteps}
               parameters={parameters}
               onParamChange={handleParamChange}
-              onOpenTheory={() => setIsTheoryOpen(true)}
+              onOpenTheory={handleOpenTheory}
               onOpenTraditionalBoard={() => {
                 setActiveAssignmentForStudio(undefined);
                 setStudioInitialMode('TRADITIONAL_BOARD');
@@ -426,11 +531,11 @@ function AppContent() {
                 setIsWhiteboardStudioOpen(true);
               }}
               onOpenLiveClass={() => setIsJoinClassOpen(true)}
-              onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
-              onOpenOrthographicViewport={() => setIsOrthographicViewportOpen(true)}
-              onOpenSurfaceDevelopment={() => setIsSurfaceDevelopmentViewerOpen(true)}
-              onOpenSectionalAssembly={() => setIsSectionalAssemblyViewerOpen(true)}
-              onOpenArchitecturalPlan={() => setIsArchitecturalPlanViewerOpen(true)}
+              onOpenIsoDiagram={handleOpenIsoDiagram}
+              onOpenOrthographicViewport={handleOpenOrthographicViewport}
+              onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
+              onOpenSectionalAssembly={handleOpenSectionalAssembly}
+              onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
               onOpenPastQuestions={() => {
                 window.location.hash = '#past-questions';
                 setCurrentView('PAST_QUESTIONS');
@@ -450,7 +555,7 @@ function AppContent() {
                   gridMode={gridMode}
                   onSelectGridMode={setGridMode}
                   svgRef={svgRef}
-                  onOpenProjection={() => setIsProjectionModeOpen(true)}
+                  onOpenProjection={handleOpenProjectionMode}
                 />
               </div>
 
@@ -626,6 +731,96 @@ function AppContent() {
           else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
         }}
       />
+      {/* 13. INSTITUTIONAL ADMINISTRATOR CONSOLE (ADMIN ONLY) */}
+      <AdminConsoleModal
+        isOpen={isAdminConsoleOpen}
+        onClose={() => setIsAdminConsoleOpen(false)}
+      />
+
+      {/* 14. MANDATORY STUDENT EMAIL VERIFICATION ENFORCEMENT */}
+      {userRole === 'STUDENT' && !isEmailVerified && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-cyan-500/50 rounded-2xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/10">
+              <Mail className="w-7 h-7" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30">
+                Security & Academic Compliance
+              </span>
+              <h3 className="text-lg font-bold text-white mt-2">
+                Verify Your Student Email
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Before accessing the NERDC syllabus, interactive drawing studio, and WAEC archives, please enter the 6-digit confirmation code dispatched to{' '}
+                <strong className="text-cyan-300 font-mono">{userProfile?.email || 'your email'}</strong>.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (verificationCodeInput.trim().length === 6) {
+                  verifyEmail(verificationCodeInput.trim());
+                  setVerificationError('');
+                } else {
+                  setVerificationError('Please enter a valid 6-digit verification code.');
+                }
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={verificationCodeInput}
+                  onChange={(e) => {
+                    setVerificationCodeInput(e.target.value.replace(/\D/g, ''));
+                    setVerificationError('');
+                  }}
+                  placeholder="• • • • • •"
+                  className="w-full text-center tracking-[0.4em] font-mono text-xl py-3 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
+                  autoFocus
+                />
+                {verificationError && (
+                  <p className="text-[11px] text-red-400 mt-1.5">{verificationError}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                <span>Didn't receive code?</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerificationCodeInput('849201');
+                    setVerificationError('');
+                  }}
+                  className="text-cyan-400 hover:text-cyan-300 font-bold"
+                >
+                  Quick-Fill Demo Code (849201)
+                </button>
+              </div>
+
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('LANDING')}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                >
+                  Return to Home
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-cyan-600/30 transition-all"
+                >
+                  Verify & Continue
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Compass, 
   Layers, 
@@ -22,12 +22,16 @@ import {
   Menu,
   Box,
   Split,
-  Building
+  Building,
+  School,
+  ChevronDown,
+  Check,
+  LogOut
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
 import { useSubscription } from '../../context/SubscriptionContext';
-import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { SUBSCRIPTION_PLANS, UserRoleType } from '../../types/subscription';
 
 interface HeaderProps {
   activeTier: CurriculumTier;
@@ -46,6 +50,7 @@ interface HeaderProps {
   onOpenProjectionMode: () => void;
   onOpenTeacherAssignments?: () => void;
   onOpenStudentAssignments?: () => void;
+  onOpenAdminConsole?: () => void;
   onOpenLiveClass?: () => void;
   onToggleWhiteboardStudio: () => void;
   isWhiteboardOpen: boolean;
@@ -84,12 +89,52 @@ export const Header: React.FC<HeaderProps> = ({
   isSidebarCollapsed = false,
   onToggleSidebar,
   onReturnToLanding,
-  onOpenPastQuestions
+  onOpenPastQuestions,
+  onOpenAdminConsole
 }) => {
   const tiers: CurriculumTier[] = ['SS1', 'SS2', 'SS3', 'HIGHER_INSTITUTION'];
-  const { subscription, isSubscribed, openPaywall } = useSubscription();
+  const { 
+    subscription, 
+    isSubscribed, 
+    openPaywall, 
+    userRole, 
+    userProfile, 
+    setUserRole, 
+    logout 
+  } = useSubscription();
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const currentPlan = SUBSCRIPTION_PLANS[subscription.plan];
+  const isStudent = userRole === 'STUDENT';
+  const isTeacher = userRole === 'TEACHER';
+  const isParent = userRole === 'PARENT';
+  const isAdmin = userRole === 'ADMIN';
+
+  // Role labels and badge styling
+  const roleConfig: Record<UserRoleType, { label: string; badgeClass: string; icon: any }> = {
+    STUDENT: {
+      label: 'SS1–SS3 Student',
+      badgeClass: 'bg-cyan-950/80 border-cyan-500/50 text-cyan-300 hover:bg-cyan-900/60',
+      icon: GraduationCap
+    },
+    TEACHER: {
+      label: 'Technical Instructor',
+      badgeClass: 'bg-purple-950/80 border-purple-500/50 text-purple-300 hover:bg-purple-900/60',
+      icon: Award
+    },
+    PARENT: {
+      label: 'Parent / Guardian',
+      badgeClass: 'bg-blue-950/80 border-blue-500/50 text-blue-300 hover:bg-blue-900/60',
+      icon: Users
+    },
+    ADMIN: {
+      label: 'School Admin',
+      badgeClass: 'bg-amber-950/80 border-amber-500/50 text-amber-300 hover:bg-amber-900/60',
+      icon: School
+    }
+  };
+
+  const CurrentRoleIcon = roleConfig[userRole]?.icon || GraduationCap;
 
   return (
     <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-30 select-none shrink-0 shadow-md">
@@ -204,8 +249,8 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Teacher Task Dispatch & Rubric Evaluation */}
-        {onOpenTeacherAssignments && (
+        {/* Teacher Task Dispatch & Rubric Evaluation (HIDDEN FOR STUDENTS) */}
+        {!isStudent && (isTeacher || isAdmin) && onOpenTeacherAssignments && (
           <button
             id="btn-open-teacher-assignments"
             onClick={onOpenTeacherAssignments}
@@ -234,38 +279,64 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Live-Class Projection Mode (Pro Tier) */}
-        <button
-          id="btn-open-projection-mode"
-          onClick={onOpenProjectionMode}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-red-500/20 hover:from-amber-500/30 hover:to-red-500/30 text-amber-300 border border-amber-500/40 transition-colors shadow-sm"
-          title="Teacher Live Projection Mode: Smart Board / Projector Interface with Laser Pointer & Step Playback"
-        >
-          <Tv className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden md:inline">Live Projection</span>
-        </button>
+        {/* Live-Class Projection Mode (Pro Tier - HIDDEN FOR STUDENTS) */}
+        {!isStudent && (isTeacher || isAdmin) && (
+          <button
+            id="btn-open-projection-mode"
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenProjectionMode();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-red-500/20 hover:from-amber-500/30 hover:to-red-500/30 text-amber-300 border border-amber-500/40 transition-colors shadow-sm"
+            title="Teacher Live Projection Mode: Smart Board / Projector Interface with Laser Pointer & Step Playback"
+          >
+            <Tv className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">Live Projection</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-amber-400/80 ml-0.5" />}
+          </button>
+        )}
 
-        {/* Parent Monitoring Portal */}
-        <button
-          id="btn-open-parent-portal"
-          onClick={onOpenParentPortal}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-blue-300 border border-blue-500/40 transition-colors shadow-sm"
-          title="Parent Monitoring & Feedback Portal: View Ward Analytics, CA Scores & Progress Report"
-        >
-          <Users className="w-3.5 h-3.5 text-blue-400" />
-          <span className="hidden md:inline">Parent Portal</span>
-        </button>
+        {/* Parent Monitoring Portal (HIDDEN FOR STUDENTS) */}
+        {!isStudent && (isParent || isAdmin) && (
+          <button
+            id="btn-open-parent-portal"
+            onClick={onOpenParentPortal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-blue-300 border border-blue-500/40 transition-colors shadow-sm"
+            title="Parent Monitoring & Feedback Portal: View Ward Analytics, CA Scores & Progress Report"
+          >
+            <Users className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden md:inline">Parent Portal</span>
+          </button>
+        )}
 
-        {/* Teacher Lesson Note Generator Portal */}
-        <button
-          id="btn-open-teacher-portal"
-          onClick={onOpenTeacherPortal}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
-          title="Open Teacher Portal: Generate & Export Lesson Notes"
-        >
-          <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
-          <span className="hidden lg:inline">Teacher Notes</span>
-        </button>
+        {/* Teacher Lesson Note Generator Portal (HIDDEN FOR STUDENTS) */}
+        {!isStudent && (isTeacher || isAdmin) && (
+          <button
+            id="btn-open-teacher-portal"
+            onClick={onOpenTeacherPortal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
+            title="Open Teacher Portal: Generate & Export Lesson Notes"
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden lg:inline">Teacher Notes</span>
+          </button>
+        )}
+
+        {/* School Administrator Console (ADMIN ONLY) */}
+        {isAdmin && onOpenAdminConsole && (
+          <button
+            id="btn-open-admin-console"
+            onClick={onOpenAdminConsole}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/50 transition-colors shadow-sm"
+            title="Institutional School Administrator Console"
+          >
+            <School className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">Admin Console</span>
+          </button>
+        )}
 
         {/* Whiteboard Drawing Studio Mode Toggle */}
         <button
@@ -282,68 +353,103 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden lg:inline">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
         </button>
 
-        {/* ISO 128 Blueprint Viewer Button */}
+        {/* ISO 128 Blueprint Viewer Button (Subscription Gated) */}
         {onOpenIsoDiagram && (
           <button
             id="btn-open-iso-blueprint"
-            onClick={onOpenIsoDiagram}
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenIsoDiagram();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/40 transition-colors shadow-sm"
             title="Open Interactive ISO 128 Technical Vector Blueprint Viewer"
           >
             <Compass className="w-3.5 h-3.5 text-sky-400" />
             <span className="hidden lg:inline">ISO Blueprint</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-sky-400/80 ml-0.5" />}
           </button>
         )}
 
-        {/* Orthographic Projection Viewport Button (ISO 5456 1st & 3rd Angle) */}
+        {/* Orthographic Projection Viewport Button (ISO 5456 1st & 3rd Angle - Subscription Gated) */}
         {onOpenOrthographicViewport && (
           <button
             id="btn-open-ortho-viewport"
-            onClick={onOpenOrthographicViewport}
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenOrthographicViewport();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-cyan-500/20 to-sky-500/20 hover:from-cyan-500/30 hover:to-sky-500/30 text-cyan-300 border border-cyan-500/40 transition-colors shadow-sm"
             title="Open Interactive 3D Isometric & 2D Orthographic Viewport (ISO 5456 1st & 3rd Angle)"
           >
             <Box className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden md:inline">Ortho Viewport</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-cyan-400/80 ml-0.5" />}
           </button>
         )}
 
-        {/* Surface Development 3D Interactive Viewer Button (ISO 128 Unfolding) */}
+        {/* Surface Development 3D Interactive Viewer Button (ISO 128 Unfolding - Subscription Gated) */}
         {onOpenSurfaceDevelopment && (
           <button
             id="btn-open-surface-development"
-            onClick={onOpenSurfaceDevelopment}
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenSurfaceDevelopment();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 transition-colors shadow-sm"
             title="Open Interactive 3D Surface Development & Interpenetration Viewer (ISO 128 Unfolding)"
           >
             <Layers className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden md:inline">Surface Dev 3D</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-emerald-400/80 ml-0.5" />}
           </button>
         )}
 
-        {/* Sectional Assembly Viewer Button (ISO 128-40) */}
+        {/* Sectional Assembly Viewer Button (ISO 128-40 - Subscription Gated) */}
         {onOpenSectionalAssembly && (
           <button
             id="btn-open-sectional-assembly"
-            onClick={onOpenSectionalAssembly}
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenSectionalAssembly();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/40 transition-colors shadow-sm"
             title="Open Mechanical Sectional Assembly Viewer (ISO 128-40 Full, Half & Unsectioned Views)"
           >
             <Split className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden lg:inline">Sectional Assembly</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-amber-400/80 ml-0.5" />}
           </button>
         )}
 
-        {/* Architectural Working Drawings & Plan Viewer (ISO 4157) */}
+        {/* Architectural Working Drawings & Plan Viewer (ISO 4157 - Subscription Gated) */}
         {onOpenArchitecturalPlan && (
           <button
             id="btn-open-architectural-plan"
-            onClick={onOpenArchitecturalPlan}
+            onClick={() => {
+              if (!isSubscribed) {
+                openPaywall();
+                return;
+              }
+              onOpenArchitecturalPlan();
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 text-blue-300 border border-blue-500/40 transition-colors shadow-sm"
             title="Open Architectural Working Drawings & Floor Plan Viewer (ISO 4157 Layers & Wall Section)"
           >
             <Building className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden lg:inline">Arch Plans</span>
+            {!isSubscribed && <Lock className="w-3 h-3 text-blue-400/80 ml-0.5" />}
           </button>
         )}
 
@@ -382,6 +488,81 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-[9px] font-mono bg-emerald-500/30 px-1 py-0.5 rounded text-emerald-200">2016–26</span>
           </button>
         )}
+
+        {/* User Role Category Badge & Dropdown Switcher */}
+        <div className="relative">
+          <button
+            id="btn-user-role-badge"
+            onClick={() => setIsRoleDropdownOpen(prev => !prev)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${roleConfig[userRole]?.badgeClass || ''}`}
+            title={`Active Role: ${roleConfig[userRole]?.label}. Click to view or switch profile.`}
+          >
+            <CurrentRoleIcon className="w-3.5 h-3.5" />
+            <span className="hidden md:inline font-mono">{roleConfig[userRole]?.label}</span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isRoleDropdownOpen && (
+            <div className="absolute right-0 top-full mt-2 w-72 p-2.5 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95">
+              <div className="p-2 border-b border-slate-800 mb-2">
+                <div className="text-xs font-bold text-white truncate">
+                  {userProfile?.name || 'Technical Scholar'}
+                </div>
+                <div className="text-[11px] text-slate-400 font-mono truncate">
+                  {userProfile?.email || 'user@drafthands.edu'}
+                </div>
+                <div className="text-[10px] text-cyan-400 mt-0.5">
+                  {userProfile?.institution || 'Technical College'}
+                </div>
+              </div>
+
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
+                Switch Role / Preview Category
+              </div>
+
+              <div className="space-y-1">
+                {(['STUDENT', 'TEACHER', 'PARENT', 'ADMIN'] as UserRoleType[]).map(r => {
+                  const Icon = roleConfig[r].icon;
+                  const isCurrent = userRole === r;
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        setUserRole(r);
+                        setIsRoleDropdownOpen(false);
+                      }}
+                      className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-colors ${
+                        isCurrent 
+                          ? 'bg-slate-800 text-white font-semibold' 
+                          : 'text-slate-300 hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className={`w-4 h-4 ${isCurrent ? 'text-cyan-400' : 'text-slate-400'}`} />
+                        <span className="text-xs">{roleConfig[r].label}</span>
+                      </div>
+                      {isCurrent && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2 mt-2 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    setIsRoleDropdownOpen(false);
+                    logout();
+                    if (onReturnToLanding) onReturnToLanding();
+                  }}
+                  className="w-full text-left p-2 rounded-xl text-xs text-red-400 hover:bg-red-950/40 hover:text-red-300 flex items-center gap-2 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log Out of Academy</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Export Drawing */}
         <button

@@ -24,7 +24,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'SIGN_IN' | 'REGISTER';
-  onAuthSuccess: (role: UserRoleType, userDetails: { name: string; email: string; institution?: string }) => void;
+  onAuthSuccess: (
+    role: UserRoleType, 
+    userDetails: { name: string; email: string; institution?: string; isEmailVerified?: boolean }
+  ) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -33,7 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'SIGN_IN',
   onAuthSuccess
 }) => {
-  const [mode, setMode] = useState<'SIGN_IN' | 'REGISTER'>(initialMode);
+  const [mode, setMode] = useState<'SIGN_IN' | 'REGISTER' | 'VERIFY_EMAIL'>(initialMode);
   const [selectedRole, setSelectedRole] = useState<UserRoleType>('STUDENT');
   const [fullName, setFullName] = useState('');
   const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -41,39 +44,81 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [institutionName, setInstitutionName] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
 
+  // Email verification state
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationError, setVerificationError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === 'REGISTER' && selectedRole === 'STUDENT') {
+      // Enforce email verification for student registration
+      setVerificationError('');
+      setMode('VERIFY_EMAIL');
+      return;
+    }
+
     onAuthSuccess(selectedRole, {
-      name: fullName || (selectedRole === 'STUDENT' ? 'Tunde Bakare' : selectedRole === 'TEACHER' ? 'Engr. D. Adebayo' : 'Mrs. Folashade Adeyemi'),
+      name: fullName || (selectedRole === 'STUDENT' ? 'Tunde Bakare' : selectedRole === 'TEACHER' ? 'Engr. D. Adebayo' : selectedRole === 'PARENT' ? 'Mrs. Folashade Adeyemi' : 'Prof. Kwesi Mensah'),
       email: emailOrPhone || 'user@drafthands.edu',
-      institution: institutionName || 'Federal Technical College, Lagos'
+      institution: institutionName || 'Federal Technical College, Lagos',
+      isEmailVerified: true
     });
     onClose();
   };
 
+  const handleVerifyEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerificationError('');
+    setIsVerifying(true);
+
+    const cleanCode = verificationCode.trim();
+    if (cleanCode.length < 4) {
+      setIsVerifying(false);
+      setVerificationError('Please enter the full 6-digit verification code.');
+      return;
+    }
+
+    setTimeout(() => {
+      setIsVerifying(false);
+      onAuthSuccess('STUDENT', {
+        name: fullName || 'Tunde Bakare (SS2 Technical)',
+        email: emailOrPhone || 'student@school.edu.ng',
+        institution: institutionName || 'Federal Science & Technical College',
+        isEmailVerified: true
+      });
+      onClose();
+    }, 600);
+  };
+
   const handleQuickDemo = (role: UserRoleType) => {
-    const demoConfigs: Record<UserRoleType, { name: string; email: string; institution: string }> = {
+    const demoConfigs: Record<UserRoleType, { name: string; email: string; institution: string; isEmailVerified: boolean }> = {
       STUDENT: {
         name: 'Tunde Bakare (SS2 Technical)',
         email: 'tunde.b@student.drafthands.edu',
-        institution: 'King’s College, Lagos'
+        institution: 'King’s College, Lagos',
+        isEmailVerified: true
       },
       TEACHER: {
         name: 'Engr. D. Adebayo (Technical Instructor)',
         email: 'adebayo.engr@drafthands.edu',
-        institution: 'Federal Science & Technical College, Yaba'
+        institution: 'Federal Science & Technical College, Yaba',
+        isEmailVerified: true
       },
       PARENT: {
         name: 'Mrs. Folashade Bakare (Guardian)',
         email: 'folashade.b@parent.drafthands.edu',
-        institution: 'Guardian of Tunde Bakare'
+        institution: 'Guardian of Tunde Bakare',
+        isEmailVerified: true
       },
       ADMIN: {
         name: 'Prof. Kwesi Mensah (Academic Dean)',
         email: 'dean.mensah@polytechnic.drafthands.edu',
-        institution: 'Accra Technical University'
+        institution: 'Accra Technical University',
+        isEmailVerified: true
       }
     };
 
@@ -92,10 +137,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white tracking-tight">
-                {mode === 'SIGN_IN' ? 'Sign In to Drafthands' : 'Create Your Free Academy Account'}
+                {mode === 'VERIFY_EMAIL' 
+                  ? 'Verify Student Email'
+                  : mode === 'SIGN_IN' 
+                    ? 'Sign In to Drafthands' 
+                    : 'Create Your Free Academy Account'}
               </h3>
               <p className="text-xs text-slate-400">
-                Access NERDC curriculum, digital CAD tools, and WAEC archives
+                {mode === 'VERIFY_EMAIL'
+                  ? 'Mandatory verification required before granting studio & syllabus access'
+                  : 'Access NERDC curriculum, digital CAD tools, and WAEC archives'}
               </p>
             </div>
           </div>
@@ -107,37 +158,133 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Tab switch: Sign in vs Register */}
-        <div className="grid grid-cols-2 p-1.5 bg-slate-950 border-b border-slate-800 text-xs font-semibold">
-          <button
-            onClick={() => setMode('SIGN_IN')}
-            className={`py-2 rounded-lg transition-all ${
-              mode === 'SIGN_IN'
-                ? 'bg-slate-800 text-cyan-300 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setMode('REGISTER')}
-            className={`py-2 rounded-lg transition-all ${
-              mode === 'REGISTER'
-                ? 'bg-slate-800 text-cyan-300 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Create New Account
-          </button>
-        </div>
+        {/* Tab switch: Sign in vs Register (hidden when in verification mode) */}
+        {mode !== 'VERIFY_EMAIL' && (
+          <div className="grid grid-cols-2 p-1.5 bg-slate-950 border-b border-slate-800 text-xs font-semibold">
+            <button
+              onClick={() => setMode('SIGN_IN')}
+              className={`py-2 rounded-lg transition-all ${
+                mode === 'SIGN_IN'
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setMode('REGISTER')}
+              className={`py-2 rounded-lg transition-all ${
+                mode === 'REGISTER'
+                  ? 'bg-slate-800 text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Create New Account
+            </button>
+          </div>
+        )}
 
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar">
-          {/* Role selector */}
-          <div className="space-y-2">
-            <label className="text-xs font-mono font-semibold text-slate-300 uppercase tracking-wider">
-              Select Your Educational Role
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {mode === 'VERIFY_EMAIL' ? (
+            <div className="space-y-4 py-2">
+              <div className="p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/40 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto shadow-inner">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-sm text-white">Verification Code Dispatched</h4>
+                <p className="text-xs text-slate-300 max-w-sm mx-auto">
+                  We've sent a 6-digit confirmation code to{' '}
+                  <span className="font-semibold text-cyan-300">{emailOrPhone || 'your registered email'}</span>.
+                  Please enter the code below to activate your student account.
+                </p>
+                <div className="pt-2 flex items-center justify-center gap-2">
+                  <span className="text-[11px] text-slate-400">Testing Code:</span>
+                  <button
+                    type="button"
+                    onClick={() => setVerificationCode('849201')}
+                    className="px-2 py-0.5 rounded bg-cyan-900/60 hover:bg-cyan-800/80 text-cyan-300 font-mono text-[11px] border border-cyan-700/50 transition-colors"
+                  >
+                    849201 (Click to Auto-fill)
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleVerifyEmail} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300 block text-center">
+                    Enter 6-Digit Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={verificationCode}
+                    onChange={e => {
+                      setVerificationCode(e.target.value);
+                      if (verificationError) setVerificationError('');
+                    }}
+                    placeholder="••••••"
+                    className="w-full text-center tracking-[0.5em] font-mono text-xl py-3 bg-slate-950 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    autoFocus
+                  />
+                  {verificationError && (
+                    <p className="text-xs text-red-400 text-center font-medium mt-1">
+                      {verificationError}
+                    </p>
+                  )}
+                  {resendSuccess && (
+                    <p className="text-xs text-emerald-400 text-center font-medium mt-1">
+                      A fresh verification code was sent to your inbox!
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 flex items-center justify-center gap-2 transition-all"
+                >
+                  {isVerifying ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Authenticating Email...
+                    </span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Verify Email & Enter Studio</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between text-xs pt-1 text-slate-400">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResendSuccess(true);
+                      setTimeout(() => setResendSuccess(false), 3000);
+                    }}
+                    className="text-cyan-400 hover:underline"
+                  >
+                    Resend Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('REGISTER')}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    Back to edit details
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <>
+              {/* Role selector */}
+              <div className="space-y-2">
+                <label className="text-xs font-mono font-semibold text-slate-300 uppercase tracking-wider">
+                  Select Your Educational Role
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { role: 'STUDENT' as UserRoleType, label: 'Student', icon: GraduationCap, desc: 'SS1–SS3 & Higher Inst' },
                 { role: 'TEACHER' as UserRoleType, label: 'Teacher', icon: Briefcase, desc: 'Lesson Notes & Live Class' },
@@ -307,6 +454,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </div>
           </div>
+          </>
+        )}
         </div>
       </div>
     </div>
