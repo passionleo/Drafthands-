@@ -80,8 +80,8 @@ export const getPaystackPublicKey = (): string => {
   } catch (err) {
     console.warn('Could not read VITE_PAYSTACK_PUBLIC_KEY:', err);
   }
-  // Safe test fallback if environment variable is not yet injected
-  return 'pk_test_4a03bc45c73206b87f98c784b02296ddd864fd9e';
+  // Configured live key (or via VITE_PAYSTACK_PUBLIC_KEY env variable)
+  return 'pk_live_471bce6179279093b5f31fcc7e0a099210aa72c1';
 };
 
 /**
