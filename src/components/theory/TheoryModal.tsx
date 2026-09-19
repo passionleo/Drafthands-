@@ -52,7 +52,16 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({
   if (!isOpen) return null;
 
   const chapter = getTextbookChapterForTopic(topic);
-  const { theory, standards } = topic;
+  const theory = topic?.theory || {
+    introduction: topic?.shortDescription || 'Technical and Engineering Drawing study guide.',
+    realWorldApplication: 'Standard engineering design and manufacturing.',
+    keyPoints: []
+  };
+  const standards = topic?.standards || {
+    isoCode: 'ISO 128',
+    waecRef: 'WAEC TD Section A',
+    recommendations: ['Maintain strict 2H construction lines and finished HB outlines.']
+  };
 
   const handlePrintLesson = () => {
     window.print();
@@ -74,17 +83,17 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  {topic.moduleCode}
+                  {topic?.moduleCode || 'TD'}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  {topic.tier} • Textbook-Grade Curriculum Module
+                  {topic?.tier || 'SS1'} • Textbook-Grade Curriculum Module
                 </span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  {standards.waecRef}
+                  {standards?.waecRef || 'WAEC TD'}
                 </span>
               </div>
               <h2 className="text-lg font-bold text-slate-100 mt-0.5 tracking-tight">
-                {topic.title}
+                {topic?.title || 'Technical Drawing'}
               </h2>
             </div>
           </div>
@@ -751,7 +760,7 @@ export const TheoryModal: React.FC<TheoryModalProps> = ({
               <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-xs leading-relaxed space-y-1">
                 <h4 className="font-bold text-amber-300 flex items-center gap-2">
                   <Award className="w-4 h-4 text-amber-400" />
-                  WAEC / NERDC Official Mark Allocation Key ({standards.waecRef})
+                  WAEC / NERDC Official Mark Allocation Key ({standards?.waecRef || 'WAEC TD'})
                 </h4>
                 <p className="text-amber-200/90">{chapter.standardConventions.waecMarkingKey}</p>
                 <p className="text-slate-400 pt-1">

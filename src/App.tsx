@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { CurriculumTier, DrawingTopic } from './types/curriculum';
+import { CurriculumTier, DrawingTopic, ProceduralStep } from './types/curriculum';
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
@@ -133,7 +133,7 @@ function AppContent() {
   // Topic parameter values state
   const [parameters, setParameters] = useState<Record<string, number>>(() => {
     const initParams: Record<string, number> = {};
-    activeTopic.parameters.forEach(p => {
+    (activeTopic?.parameters || []).forEach(p => {
       initParams[p.id] = p.defaultValue;
     });
     return initParams;
@@ -142,7 +142,7 @@ function AppContent() {
   // Re-initialize parameters when switching topics
   useEffect(() => {
     const initParams: Record<string, number> = {};
-    activeTopic.parameters.forEach(p => {
+    (activeTopic?.parameters || []).forEach(p => {
       initParams[p.id] = p.defaultValue;
     });
     setParameters(initParams);
@@ -156,16 +156,39 @@ function AppContent() {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
 
   // Canvas Viewport & Grid state
-  const [gridMode, setGridMode] = useState<GridMode>(() => activeTopic.defaultViewBox.defaultGrid || 'MILLIMETER');
+  const [gridMode, setGridMode] = useState<GridMode>(() => activeTopic?.defaultViewBox?.defaultGrid || 'MILLIMETER');
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Compute all steps dynamically based on current geometric parameters
   const steps = useMemo(() => {
-    return activeTopic.generateSteps(parameters);
+    try {
+      if (typeof activeTopic?.generateSteps === 'function') {
+        return activeTopic.generateSteps(parameters) || [];
+      }
+    } catch (e) {
+      console.error('Error generating steps for topic', activeTopic?.id, e);
+    }
+    return [];
   }, [activeTopic, parameters]);
 
   const totalSteps = steps.length;
-  const currentStepData = steps[Math.min(currentStep - 1, totalSteps - 1)] || steps[0];
+  const fallbackStep = useMemo<ProceduralStep>(() => ({
+    stepIndex: 1,
+    title: activeTopic?.title || 'Initial Construction Step',
+    instruction: 'Set up drawing sheet, border lines and title block according to ISO standards.',
+    detailedNotes: 'Draft initial layout with sharp 2H pencil according to ISO 128 standards.',
+    technicalPrinciple: 'Standard ISO 128 layout and line weight hierarchy.',
+    elements: [],
+    activeInstrument: {
+      toolType: 'TEE_SQUARE',
+      x: 100,
+      y: 100,
+      visible: true,
+      actionText: 'Align T-Square to drawing board edge'
+    }
+  }), [activeTopic]);
+
+  const currentStepData: ProceduralStep = (steps && steps[Math.min(currentStep - 1, Math.max(0, totalSteps - 1))]) || steps[0] || fallbackStep;
 
   // Auto-play timer effect
   useEffect(() => {

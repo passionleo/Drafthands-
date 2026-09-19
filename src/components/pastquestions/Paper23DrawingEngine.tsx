@@ -19,7 +19,7 @@ import {
   FileText,
   Sliders
 } from 'lucide-react';
-import { TheoryQuestion } from '../../types/pastQuestions';
+import { TheoryQuestion, ConstructionStep } from '../../types/pastQuestions';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payWithPaystack, formatNaira } from '../../utils/paystack';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
@@ -51,10 +51,34 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
   const [isBlueprintTheme, setIsBlueprintTheme] = useState<boolean>(true);
   const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
 
+  // Early guard if no questions exist
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+        <Compass className="w-10 h-10 text-slate-600" />
+        <h3 className="text-base font-bold text-white">No Practical Drawing Questions Found</h3>
+        <p className="text-xs text-slate-400 max-w-md">
+          Please select another examination year or exam body from the selector controls above.
+        </p>
+      </div>
+    );
+  }
+
   const activeQuestion = questions[activeQuestionIndex] || questions[0];
-  const totalSteps = activeQuestion.steps.length;
-  const currentStep = activeQuestion.steps[currentStepIndex] || activeQuestion.steps[0];
-  const isLocked = !isFullAccess && !activeQuestion.isFreePreview;
+  const steps = activeQuestion?.steps || [];
+  const totalSteps = steps.length;
+  const fallbackStep: ConstructionStep = {
+    stepNumber: 1,
+    title: 'Initial Layout',
+    label: 'Initial Layout',
+    instruction: 'Set up drawing border and title block.',
+    svgData: '<line x1="100" y1="200" x2="500" y2="200" stroke="#38bdf8" stroke-width="2" />',
+    pencilGrade: '2H',
+    lineTypeISO: 'ISO 128 Type B (0.25mm)',
+    markAllocation: '5 Marks'
+  };
+  const currentStep: ConstructionStep = steps[currentStepIndex] || steps[0] || fallbackStep;
+  const isLocked = !isFullAccess && Boolean(activeQuestion && !activeQuestion.isFreePreview);
 
   // Auto-play steps simulation
   useEffect(() => {

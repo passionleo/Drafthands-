@@ -129,7 +129,7 @@ export const CurriculumPreviewSection: React.FC<CurriculumPreviewSectionProps> =
 
                 {/* Parameters Badge Preview */}
                 <div className="pt-2 flex flex-wrap gap-1.5">
-                  {topic.parameters.slice(0, 3).map(p => (
+                  {(topic.parameters || []).slice(0, 3).map(p => (
                     <span
                       key={p.id}
                       className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900 border border-slate-800 text-slate-300"

@@ -65,7 +65,20 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
   }, [isTimerRunning, isCompleted]);
 
   const currentQ = questions[currentIndex] || questions[0];
-  const isLocked = !isFullAccess && !currentQ.isFreePreview;
+  const isLocked = !isFullAccess && Boolean(currentQ && !currentQ.isFreePreview);
+
+  // Early guard if no questions exist
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+        <BookOpen className="w-10 h-10 text-slate-600" />
+        <h3 className="text-base font-bold text-white">No Objective Questions Found</h3>
+        <p className="text-xs text-slate-400 max-w-md">
+          Please select another examination year or exam body from the navigation controls above.
+        </p>
+      </div>
+    );
+  }
 
   // Calculate score statistics
   const answeredCount = Object.keys(selectedAnswers).length;

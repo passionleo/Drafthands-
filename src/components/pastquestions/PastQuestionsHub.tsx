@@ -251,19 +251,19 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
       <main className="flex-1 p-3 sm:p-5 overflow-hidden flex flex-col min-h-0 bg-slate-950">
         {selectedPaperType === 'PAPER_1' ? (
           <Paper1QuizEngine
-            questions={currentPaper.mcqs || []}
-            paperTitle={currentPaper.title}
-            examBody={currentPaper.examBody}
-            year={currentPaper.year}
-            durationMinutes={currentPaper.durationMinutes}
+            questions={currentPaper?.mcqs || []}
+            paperTitle={currentPaper?.title || 'Examination Paper 1'}
+            examBody={currentPaper?.examBody || selectedExamBody}
+            year={currentPaper?.year || selectedYear}
+            durationMinutes={currentPaper?.durationMinutes || 60}
             onOpenPaywall={openPaywall}
           />
         ) : (
           <Paper23DrawingEngine
-            questions={currentPaper.theoryQuestions || []}
-            paperTitle={currentPaper.title}
-            examBody={currentPaper.examBody}
-            year={currentPaper.year}
+            questions={currentPaper?.theoryQuestions || []}
+            paperTitle={currentPaper?.title || `Examination ${selectedPaperType}`}
+            examBody={currentPaper?.examBody || selectedExamBody}
+            year={currentPaper?.year || selectedYear}
             paperType={selectedPaperType}
             onOpenPaywall={openPaywall}
           />

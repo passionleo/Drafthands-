@@ -81,10 +81,38 @@ class RootErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <RootErrorBoundary>
-      <App />
-    </RootErrorBoundary>
-  </StrictMode>,
-);
+// Global window unhandled error and rejection safety net for mobile browsers
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    console.error('[Drafthands Uncaught Error]', event.error || event.message);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[Drafthands Unhandled Rejection]', event.reason);
+  });
+}
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  try {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <RootErrorBoundary>
+          <App />
+        </RootErrorBoundary>
+      </StrictMode>,
+    );
+  } catch (err: any) {
+    console.error('[Drafthands Root Mount Error]', err);
+    rootElement.innerHTML = `
+      <div style="min-height:100vh;background-color:#020617;color:#f8fafc;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,-apple-system,sans-serif;text-align:center;">
+        <div style="max-width:420px;background-color:#0f172a;border:1px solid #334155;border-radius:16px;padding:24px;">
+          <h2 style="font-size:18px;font-weight:bold;margin-bottom:8px;color:#38bdf8;">Drafthands Academy</h2>
+          <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;">Starting your engineering workspace...</p>
+          <button onclick="window.location.reload()" style="background:#0284c7;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">
+            Tap to Reload
+          </button>
+        </div>
+      </div>
+    `;
+  }
+}

@@ -157,10 +157,10 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-xs space-y-2">
                   <h4 className="font-bold text-slate-300">ISO 128 / WAEC Marking Rubric:</h4>
                   <div className="grid grid-cols-2 gap-2 text-slate-400">
-                    <div>• Accuracy of Construction: <strong className="text-cyan-400">{selectedAssignment.rubric.constructionAccuracy}%</strong></div>
-                    <div>• Linework (2H vs HB): <strong className="text-cyan-400">{selectedAssignment.rubric.lineWeightDifferentiation}%</strong></div>
-                    <div>• Dimensions & Lettering: <strong className="text-cyan-400">{selectedAssignment.rubric.dimensioningAndLettering}%</strong></div>
-                    <div>• Layout & Title Block: <strong className="text-cyan-400">{selectedAssignment.rubric.neatnessAndLayout}%</strong></div>
+                    <div>• Accuracy of Construction: <strong className="text-cyan-400">{selectedAssignment.rubric?.constructionAccuracy ?? 40}%</strong></div>
+                    <div>• Linework (2H vs HB): <strong className="text-cyan-400">{selectedAssignment.rubric?.lineWeightDifferentiation ?? 25}%</strong></div>
+                    <div>• Dimensions & Lettering: <strong className="text-cyan-400">{selectedAssignment.rubric?.dimensioningAndLettering ?? 20}%</strong></div>
+                    <div>• Layout & Title Block: <strong className="text-cyan-400">{selectedAssignment.rubric?.neatnessAndLayout ?? 15}%</strong></div>
                   </div>
                 </div>
 
