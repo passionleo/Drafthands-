@@ -41,6 +41,7 @@ interface ProcedurePanelProps {
   onOpenSectionalAssembly?: () => void;
   onOpenArchitecturalPlan?: () => void;
   onOpenPastQuestions?: () => void;
+  onOpenPractice?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -59,7 +60,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenSurfaceDevelopment,
   onOpenSectionalAssembly,
   onOpenArchitecturalPlan,
-  onOpenPastQuestions
+  onOpenPastQuestions,
+  onOpenPractice
 }) => {
   return (
     <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
@@ -247,6 +249,37 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
             </button>
           )}
         </div>
+
+        {/* END-OF-TOPIC 5-QUESTION SELF-ASSESSMENT */}
+        {onOpenPractice && (
+          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-950/40 via-slate-950 to-emerald-950/40 border border-amber-500/40 space-y-2 shadow-lg">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-amber-400" />
+                End-of-Topic Self-Assessment
+              </span>
+              <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                5 Questions System
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              {topic.category === 'TECHNICAL_FOUNDATIONS' || topic.id.includes('intro')
+                ? '5 Dynamic Multiple Choice Questions (MCQs) with instant grading & explanations.'
+                : 'Hybrid format: 2 Theory MCQs + 3 Practical Tasks linking directly to the Drawing Studio.'}
+            </p>
+            <button
+              id="btn-procedure-take-assessment"
+              onClick={onOpenPractice}
+              className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-white font-bold text-xs flex items-center justify-between transition-all shadow-md shadow-emerald-950/50 cursor-pointer group"
+            >
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Launch 5-Question Assessment</span>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
 
         {/* ISO 128 DIAGRAM VIEWER TRIGGER */}
         {onOpenIsoDiagram && (

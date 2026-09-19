@@ -1,4 +1,5 @@
 import { StudentWardProfile } from '../types/parent';
+import { getAssessmentAttempts } from '../services/assessmentStorage';
 
 export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
   'WARD-DH-2025-88': {
@@ -155,11 +156,7 @@ export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
 
 export function getWardProfile(code: string): StudentWardProfile {
   const trimmed = code.trim().toUpperCase();
-  if (SAMPLE_WARD_PROFILES[trimmed]) {
-    return SAMPLE_WARD_PROFILES[trimmed];
-  }
-  // Fallback dynamic profile for any custom code
-  return {
+  const baseProfile: StudentWardProfile = SAMPLE_WARD_PROFILES[trimmed] || {
     wardCode: trimmed || 'WARD-CUSTOM',
     studentName: 'Student Candidate',
     admissionNo: 'STU/2025/' + Math.floor(1000 + Math.random() * 9000),
@@ -205,4 +202,95 @@ export function getWardProfile(code: string): StudentWardProfile {
       focusForNextWeek: 'Focus on lines and lettering exercises.'
     }
   };
+
+  // Synchronize with real-time saved assessment attempts & studio practical submissions
+  const liveAttempts = getAssessmentAttempts();
+  if (liveAttempts && liveAttempts.length > 0) {
+    // Map live attempts into recentAssessments format
+    const convertedAttempts = liveAttempts.map(att => ({
+      id: att.id,
+      topicId: att.topicId,
+      topicTitle: `${att.topicTitle} (${att.format === 'THEORY_5_MCQ' ? '5-MCQ Theory' : 'Hybrid: 2 MCQs + 3 Practical'})`,
+      date: att.completedAt,
+      score: att.score * 4, // scale out of 20 to match CA record
+      maxScore: 20,
+      waecGrade: att.waecGrade,
+      teacherComment: att.teacherRemark,
+      assessmentFormat: att.format,
+      mcqScore: att.mcqScore,
+      practicalTasksDone: att.practicalCompletedCount
+    }));
+
+    // Deduplicate against base recent assessments
+    const existingIds = new Set(convertedAttempts.map(a => a.id));
+    const mergedAssessments = [
+      ...convertedAttempts,
+      ...baseProfile.recentAssessments.filter(a => !existingIds.has(a.id))
+    ];
+
+    // Collect all practical submissions across attempts
+    const collectedPracticalSubs: {
+      taskId: string;
+      topicTitle: string;
+      taskTitle: string;
+      submittedAt: string;
+      elementCount: number;
+      notes?: string;
+      status: 'COMPLETED' | 'SUBMITTED';
+      marksAwarded?: number;
+      maxMarks?: number;
+    }[] = [];
+
+    liveAttempts.forEach(att => {
+      if (att.practicalSubmissions && att.practicalSubmissions.length > 0) {
+        att.practicalSubmissions.forEach(sub => {
+          collectedPracticalSubs.push({
+            taskId: sub.taskId,
+            topicTitle: att.topicTitle,
+            taskTitle: sub.taskTitle,
+            submittedAt: sub.submittedAt,
+            elementCount: sub.elementCount,
+            notes: sub.notes,
+            status: sub.status,
+            marksAwarded: sub.marksAwarded || 18,
+            maxMarks: sub.maxMarks || 20
+          });
+        });
+      }
+    });
+
+    // Check for any newly identified weak areas (< 70%)
+    const updatedWeakAreas = [...baseProfile.weakAreas];
+    liveAttempts.forEach(att => {
+      if (att.percentage < 70) {
+        const alreadyListed = updatedWeakAreas.some(w => w.topicId === att.topicId);
+        if (!alreadyListed) {
+          updatedWeakAreas.unshift({
+            skill: `${att.topicTitle} Construction Rule`,
+            topicId: att.topicId,
+            topicTitle: att.topicTitle,
+            accuracyScore: att.percentage,
+            recommendedAction: `Scored ${att.percentage}% (${att.score}/5). Review 5-step procedure and practice drawing baseline and arcs in Interactive Studio.`
+          });
+        }
+      }
+    });
+
+    // Calculate dynamic average score
+    const totalPercents = liveAttempts.reduce((acc, a) => acc + a.percentage, 0);
+    const liveAverage = Math.round(totalPercents / liveAttempts.length);
+    const overallScore = Math.round((baseProfile.overallScore + liveAverage) / 2);
+
+    return {
+      ...baseProfile,
+      overallScore,
+      quizzesCompleted: Math.max(baseProfile.quizzesCompleted, liveAttempts.length + 4),
+      totalQuizzes: Math.max(baseProfile.totalQuizzes, liveAttempts.length + 6),
+      recentAssessments: mergedAssessments,
+      practicalSubmissions: collectedPracticalSubs,
+      weakAreas: updatedWeakAreas
+    };
+  }
+
+  return baseProfile;
 }

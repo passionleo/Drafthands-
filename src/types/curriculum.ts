@@ -149,6 +149,38 @@ export interface TopicTheory {
   }[];
 }
 
+export type SelfAssessmentFormat = 'THEORY_5_MCQ' | 'HYBRID_PRACTICAL';
+
+export interface AssessmentMCQ {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  waecReference?: string;
+  categoryTag?: string;
+}
+
+export interface PracticalDrawingTask {
+  id: string;
+  taskNumber: number; // 3, 4, or 5 in the 5-item assessment
+  taskTitle: string;
+  taskPrompt: string;
+  specifications: string[];
+  rubricMarks: number; // e.g. 20 marks
+  suggestedMode: 'TRADITIONAL_BOARD' | 'CAD_WORKSTATION';
+  targetTool?: string;
+  expectedOutcome: string;
+}
+
+export interface TopicSelfAssessment {
+  topicId: string;
+  format: SelfAssessmentFormat;
+  passScorePercentage: number;
+  mcqs: AssessmentMCQ[];
+  practicalTasks?: PracticalDrawingTask[];
+}
+
 export interface DrawingTopic {
   id: string;
   tier: CurriculumTier;
@@ -172,7 +204,10 @@ export interface DrawingTopic {
     defaultGrid: 'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'ENGINEERING_5MM';
   };
   generateSteps: (params: Record<string, number>) => ProceduralStep[];
+  assessment?: TopicSelfAssessment;
 }
 
 export type CurriculumTopic = DrawingTopic;
+
+export type WAECGrade = 'A1' | 'B2' | 'B3' | 'C4' | 'C5' | 'C6' | 'D7' | 'E8' | 'F9';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   X, 
@@ -19,12 +19,17 @@ import {
   Lock,
   MessageSquare,
   CreditCard,
-  Check
+  Check,
+  Compass,
+  PenTool,
+  CheckCircle,
+  Eye
 } from 'lucide-react';
 import { SAMPLE_WARD_PROFILES, getWardProfile } from '../../data/parentData';
 import { StudentWardProfile } from '../../types/parent';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payForParentWardSponsorship, formatNaira } from '../../utils/paystack';
+import { subscribeAssessmentUpdates } from '../../services/assessmentStorage';
 
 interface ParentPortalModalProps {
   isOpen: boolean;
@@ -43,7 +48,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
     SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
   );
-  const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'teacherNotes' | 'reportCard' | 'sponsorship'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'practicalSubmissions' | 'teacherNotes' | 'reportCard' | 'sponsorship'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
   const [isFeedbackSent, setIsFeedbackSent] = useState<boolean>(false);
 
@@ -52,6 +57,15 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   const [sponsorshipPlan, setSponsorshipPlan] = useState<'STUDENT_TERMLY' | 'STUDENT_SESSION'>('STUDENT_SESSION');
   const [isPayingSponsorship, setIsPayingSponsorship] = useState<boolean>(false);
   const [sponsorshipReceiptRef, setSponsorshipReceiptRef] = useState<string | null>(null);
+
+  // Sync live assessments whenever opened or ward changes
+  useEffect(() => {
+    setActiveProfile(getWardProfile(wardCodeInput));
+    const unsubscribe = subscribeAssessmentUpdates(() => {
+      setActiveProfile(getWardProfile(wardCodeInput));
+    });
+    return () => unsubscribe();
+  }, [wardCodeInput, isOpen]);
 
   if (!isOpen) return null;
 
@@ -258,7 +272,18 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               }`}
             >
               <Award className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Weekly Test Scores</span>
+              <span>Test Scores & Self-Assessments ({activeProfile.recentAssessments.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('practicalSubmissions')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'practicalSubmissions'
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Studio Practical Submissions ({activeProfile.practicalSubmissions?.length || 0})</span>
             </button>
             <button
               onClick={() => setActiveTab('teacherNotes')}
@@ -446,29 +471,143 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
           {activeTab === 'assessments' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-white">Recent Technical Drawing Tests & Submissions</h4>
-                <span className="text-xs text-slate-400 font-mono">Official Continuous Assessment (CA) Record</span>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Curriculum Topic Self-Assessments & Test Scores</h4>
+                  <p className="text-xs text-slate-400">Strict 5-question system (Theory 5-MCQs or Hybrid 2 MCQs + 3 Practical Tasks)</p>
+                </div>
+                <span className="text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  Live Synced CA Record
+                </span>
               </div>
 
               <div className="space-y-3">
                 {activeProfile.recentAssessments.map((ass) => (
-                  <div key={ass.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center font-mono font-bold text-emerald-400">
-                        {ass.waecGrade}
+                  <div key={ass.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4 transition-all hover:border-slate-700">
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400 shrink-0">
+                        <span className="text-sm leading-none">{ass.waecGrade}</span>
+                        <span className="text-[9px] text-emerald-500/70 font-normal">WAEC</span>
                       </div>
                       <div>
-                        <h5 className="text-xs font-bold text-white">{ass.topicTitle}</h5>
-                        <p className="text-[11px] text-slate-400">{ass.date} • Score: <strong className="text-emerald-400">{ass.score} / {ass.maxScore}</strong> ({Math.round((ass.score / ass.maxScore) * 100)}%)</p>
-                        <p className="text-xs text-slate-300 italic mt-1">"{ass.teacherComment}"</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h5 className="text-xs font-bold text-white">{ass.topicTitle}</h5>
+                          {ass.assessmentFormat === 'THEORY_5_MCQ' ? (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              5-MCQ Theory Exam
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                              Hybrid: 2 MCQs + 3 Practical Tasks
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {ass.date} • Continuous Assessment Score: <strong className="text-emerald-400 font-mono">{ass.score} / {ass.maxScore}</strong> ({Math.round((ass.score / ass.maxScore) * 100)}%)
+                        </p>
+                        <p className="text-xs text-slate-300 italic mt-1.5 bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                          "{ass.teacherComment}"
+                        </p>
                       </div>
                     </div>
-                    <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400">
-                      Verified CA Score
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {ass.topicId && onSelectTopic && (
+                        <button
+                          onClick={() => {
+                            onClose();
+                            onSelectTopic(ass.topicId!);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-semibold flex items-center gap-1.5 transition-colors border border-slate-700"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-slate-400" />
+                          <span>View Topic</span>
+                        </button>
+                      )}
+                      <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-emerald-400 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3 text-emerald-400" />
+                        Verified
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* TAB: STUDIO PRACTICAL SUBMISSIONS */}
+          {activeTab === 'practicalSubmissions' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Interactive Drawing Studio Practical Submissions</h4>
+                  <p className="text-xs text-slate-400">Geometry and construction tasks drawn by your child in the Interactive Viewport</p>
+                </div>
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>{activeProfile.practicalSubmissions?.length || 0} Submissions Synced</span>
+                </span>
+              </div>
+
+              {(!activeProfile.practicalSubmissions || activeProfile.practicalSubmissions.length === 0) ? (
+                <div className="p-8 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400">
+                    <PenTool className="w-6 h-6" />
+                  </div>
+                  <h5 className="text-sm font-bold text-white">No Practical Submissions Yet</h5>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto">
+                    When your child starts a practical/construction self-assessment and draws in the Interactive Drawing Studio, their submitted geometric constructions will automatically sync and display here with rubric marks.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeProfile.practicalSubmissions.map((sub, idx) => (
+                    <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 hover:border-cyan-500/30 transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            {sub.topicTitle}
+                          </span>
+                          <h5 className="text-xs font-bold text-white mt-1.5">{sub.taskTitle}</h5>
+                          <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                            <Clock className="w-3 h-3 text-slate-500" />
+                            {sub.submittedAt}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-mono font-bold text-emerald-400 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
+                            {sub.marksAwarded || 18} / {sub.maxMarks || 20} Marks
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>Studio Elements Drawn:</span>
+                          <span className="font-mono text-cyan-400 font-bold">{sub.elementCount} Geometry Entities</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>Marking Rubric:</span>
+                          <span className="text-emerald-400 font-semibold">WAEC Technical Drawing Scheme</span>
+                        </div>
+                        {sub.notes && (
+                          <p className="text-[11px] text-slate-400 italic mt-1 border-t border-slate-800/80 pt-1">
+                            "{sub.notes}"
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[11px] font-mono text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          Verified Studio Construction
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          ID: {sub.taskId}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

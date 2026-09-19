@@ -26,12 +26,27 @@ export interface StudentWardProfile {
   }[];
   recentAssessments: {
     id: string;
+    topicId?: string;
     topicTitle: string;
     date: string;
     score: number;
     maxScore: number;
     waecGrade: 'A1' | 'B2' | 'B3' | 'C4' | 'C5' | 'C6' | 'D7' | 'E8' | 'F9';
     teacherComment: string;
+    assessmentFormat?: 'THEORY_5_MCQ' | 'HYBRID_PRACTICAL';
+    mcqScore?: number;
+    practicalTasksDone?: number;
+  }[];
+  practicalSubmissions?: {
+    taskId: string;
+    topicTitle: string;
+    taskTitle: string;
+    submittedAt: string;
+    elementCount: number;
+    notes?: string;
+    status: 'COMPLETED' | 'SUBMITTED';
+    marksAwarded?: number;
+    maxMarks?: number;
   }[];
   teacherRemarks: {
     teacherName: string;

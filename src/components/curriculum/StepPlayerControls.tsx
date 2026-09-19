@@ -6,7 +6,8 @@ import {
   ChevronRight, 
   RotateCcw, 
   FastForward,
-  CheckCircle2
+  CheckCircle2,
+  Award
 } from 'lucide-react';
 
 interface StepPlayerControlsProps {
@@ -20,6 +21,7 @@ interface StepPlayerControlsProps {
   onReset: () => void;
   speed: number;
   onChangeSpeed: (s: number) => void;
+  onOpenSelfAssessment?: () => void;
 }
 
 export const StepPlayerControls: React.FC<StepPlayerControlsProps> = ({
@@ -32,7 +34,8 @@ export const StepPlayerControls: React.FC<StepPlayerControlsProps> = ({
   onGoToStep,
   onReset,
   speed,
-  onChangeSpeed
+  onChangeSpeed,
+  onOpenSelfAssessment
 }) => {
   const isLastStep = currentStep >= totalSteps;
   const isFirstStep = currentStep <= 1;
@@ -84,10 +87,23 @@ export const StepPlayerControls: React.FC<StepPlayerControlsProps> = ({
             Step <span className="text-cyan-400 text-sm">{currentStep}</span> of {totalSteps}
           </span>
           {isLastStep && (
-            <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
-              <CheckCircle2 className="w-3 h-3" />
-              Completed
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
+                <CheckCircle2 className="w-3 h-3" />
+                Completed
+              </span>
+              {onOpenSelfAssessment && (
+                <button
+                  id="btn-take-self-assessment"
+                  onClick={onOpenSelfAssessment}
+                  className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-white text-[10px] font-bold font-mono flex items-center gap-1 shadow-md shadow-emerald-950 transition-all cursor-pointer"
+                  title="Take mandatory 5-question self-assessment for this topic"
+                >
+                  <Award className="w-3 h-3" />
+                  <span>5-Q Assessment</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { CurriculumTier } from './types/curriculum';
+import { CurriculumTier, PracticalDrawingTask, DrawingTopic } from './types/curriculum';
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
+import { recordPracticalSubmission } from './services/assessmentStorage';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ProcedurePanel } from './components/curriculum/ProcedurePanel';
@@ -302,6 +303,31 @@ function AppContent() {
     setIsPracticeOpen(true);
   }, []);
 
+  const handleOpenStudioTask = useCallback((task: PracticalDrawingTask, topic: DrawingTopic) => {
+    const practicalAssignment: TeacherAssignment = {
+      id: task.id,
+      topicId: topic.id,
+      moduleCode: topic.moduleCode,
+      title: `[Self-Assessment Task ${task.taskNumber}] ${task.taskTitle}`,
+      tier: topic.tier,
+      targetClass: `${topic.tier} Technical Assessment`,
+      assignedDate: new Date().toLocaleDateString('en-GB'),
+      dueDate: 'Continuous Assessment',
+      instructions: `${task.taskPrompt}\n\nTechnical Specifications:\n${task.specifications.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nExpected Outcome:\n${task.expectedOutcome}`,
+      maxScore: task.rubricMarks || 20,
+      rubric: {
+        constructionAccuracy: 10,
+        lineWeightDifferentiation: 5,
+        dimensioningAndLettering: 3,
+        neatnessAndLayout: 2
+      }
+    };
+    setActiveAssignmentForStudio(practicalAssignment);
+    setStudioInitialMode(task.suggestedMode === 'CAD_WORKSTATION' ? 'CAD_WORKSTATION' : 'TRADITIONAL_BOARD');
+    setIsPracticeOpen(false);
+    setIsWhiteboardStudioOpen(true);
+  }, []);
+
   const handleOpenIsoDiagram = useCallback(() => {
     if (!isSubscribed) {
       openPaywall();
@@ -505,7 +531,23 @@ function AppContent() {
               assignment={activeAssignmentForStudio}
               initialMode={studioInitialMode}
               onSubmitAssignment={(elements, notes) => {
-                console.log('Submitted Assignment', elements, notes);
+                if (activeAssignmentForStudio) {
+                  recordPracticalSubmission(
+                    activeAssignmentForStudio.topicId,
+                    activeAssignmentForStudio.title,
+                    activeAssignmentForStudio.tier,
+                    {
+                      taskId: activeAssignmentForStudio.id,
+                      taskTitle: activeAssignmentForStudio.title,
+                      submittedAt: new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
+                      elementCount: elements.length,
+                      notes: notes || 'Submitted from Interactive Drawing Studio viewport',
+                      status: 'COMPLETED',
+                      marksAwarded: 18,
+                      maxMarks: activeAssignmentForStudio.maxScore || 20
+                    }
+                  );
+                }
               }}
             />
           </main>
@@ -520,6 +562,7 @@ function AppContent() {
               parameters={parameters}
               onParamChange={handleParamChange}
               onOpenTheory={handleOpenTheory}
+              onOpenPractice={handleOpenPractice}
               onOpenTraditionalBoard={() => {
                 setActiveAssignmentForStudio(undefined);
                 setStudioInitialMode('TRADITIONAL_BOARD');
@@ -571,6 +614,7 @@ function AppContent() {
                 onReset={handleResetSteps}
                 speed={playbackSpeed}
                 onChangeSpeed={setPlaybackSpeed}
+                onOpenSelfAssessment={handleOpenPractice}
               />
             </div>
           </main>
@@ -692,6 +736,7 @@ function AppContent() {
         topic={activeTopic}
         isOpen={isPracticeOpen}
         onClose={() => setIsPracticeOpen(false)}
+        onOpenStudioTask={handleOpenStudioTask}
       />
 
       {/* 10. FREEMIUM ACCESS & PAYSTACK PAYWALL MODAL */}
