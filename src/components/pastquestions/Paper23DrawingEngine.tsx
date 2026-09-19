@@ -41,8 +41,8 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
   paperType,
   onOpenPaywall
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
-  const isFullAccess = isSubscribed || subscription.plan !== 'FREE' || subscription.userRole === 'TEACHER' || subscription.userRole === 'ADMIN';
+  const { hasActivePaidSubscription, subscribeToPlan } = useSubscription();
+  const isFullAccess = Boolean(hasActivePaidSubscription);
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -97,6 +97,13 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
 
   // Reset step when switching question
   const handleSelectQuestion = (idx: number) => {
+    const targetQ = (questions || [])[idx];
+    if (!isFullAccess && targetQ && !targetQ.isFreePreview) {
+      if (onOpenPaywall) {
+        onOpenPaywall();
+      }
+      return;
+    }
     setActiveQuestionIndex(idx);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -161,7 +168,7 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
         {/* Question Selector Pills */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400 font-mono hidden sm:inline">Questions:</span>
-          {questions.map((q, idx) => {
+          {(questions || []).map((q, idx) => {
             const isCurr = idx === activeQuestionIndex;
             const isLockedQ = !isFullAccess && !q.isFreePreview;
 
@@ -246,9 +253,9 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
         </div>
       ) : (
         /* STEP-BY-STEP CONSTRUCTION VIEWPORT & CONTROLS */
-        <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-          {/* Left Column: Question Details, Given Data & Marking Notes */}
-          <div className="w-full lg:w-80 p-4 bg-slate-950/80 border-r border-slate-800 flex flex-col gap-4 overflow-y-auto shrink-0">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+          {/* Left Column: Question Details, Given Data & Marking Notes - Tablet Responsive Stacking */}
+          <div className="w-full md:w-72 lg:w-80 p-3.5 sm:p-4 bg-slate-950/90 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col gap-3.5 overflow-y-auto shrink-0 max-h-[32vh] md:max-h-none md:h-full custom-scrollbar">
             {/* Description Card */}
             <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
@@ -256,7 +263,7 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                 <span>Problem Statement</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                {activeQuestion.description}
+                {activeQuestion?.description || ''}
               </p>
             </div>
 
@@ -267,7 +274,7 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                 <span>Given Dimensions & Criteria</span>
               </div>
               <ul className="space-y-1.5 text-[11px] text-slate-300">
-                {activeQuestion.givenData.map((data, i) => (
+                {(activeQuestion?.givenData || []).map((data, i) => (
                   <li key={i} className="flex items-start gap-1.5">
                     <span className="text-cyan-400 font-bold">•</span>
                     <span>{data}</span>
@@ -283,7 +290,7 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                 <span>WAEC Examiner Marking Rubric</span>
               </div>
               <ul className="space-y-1.5 text-[11px] text-slate-300">
-                {activeQuestion.markingSchemeNotes.map((note, i) => (
+                {(activeQuestion?.markingSchemeNotes || []).map((note, i) => (
                   <li key={i} className="flex items-start gap-1.5">
                     <span className="text-emerald-400 font-bold">✓</span>
                     <span>{note}</span>
@@ -377,33 +384,33 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
               </div>
             </div>
 
-            {/* Bottom Step Instruction Bar & Slider Controls */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 space-y-3">
+            {/* Bottom Step Instruction Bar & Slider Controls - Stacks cleanly on tablet viewports */}
+            <div className="p-3 sm:p-4 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 space-y-2.5 shrink-0 z-20">
               {/* Step Card */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold">
-                      Step {currentStep.stepNumber} of {totalSteps}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/90 border border-slate-800 shadow-md">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold shrink-0">
+                      Step {currentStep?.stepNumber || currentStepIndex + 1} of {totalSteps}
                     </span>
-                    <h4 className="text-sm font-bold text-white">
-                      {currentStep.title || currentStep.label}
+                    <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">
+                      {currentStep?.title || currentStep?.label || `Step ${currentStepIndex + 1}`}
                     </h4>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {currentStep.instruction || currentStep.label}
+                  <p className="text-xs text-slate-300 leading-relaxed break-words">
+                    {currentStep?.instruction || currentStep?.label || ''}
                   </p>
                 </div>
 
                 {/* Drafting Instrument & ISO Line Badges */}
-                <div className="flex flex-wrap sm:flex-col items-end gap-1 text-[11px] font-mono shrink-0">
+                <div className="flex flex-wrap md:flex-col md:items-end gap-1.5 text-[11px] font-mono shrink-0">
                   <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                    ✏️ {currentStep.pencilGrade}
+                    ✏️ {currentStep?.pencilGrade || '2H'}
                   </span>
                   <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
-                    📏 {currentStep.lineTypeISO}
+                    📏 {currentStep?.lineTypeISO || 'Continuous Thin'}
                   </span>
-                  {currentStep.markAllocation && (
+                  {currentStep?.markAllocation && (
                     <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800">
                       {currentStep.markAllocation}
                     </span>
@@ -412,7 +419,7 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
               </div>
 
               {/* Slider & Playback Controls */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 {/* Play / Pause */}
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}

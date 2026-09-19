@@ -37,8 +37,9 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
   onBackToStudio,
   onReturnToLanding
 }) => {
-  const { isSubscribed, subscription, openPaywall, subscribeToPlan } = useSubscription();
-  const isFullAccess = isSubscribed || subscription.plan !== 'FREE' || subscription.userRole === 'TEACHER' || subscription.userRole === 'ADMIN';
+  const { hasActivePaidSubscription, subscription, openPaywall, subscribeToPlan } = useSubscription();
+  // 10-year past questions archive strictly requires an active Paystack subscription
+  const isFullAccess = Boolean(hasActivePaidSubscription);
 
   // Filters State
   const [selectedExamBody, setSelectedExamBody] = useState<ExamBody>('WAEC');
@@ -227,20 +228,30 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
           <span className="text-xs font-mono text-slate-400 shrink-0 flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-cyan-400" /> Year:
           </span>
-          {ALL_YEARS.map(year => {
+          {(ALL_YEARS || []).map(year => {
             const isSelected = selectedYear === year;
+            const isLockedYear = !isFullAccess && year !== 2026;
             return (
               <button
                 key={year}
                 id={`btn-year-${year}`}
-                onClick={() => setSelectedYear(year)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold shrink-0 transition-all ${
+                onClick={() => {
+                  if (isLockedYear) {
+                    openPaywall();
+                    return;
+                  }
+                  setSelectedYear(year);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold shrink-0 transition-all flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400 font-bold shadow-sm'
+                    : isLockedYear
+                    ? 'bg-slate-950 text-slate-500 hover:text-amber-400 border border-slate-800/80 hover:bg-slate-900'
                     : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800/80 hover:bg-slate-800'
                 }`}
               >
-                {year}
+                <span>{year}</span>
+                {isLockedYear && <Lock className="w-2.5 h-2.5 text-amber-400/80" />}
               </button>
             );
           })}

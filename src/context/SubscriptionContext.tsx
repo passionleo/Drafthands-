@@ -13,6 +13,8 @@ import { DrawingTopic, CurriculumTier } from '../types/curriculum';
 export interface SubscriptionContextType {
   subscription: UserSubscriptionState;
   isSubscribed: boolean;
+  hasActivePaidSubscription: boolean;
+  isDemoMode: boolean;
   isTeacherOrAdmin: boolean;
   userRole: UserRoleType;
   userProfile?: UserProfile;
@@ -32,6 +34,7 @@ export interface SubscriptionContextType {
     reason?: string;
   };
   subscribeToPlan: (plan: SubscriptionPlanType, reference?: string) => void;
+  enableDemoMode: () => void;
   redeemVoucherCode: (code: string) => { success: boolean; message: string; plan?: SubscriptionPlanType };
   resetSubscription: () => void;
   openPaywall: (topic?: DrawingTopic) => void;
@@ -109,8 +112,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const isEmailVerified = userProfile ? Boolean(userProfile.isEmailVerified) : true;
   const currentPlan = SUBSCRIPTION_PLANS[subscription?.plan || 'FREE'] || SUBSCRIPTION_PLANS.FREE;
 
-  const isSubscribed = Boolean(subscription?.isSubscribed && subscription?.plan !== 'FREE');
-  const isTeacherOrAdmin = userRole === 'TEACHER' || userRole === 'ADMIN' || (isSubscribed && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'));
+  const isDemoMode = Boolean(
+    subscription?.isDemo || 
+    (subscription?.licenseKey && subscription.licenseKey.startsWith('DEMO-'))
+  );
+
+  // Strictly check for an active, paid non-demo subscription
+  const hasActivePaidSubscription = Boolean(
+    subscription?.isSubscribed && 
+    subscription?.plan !== 'FREE' && 
+    !isDemoMode
+  );
+
+  // isSubscribed reflects strict active paid status
+  const isSubscribed = hasActivePaidSubscription;
+  const isTeacherOrAdmin = userRole === 'TEACHER' || userRole === 'ADMIN' || (hasActivePaidSubscription && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'));
 
   const setUserRole = (role: UserRoleType) => {
     setSubscription(prev => ({
@@ -156,8 +172,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkTopicAccess = (topic: DrawingTopic, topicsInTier: DrawingTopic[]) => {
-    // If user has an active premium subscription, everything is unlocked
-    if (isSubscribed) {
+    // If user has an active paid subscription, all syllabus modules are unlocked
+    if (hasActivePaidSubscription) {
       return { isAllowed: true, isFreeTier: false, tierIndex: 0 };
     }
 
@@ -166,9 +182,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     // Find the index of this topic within its class level
-    const tierIndex = topicsInTier.findIndex(t => t?.id === topic?.id);
+    const tierIndex = (topicsInTier || []).findIndex(t => t?.id === topic?.id);
     const isFreeTier = tierIndex >= 0 && tierIndex < FREE_TOPICS_PER_TIER;
 
+    // Demo Mode & Free Tier strictly unlock ONLY introductory topics (first 3)
     return {
       isAllowed: isFreeTier,
       isFreeTier,
@@ -192,20 +209,20 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return { isAllowed: true };
     }
 
-    // Subscription checks
+    // Subscription checks strictly require active paid subscription
     if (featureKey === 'PROJECTION_MODE') {
       if (userRole === 'STUDENT') {
         return { isAllowed: false, reason: 'Smart board projection mode is reserved for Educators.' };
       }
-      if (!isSubscribed) {
-        return { isAllowed: false, reason: 'Live Projection Mode requires an active Teacher Pro or Institution subscription.' };
+      if (!hasActivePaidSubscription) {
+        return { isAllowed: false, reason: 'Live Projection Mode requires an active Teacher Pro or Institution Paystack subscription.' };
       }
       return { isAllowed: true };
     }
 
     if (featureKey === '3D_VIEWPORT' || featureKey === 'EXAM_ARCHIVE_DOWNLOAD') {
-      if (!isSubscribed) {
-        return { isAllowed: false, reason: 'This module requires an active Drafthands Pro subscription.' };
+      if (!hasActivePaidSubscription) {
+        return { isAllowed: false, reason: 'This module requires an active Drafthands Paystack subscription.' };
       }
       return { isAllowed: true };
     }
@@ -223,22 +240,37 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     const assignedRole: UserRoleType = isTeacher ? 'TEACHER' : userRole;
+    const isDemo = reference?.startsWith('DEMO-') || false;
 
     const newState: UserSubscriptionState = {
       plan,
-      isSubscribed: true,
-      activeUntil: expiryDate.toISOString(),
-      licenseKey: reference || `REF-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+      isSubscribed: !isDemo && plan !== 'FREE',
+      activeUntil: isDemo ? null : expiryDate.toISOString(),
+      licenseKey: reference || `PAYSTACK-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
       userRole: assignedRole,
       userProfile: subscription.userProfile ? {
         ...subscription.userProfile,
         role: assignedRole,
         isEmailVerified: true
       } : undefined,
-      unlockedTopicIds: []
+      unlockedTopicIds: [],
+      isDemo
     };
 
     setSubscription(newState);
+    setIsPaywallOpen(false);
+    setPaywallTargetTopic(null);
+  };
+
+  const enableDemoMode = () => {
+    setSubscription(prev => ({
+      ...prev,
+      plan: 'FREE',
+      isSubscribed: false,
+      isDemo: true,
+      licenseKey: `DEMO-${Date.now()}`,
+      activeUntil: null
+    }));
     setIsPaywallOpen(false);
     setPaywallTargetTopic(null);
   };
@@ -294,6 +326,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       value={{
         subscription,
         isSubscribed,
+        hasActivePaidSubscription,
+        isDemoMode,
         isTeacherOrAdmin,
         userRole,
         userProfile,
@@ -306,6 +340,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         checkTopicAccess,
         checkFeatureAccess,
         subscribeToPlan,
+        enableDemoMode,
         redeemVoucherCode,
         resetSubscription,
         openPaywall,

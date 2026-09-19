@@ -64,7 +64,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenPractice
 }) => {
   return (
-    <div className="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 select-none overflow-hidden">
+    <div className="w-full md:w-80 lg:w-[400px] xl:w-[420px] bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col h-auto md:h-full max-h-[38vh] md:max-h-none shrink-0 select-none overflow-hidden">
       {/* Topic Title Header */}
       <div className="p-4 border-b border-slate-800 bg-slate-950/70">
         <div className="flex items-center justify-between gap-2 mb-1.5">

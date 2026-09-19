@@ -30,15 +30,15 @@ interface Paper1QuizEngineProps {
 }
 
 export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
-  questions,
+  questions = [],
   paperTitle,
   examBody,
   year,
   durationMinutes = 60,
   onOpenPaywall
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
-  const isFullAccess = isSubscribed || subscription.plan !== 'FREE' || subscription.userRole === 'TEACHER' || subscription.userRole === 'ADMIN';
+  const { hasActivePaidSubscription, subscribeToPlan } = useSubscription();
+  const isFullAccess = Boolean(hasActivePaidSubscription);
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
@@ -296,7 +296,7 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
 
             {/* Options List */}
             <div className="space-y-3">
-              {currentQ.options.map(opt => {
+              {(currentQ?.options || []).map(opt => {
                 const isSelected = selectedAnswer === opt.key;
                 const isThisCorrect = opt.key === currentQ.correctKey;
                 const showValidation = isAnswered && instantFeedback;
@@ -375,7 +375,7 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
       <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Question Selector Palette Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
-          {questions.map((q, idx) => {
+          {(questions || []).map((q, idx) => {
             const isAns = selectedAnswers[idx] !== undefined;
             const isCurr = idx === currentIndex;
             const isLockedQuestion = !isFullAccess && !q.isFreePreview;
@@ -383,7 +383,13 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
             return (
               <button
                 key={q.id}
-                onClick={() => setCurrentIndex(idx)}
+                onClick={() => {
+                  if (isLockedQuestion) {
+                    onOpenPaywall?.();
+                    return;
+                  }
+                  setCurrentIndex(idx);
+                }}
                 className={`w-7 h-7 rounded-lg text-xs font-mono font-bold flex items-center justify-center transition-all ${
                   isCurr
                     ? 'bg-cyan-500 text-slate-950 ring-2 ring-cyan-400'
@@ -411,8 +417,16 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
             <ChevronLeft className="w-4 h-4" /> Previous
           </button>
           <button
-            onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
-            disabled={currentIndex === questions.length - 1}
+            onClick={() => {
+              const nextIdx = currentIndex + 1;
+              const nextQ = (questions || [])[nextIdx];
+              if (!isFullAccess && nextQ && !nextQ.isFreePreview) {
+                onOpenPaywall?.();
+                return;
+              }
+              setCurrentIndex(prev => Math.min((questions || []).length - 1, prev + 1));
+            }}
+            disabled={currentIndex === (questions || []).length - 1}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 text-white flex items-center gap-1.5 transition-colors"
           >
             Next <ChevronRight className="w-4 h-4" />

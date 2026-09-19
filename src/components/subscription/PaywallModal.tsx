@@ -36,7 +36,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   onClose,
   targetTopic
 }) => {
-  const { subscribeToPlan, redeemVoucherCode } = useSubscription();
+  const { subscribeToPlan, enableDemoMode, redeemVoucherCode } = useSubscription();
 
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>('STUDENT_SESSION');
   const [payerEmail, setPayerEmail] = useState<string>('student@drafthands.edu.ng');
@@ -46,7 +46,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedPlan = SUBSCRIPTION_PLANS[selectedPlanType];
+  const selectedPlan = SUBSCRIPTION_PLANS[selectedPlanType] || SUBSCRIPTION_PLANS.STUDENT_SESSION;
 
   const handleOfficialPaystackCheckout = () => {
     setIsProcessingPaystack(true);
@@ -85,8 +85,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     }
   };
 
-  const handleInstantDemoUnlock = (planType: SubscriptionPlanType) => {
-    subscribeToPlan(planType, `DEMO-${Date.now()}`);
+  const handleActivateDemoMode = () => {
+    enableDemoMode();
     onClose();
   };
 
@@ -300,7 +300,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
               </div>
 
               <div className="grid sm:grid-cols-2 gap-2 text-xs">
-                {selectedPlan.features.map((feat, i) => (
+                {(selectedPlan?.features || []).map((feat, i) => (
                   <div key={i} className="flex items-start gap-2 text-slate-300">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                     <span className="text-[11px] leading-tight">{feat}</span>
@@ -308,14 +308,19 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 ))}
               </div>
 
-              {/* Checkout Action Button */}
-              <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Official Paystack Checkout: Cards, Bank Transfer, USSD & QR</span>
+              {/* Checkout Action Button & Demo Tier Restriction */}
+              <div className="pt-3 border-t border-slate-800 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Official Paystack Checkout: Cards, Bank Transfer, USSD & QR</span>
+                  </div>
+                  <span className="text-amber-400 font-mono text-[10px] hidden sm:inline">
+                    Instant Automated Activation
+                  </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 rounded-xl px-2.5 py-1.5">
                     <span className="text-[10px] text-slate-400 font-mono">Receipt:</span>
                     <input
@@ -327,31 +332,33 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     />
                   </div>
 
-                  <button
-                    onClick={handleOfficialPaystackCheckout}
-                    disabled={isProcessingPaystack}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-colors"
-                  >
-                    {isProcessingPaystack ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Connecting to Paystack...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pay with Paystack ({formatNaira(selectedPlan.priceNGN)})</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleActivateDemoMode}
+                      className="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 font-mono text-[11px] border border-slate-700/80 transition-colors"
+                      title="Demo mode unlocks free introductory content only"
+                    >
+                      Preview Free Tier
+                    </button>
 
-                  <button
-                    onClick={() => handleInstantDemoUnlock(selectedPlanType)}
-                    className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-mono text-[11px] border border-slate-700"
-                    title="Instantly activate this plan for testing"
-                  >
-                    Demo Unlock
-                  </button>
+                    <button
+                      onClick={handleOfficialPaystackCheckout}
+                      disabled={isProcessingPaystack}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-colors"
+                    >
+                      {isProcessingPaystack ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Connecting to Paystack...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4" />
+                          <span>Pay with Paystack ({formatNaira(selectedPlan.priceNGN)})</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

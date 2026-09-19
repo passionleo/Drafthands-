@@ -533,7 +533,7 @@ function AppContent() {
             />
           </main>
         ) : (
-          <main className="flex flex-1 flex-col lg:flex-row min-w-0 overflow-hidden">
+          <main className="flex flex-1 flex-col md:flex-row min-w-0 overflow-hidden">
             {/* B1. PROCEDURAL INSTRUCTIONS & PARAMETER TUNER */}
             <ProcedurePanel
               topic={activeTopic}
@@ -567,7 +567,7 @@ function AppContent() {
             />
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 border-l border-slate-800">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 md:border-l border-slate-800">
               {/* Interactive Vector Canvas Stage */}
               <div className="flex-1 min-h-0 relative">
                 <DrawingCanvas

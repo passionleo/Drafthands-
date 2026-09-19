@@ -38,6 +38,7 @@ export interface UserSubscriptionState {
   userRole: UserRoleType;
   userProfile?: UserProfile;
   unlockedTopicIds: string[];
+  isDemo?: boolean;
 }
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanType, SubscriptionPlan> = {
