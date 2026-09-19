@@ -69,14 +69,14 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
       <div className="p-4 border-b border-slate-800 bg-slate-950/70">
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-            {topic.moduleCode}
+            {topic?.moduleCode || 'TD'}
           </span>
           <span className="text-[11px] text-slate-400 font-mono">
-            {topic.tier} • {topic.standards.waecRef}
+            {topic?.tier || 'SS1'} • {topic?.standards?.waecRef || 'WAEC TD'}
           </span>
         </div>
         <h2 className="text-sm font-bold text-slate-100 leading-snug">
-          {topic.title}
+          {topic?.title || 'Technical Drawing Topic'}
         </h2>
       </div>
 
@@ -90,7 +90,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
             <span className="text-xs font-mono font-bold text-cyan-400">
               STEP {currentStepIndex} OF {totalSteps}
             </span>
-            {step.activeInstrument.toolType !== 'NONE' && (
+            {step?.activeInstrument?.toolType && step.activeInstrument.toolType !== 'NONE' && (
               <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/30">
                 <Compass className="w-3 h-3" />
                 {step.activeInstrument.toolType.replace('_', ' ')}
@@ -99,15 +99,15 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
           </div>
 
           <h3 className="text-sm font-bold text-slate-100 mb-2 leading-tight">
-            {step.title}
+            {step?.title || 'Step Instruction'}
           </h3>
 
           <p className="text-xs text-slate-300 leading-relaxed font-normal bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
-            {step.instruction}
+            {step?.instruction || 'Follow the step-by-step drafting sequence.'}
           </p>
 
           {/* Detailed Notes */}
-          {step.detailedNotes && (
+          {step?.detailedNotes && (
             <div className="mt-3 pt-3 border-t border-slate-800 flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed">
               <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <span>{step.detailedNotes}</span>
@@ -115,7 +115,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
           )}
 
           {/* Technical Principle */}
-          {step.technicalPrinciple && (
+          {step?.technicalPrinciple && (
             <div className="mt-2.5 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-800/40 text-[11px] text-cyan-200 flex items-start gap-2">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
               <div>
@@ -127,7 +127,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
         </div>
 
         {/* INTERACTIVE PARAMETERS TUNER */}
-        {topic.parameters.length > 0 && (
+        {(topic?.parameters || []).length > 0 && (
           <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800/80">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
@@ -142,8 +142,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
             </div>
 
             <div className="space-y-3">
-              {topic.parameters.map((param) => {
-                const val = parameters[param.id] ?? param.defaultValue;
+              {(topic?.parameters || []).map((param) => {
+                const val = (parameters && parameters[param.id] !== undefined) ? parameters[param.id] : param.defaultValue;
                 return (
                   <div key={param.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs font-mono">
@@ -263,7 +263,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-300 leading-relaxed">
-              {topic.category === 'TECHNICAL_FOUNDATIONS' || topic.id.includes('intro')
+              {topic?.category === 'TECHNICAL_FOUNDATIONS' || (topic?.id && topic.id.includes('intro'))
                 ? '5 Dynamic Multiple Choice Questions (MCQs) with instant grading & explanations.'
                 : 'Hybrid format: 2 Theory MCQs + 3 Practical Tasks linking directly to the Drawing Studio.'}
             </p>

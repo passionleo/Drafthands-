@@ -121,42 +121,86 @@ const INITIAL_SEED_ATTEMPTS: AssessmentAttempt[] = [
   }
 ];
 
+const isStorageAvailable = (): boolean => {
+  try {
+    return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+  } catch {
+    return false;
+  }
+};
+
+function sanitizeAttempt(item: any): AssessmentAttempt {
+  const percentage = typeof item?.percentage === 'number' ? item.percentage : 0;
+  return {
+    id: item?.id || 'att-' + Math.random().toString(36).substring(2, 9),
+    topicId: item?.topicId || 'general-td',
+    topicTitle: item?.topicTitle || 'Technical Drawing Assessment',
+    tier: item?.tier || 'SS1',
+    format: item?.format === 'THEORY_5_MCQ' ? 'THEORY_5_MCQ' : 'HYBRID_PRACTICAL',
+    completedAt: item?.completedAt || new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
+    score: typeof item?.score === 'number' ? item.score : 0,
+    maxScore: typeof item?.maxScore === 'number' ? item.maxScore : 5,
+    percentage,
+    waecGrade: item?.waecGrade || calculateWaecGrade(percentage),
+    mcqScore: typeof item?.mcqScore === 'number' ? item.mcqScore : 0,
+    mcqTotal: typeof item?.mcqTotal === 'number' ? item.mcqTotal : 0,
+    practicalCompletedCount: typeof item?.practicalCompletedCount === 'number' ? item.practicalCompletedCount : 0,
+    practicalTotalCount: typeof item?.practicalTotalCount === 'number' ? item.practicalTotalCount : 0,
+    answers: Array.isArray(item?.answers) ? item.answers : [],
+    practicalSubmissions: Array.isArray(item?.practicalSubmissions) ? item.practicalSubmissions : [],
+    teacherRemark: item?.teacherRemark || 'Continuous assessment progress recorded.'
+  };
+}
+
 export function getAssessmentAttempts(): AssessmentAttempt[] {
   try {
+    if (!isStorageAvailable()) {
+      return INITIAL_SEED_ATTEMPTS.map(sanitizeAttempt);
+    }
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SEED_ATTEMPTS));
-      return INITIAL_SEED_ATTEMPTS;
+      return INITIAL_SEED_ATTEMPTS.map(sanitizeAttempt);
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : INITIAL_SEED_ATTEMPTS;
+    if (!Array.isArray(parsed)) {
+      return INITIAL_SEED_ATTEMPTS.map(sanitizeAttempt);
+    }
+    return parsed.map(sanitizeAttempt);
   } catch (err) {
     console.error('Failed to load assessment attempts from localStorage', err);
-    return INITIAL_SEED_ATTEMPTS;
+    return INITIAL_SEED_ATTEMPTS.map(sanitizeAttempt);
   }
 }
 
 export function saveAssessmentAttempt(attempt: AssessmentAttempt): void {
   try {
-    const current = getAssessmentAttempts();
-    const existingIndex = current.findIndex(a => a.topicId === attempt.topicId);
+    if (!attempt) return;
+    const sanitized = sanitizeAttempt(attempt);
+    const current = getAssessmentAttempts() || [];
+    const existingIndex = current.findIndex(a => a?.topicId === sanitized.topicId);
     let updated: AssessmentAttempt[];
     if (existingIndex >= 0) {
       updated = [...current];
-      updated[existingIndex] = attempt;
+      updated[existingIndex] = sanitized;
     } else {
-      updated = [attempt, ...current];
+      updated = [sanitized, ...current];
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent(UPDATE_EVENT_NAME, { detail: attempt }));
+    if (isStorageAvailable()) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(UPDATE_EVENT_NAME, { detail: sanitized }));
+    }
   } catch (err) {
     console.error('Failed to save assessment attempt to localStorage', err);
   }
 }
 
-export function getAttemptByTopicId(topicId: string): AssessmentAttempt | undefined {
-  const all = getAssessmentAttempts();
-  return all.find(a => a.topicId === topicId);
+export function getAttemptByTopicId(topicId?: string): AssessmentAttempt | undefined {
+  if (!topicId) return undefined;
+  const all = getAssessmentAttempts() || [];
+  return all.find(a => a?.topicId === topicId);
 }
 
 export function recordPracticalSubmission(
@@ -165,13 +209,14 @@ export function recordPracticalSubmission(
   tier: string,
   submission: PracticalSubmissionRecord
 ): AssessmentAttempt {
-  const current = getAssessmentAttempts();
-  const existing = current.find(a => a.topicId === topicId);
+  const current = getAssessmentAttempts() || [];
+  const existing = current.find(a => a?.topicId === topicId);
 
   let attempt: AssessmentAttempt;
   if (existing) {
-    const subIndex = existing.practicalSubmissions.findIndex(s => s.taskId === submission.taskId);
-    let updatedSubs = [...existing.practicalSubmissions];
+    const safeSubs = Array.isArray(existing.practicalSubmissions) ? existing.practicalSubmissions : [];
+    const subIndex = safeSubs.findIndex(s => s?.taskId === submission?.taskId);
+    let updatedSubs = [...safeSubs];
     if (subIndex >= 0) {
       updatedSubs[subIndex] = submission;
     } else {
@@ -179,10 +224,11 @@ export function recordPracticalSubmission(
     }
     const completedCount = updatedSubs.length;
     const practicalPts = Math.min(3, completedCount);
-    const newScore = existing.mcqScore + practicalPts;
+    const mcqScore = typeof existing.mcqScore === 'number' ? existing.mcqScore : 0;
+    const newScore = mcqScore + practicalPts;
     const percentage = Math.round((newScore / 5) * 100);
 
-    attempt = {
+    attempt = sanitizeAttempt({
       ...existing,
       completedAt: new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
       practicalSubmissions: updatedSubs,
@@ -190,16 +236,16 @@ export function recordPracticalSubmission(
       score: newScore,
       percentage,
       waecGrade: calculateWaecGrade(percentage),
-      teacherRemark: `Practical construction task (${submission.taskTitle}) rendered and verified in Interactive Drawing Studio.`
-    };
+      teacherRemark: `Practical construction task (${submission?.taskTitle || 'Studio Task'}) rendered and verified in Interactive Drawing Studio.`
+    });
   } else {
     // New attempt
     const percentage = 20; // 1 practical task done out of 5
-    attempt = {
+    attempt = sanitizeAttempt({
       id: 'att-' + Date.now(),
-      topicId,
-      topicTitle,
-      tier,
+      topicId: topicId || 'general-td',
+      topicTitle: topicTitle || 'Technical Drawing',
+      tier: tier || 'SS1',
       format: 'HYBRID_PRACTICAL',
       completedAt: new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
       score: 1,
@@ -211,9 +257,9 @@ export function recordPracticalSubmission(
       practicalCompletedCount: 1,
       practicalTotalCount: 3,
       answers: [],
-      practicalSubmissions: [submission],
-      teacherRemark: `Practical construction task (${submission.taskTitle}) rendered in Interactive Drawing Studio.`
-    };
+      practicalSubmissions: submission ? [submission] : [],
+      teacherRemark: `Practical construction task (${submission?.taskTitle || 'Studio Task'}) rendered in Interactive Drawing Studio.`
+    });
   }
 
   saveAssessmentAttempt(attempt);
@@ -221,11 +267,21 @@ export function recordPracticalSubmission(
 }
 
 export function subscribeAssessmentUpdates(callback: () => void): () => void {
-  const handler = () => callback();
-  window.addEventListener(UPDATE_EVENT_NAME, handler);
-  window.addEventListener('storage', handler);
+  const handler = () => {
+    try {
+      callback();
+    } catch (err) {
+      console.error('Error in assessment update listener', err);
+    }
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener(UPDATE_EVENT_NAME, handler);
+    window.addEventListener('storage', handler);
+  }
   return () => {
-    window.removeEventListener(UPDATE_EVENT_NAME, handler);
-    window.removeEventListener('storage', handler);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener(UPDATE_EVENT_NAME, handler);
+      window.removeEventListener('storage', handler);
+    }
   };
 }

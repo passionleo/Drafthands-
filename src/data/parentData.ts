@@ -204,28 +204,29 @@ export function getWardProfile(code: string): StudentWardProfile {
   };
 
   // Synchronize with real-time saved assessment attempts & studio practical submissions
-  const liveAttempts = getAssessmentAttempts();
-  if (liveAttempts && liveAttempts.length > 0) {
+  const liveAttempts = getAssessmentAttempts() || [];
+  if (Array.isArray(liveAttempts) && liveAttempts.length > 0) {
     // Map live attempts into recentAssessments format
     const convertedAttempts = liveAttempts.map(att => ({
-      id: att.id,
-      topicId: att.topicId,
-      topicTitle: `${att.topicTitle} (${att.format === 'THEORY_5_MCQ' ? '5-MCQ Theory' : 'Hybrid: 2 MCQs + 3 Practical'})`,
-      date: att.completedAt,
-      score: att.score * 4, // scale out of 20 to match CA record
+      id: att?.id || 'att-' + Math.random(),
+      topicId: att?.topicId || 'general-td',
+      topicTitle: `${att?.topicTitle || 'Technical Drawing'} (${att?.format === 'THEORY_5_MCQ' ? '5-MCQ Theory' : 'Hybrid: 2 MCQs + 3 Practical'})`,
+      date: att?.completedAt || 'Recently completed',
+      score: (typeof att?.score === 'number' ? att.score : 0) * 4, // scale out of 20 to match CA record
       maxScore: 20,
-      waecGrade: att.waecGrade,
-      teacherComment: att.teacherRemark,
-      assessmentFormat: att.format,
-      mcqScore: att.mcqScore,
-      practicalTasksDone: att.practicalCompletedCount
+      waecGrade: att?.waecGrade || 'C4',
+      teacherComment: att?.teacherRemark || 'Continuous assessment score synchronized.',
+      assessmentFormat: att?.format || 'THEORY_5_MCQ',
+      mcqScore: typeof att?.mcqScore === 'number' ? att.mcqScore : 0,
+      practicalTasksDone: typeof att?.practicalCompletedCount === 'number' ? att.practicalCompletedCount : 0
     }));
 
     // Deduplicate against base recent assessments
     const existingIds = new Set(convertedAttempts.map(a => a.id));
+    const safeBaseRecent = Array.isArray(baseProfile.recentAssessments) ? baseProfile.recentAssessments : [];
     const mergedAssessments = [
       ...convertedAttempts,
-      ...baseProfile.recentAssessments.filter(a => !existingIds.has(a.id))
+      ...safeBaseRecent.filter(a => a && !existingIds.has(a.id))
     ];
 
     // Collect all practical submissions across attempts
@@ -242,55 +243,64 @@ export function getWardProfile(code: string): StudentWardProfile {
     }[] = [];
 
     liveAttempts.forEach(att => {
-      if (att.practicalSubmissions && att.practicalSubmissions.length > 0) {
-        att.practicalSubmissions.forEach(sub => {
+      const subs = Array.isArray(att?.practicalSubmissions) ? att.practicalSubmissions : [];
+      subs.forEach(sub => {
+        if (sub) {
           collectedPracticalSubs.push({
-            taskId: sub.taskId,
-            topicTitle: att.topicTitle,
-            taskTitle: sub.taskTitle,
-            submittedAt: sub.submittedAt,
-            elementCount: sub.elementCount,
+            taskId: sub.taskId || 'task-' + Math.random(),
+            topicTitle: att?.topicTitle || 'Technical Drawing',
+            taskTitle: sub.taskTitle || 'Studio Construction Task',
+            submittedAt: sub.submittedAt || 'Recently',
+            elementCount: typeof sub.elementCount === 'number' ? sub.elementCount : 0,
             notes: sub.notes,
-            status: sub.status,
+            status: sub.status || 'COMPLETED',
             marksAwarded: sub.marksAwarded || 18,
             maxMarks: sub.maxMarks || 20
           });
-        });
-      }
+        }
+      });
     });
 
     // Check for any newly identified weak areas (< 70%)
-    const updatedWeakAreas = [...baseProfile.weakAreas];
+    const safeBaseWeak = Array.isArray(baseProfile.weakAreas) ? baseProfile.weakAreas : [];
+    const updatedWeakAreas = [...safeBaseWeak];
     liveAttempts.forEach(att => {
-      if (att.percentage < 70) {
-        const alreadyListed = updatedWeakAreas.some(w => w.topicId === att.topicId);
+      if (att && typeof att.percentage === 'number' && att.percentage < 70) {
+        const alreadyListed = updatedWeakAreas.some(w => w?.topicId === att.topicId);
         if (!alreadyListed) {
           updatedWeakAreas.unshift({
-            skill: `${att.topicTitle} Construction Rule`,
+            skill: `${att.topicTitle || 'Technical Drawing'} Construction Rule`,
             topicId: att.topicId,
-            topicTitle: att.topicTitle,
+            topicTitle: att.topicTitle || 'Construction Topic',
             accuracyScore: att.percentage,
-            recommendedAction: `Scored ${att.percentage}% (${att.score}/5). Review 5-step procedure and practice drawing baseline and arcs in Interactive Studio.`
+            recommendedAction: `Scored ${att.percentage}% (${att.score || 0}/5). Review 5-step procedure and practice drawing baseline and arcs in Interactive Studio.`
           });
         }
       }
     });
 
     // Calculate dynamic average score
-    const totalPercents = liveAttempts.reduce((acc, a) => acc + a.percentage, 0);
-    const liveAverage = Math.round(totalPercents / liveAttempts.length);
-    const overallScore = Math.round((baseProfile.overallScore + liveAverage) / 2);
+    const totalPercents = liveAttempts.reduce((acc, a) => acc + (typeof a?.percentage === 'number' ? a.percentage : 0), 0);
+    const liveAverage = Math.round(totalPercents / Math.max(1, liveAttempts.length));
+    const baseOverall = typeof baseProfile.overallScore === 'number' ? baseProfile.overallScore : 75;
+    const overallScore = Math.round((baseOverall + liveAverage) / 2);
 
     return {
       ...baseProfile,
       overallScore,
-      quizzesCompleted: Math.max(baseProfile.quizzesCompleted, liveAttempts.length + 4),
-      totalQuizzes: Math.max(baseProfile.totalQuizzes, liveAttempts.length + 6),
+      quizzesCompleted: Math.max(baseProfile.quizzesCompleted || 0, liveAttempts.length + 4),
+      totalQuizzes: Math.max(baseProfile.totalQuizzes || 0, liveAttempts.length + 6),
       recentAssessments: mergedAssessments,
       practicalSubmissions: collectedPracticalSubs,
       weakAreas: updatedWeakAreas
     };
   }
 
-  return baseProfile;
+  return {
+    ...baseProfile,
+    recentAssessments: Array.isArray(baseProfile.recentAssessments) ? baseProfile.recentAssessments : [],
+    practicalSubmissions: Array.isArray(baseProfile.practicalSubmissions) ? baseProfile.practicalSubmissions : [],
+    weakAreas: Array.isArray(baseProfile.weakAreas) ? baseProfile.weakAreas : [],
+    masteryBreakdown: Array.isArray(baseProfile.masteryBreakdown) ? baseProfile.masteryBreakdown : []
+  };
 }

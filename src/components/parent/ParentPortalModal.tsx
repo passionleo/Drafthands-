@@ -385,34 +385,34 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  {activeProfile.masteryBreakdown.map((item, idx) => (
+                  {(activeProfile?.masteryBreakdown || []).map((item, idx) => (
                     <div key={idx} className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-semibold text-slate-200">{item.category}</span>
-                          <span className="text-xs font-mono font-bold text-slate-300">{item.masteryScore}%</span>
+                          <span className="text-xs font-semibold text-slate-200">{item?.category || 'Module Category'}</span>
+                          <span className="text-xs font-mono font-bold text-slate-300">{item?.masteryScore || 0}%</span>
                         </div>
                         <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              item.masteryScore >= 85
+                              (item?.masteryScore || 0) >= 85
                                 ? 'bg-emerald-500'
-                                : item.masteryScore >= 70
+                                : (item?.masteryScore || 0) >= 70
                                 ? 'bg-blue-500'
                                 : 'bg-amber-500'
                             }`}
-                            style={{ width: `${item.masteryScore}%` }}
+                            style={{ width: `${item?.masteryScore || 0}%` }}
                           />
                         </div>
                       </div>
                       <span className={`text-[11px] font-semibold px-2.5 py-1 rounded border font-mono ${
-                        item.level === 'Excellent'
+                        item?.level === 'Excellent'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                          : item.level === 'Good'
+                          : item?.level === 'Good'
                           ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                           : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                       }`}>
-                        {item.level}
+                        {item?.level || 'Active'}
                       </span>
                     </div>
                   ))}
@@ -433,22 +433,22 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeProfile.weakAreas.map((area, idx) => (
+                {(activeProfile?.weakAreas || []).map((area, idx) => (
                   <div key={idx} className="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                        Accuracy: {area.accuracyScore}%
+                        Accuracy: {area?.accuracyScore || 0}%
                       </span>
                       <span className="text-xs text-slate-500 font-mono">Priority Area #{idx + 1}</span>
                     </div>
-                    <h4 className="text-sm font-bold text-white">{area.skill}</h4>
+                    <h4 className="text-sm font-bold text-white">{area?.skill || 'Technical Drawing Competency'}</h4>
                     <p className="text-xs text-slate-300 bg-slate-900 p-3 rounded-lg border border-slate-800">
                       <strong className="text-amber-400 block mb-1">Recommended Action:</strong>
-                      {area.recommendedAction}
+                      {area?.recommendedAction || 'Practice exercises in the interactive studio.'}
                     </p>
                     <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                      <span className="text-xs text-slate-400 font-mono">{area.topicTitle}</span>
-                      {onSelectTopic && (
+                      <span className="text-xs text-slate-400 font-mono">{area?.topicTitle || 'General Topic'}</span>
+                      {onSelectTopic && area?.topicId && (
                         <button
                           onClick={() => {
                             onSelectTopic(area.topicId);
@@ -481,17 +481,17 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               </div>
 
               <div className="space-y-3">
-                {activeProfile.recentAssessments.map((ass) => (
-                  <div key={ass.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4 transition-all hover:border-slate-700">
+                {(activeProfile?.recentAssessments || []).map((ass) => (
+                  <div key={ass?.id || Math.random()} className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4 transition-all hover:border-slate-700">
                     <div className="flex items-start gap-3.5">
                       <div className="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center justify-center font-mono font-bold text-emerald-400 shrink-0">
-                        <span className="text-sm leading-none">{ass.waecGrade}</span>
+                        <span className="text-sm leading-none">{ass?.waecGrade || 'C4'}</span>
                         <span className="text-[9px] text-emerald-500/70 font-normal">WAEC</span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h5 className="text-xs font-bold text-white">{ass.topicTitle}</h5>
-                          {ass.assessmentFormat === 'THEORY_5_MCQ' ? (
+                          <h5 className="text-xs font-bold text-white">{ass?.topicTitle || 'Technical Drawing Assessment'}</h5>
+                          {ass?.assessmentFormat === 'THEORY_5_MCQ' ? (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
                               5-MCQ Theory Exam
                             </span>
@@ -502,15 +502,17 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                           )}
                         </div>
                         <p className="text-[11px] text-slate-400 mt-0.5">
-                          {ass.date} • Continuous Assessment Score: <strong className="text-emerald-400 font-mono">{ass.score} / {ass.maxScore}</strong> ({Math.round((ass.score / ass.maxScore) * 100)}%)
+                          {ass?.date || 'Recent'} • Continuous Assessment Score: <strong className="text-emerald-400 font-mono">{ass?.score ?? 0} / {ass?.maxScore ?? 20}</strong> ({Math.round(((ass?.score || 0) / Math.max(1, ass?.maxScore || 20)) * 100)}%)
                         </p>
-                        <p className="text-xs text-slate-300 italic mt-1.5 bg-slate-900/60 p-2 rounded border border-slate-800/80">
-                          "{ass.teacherComment}"
-                        </p>
+                        {ass?.teacherComment && (
+                          <p className="text-xs text-slate-300 italic mt-1.5 bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                            "{ass.teacherComment}"
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {ass.topicId && onSelectTopic && (
+                      {ass?.topicId && onSelectTopic && (
                         <button
                           onClick={() => {
                             onClose();
@@ -543,11 +545,11 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 </div>
                 <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5" />
-                  <span>{activeProfile.practicalSubmissions?.length || 0} Submissions Synced</span>
+                  <span>{(activeProfile?.practicalSubmissions || []).length} Submissions Synced</span>
                 </span>
               </div>
 
-              {(!activeProfile.practicalSubmissions || activeProfile.practicalSubmissions.length === 0) ? (
+              {(!activeProfile?.practicalSubmissions || activeProfile.practicalSubmissions.length === 0) ? (
                 <div className="p-8 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
                   <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400">
                     <PenTool className="w-6 h-6" />
@@ -559,22 +561,22 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activeProfile.practicalSubmissions.map((sub, idx) => (
+                  {(activeProfile?.practicalSubmissions || []).map((sub, idx) => (
                     <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 hover:border-cyan-500/30 transition-all">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                            {sub.topicTitle}
+                            {sub?.topicTitle || 'Practical Task'}
                           </span>
-                          <h5 className="text-xs font-bold text-white mt-1.5">{sub.taskTitle}</h5>
+                          <h5 className="text-xs font-bold text-white mt-1.5">{sub?.taskTitle || 'Studio Construction'}</h5>
                           <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
                             <Clock className="w-3 h-3 text-slate-500" />
-                            {sub.submittedAt}
+                            {sub?.submittedAt || 'Recently'}
                           </span>
                         </div>
                         <div className="text-right">
                           <span className="text-xs font-mono font-bold text-emerald-400 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
-                            {sub.marksAwarded || 18} / {sub.maxMarks || 20} Marks
+                            {sub?.marksAwarded || 18} / {sub?.maxMarks || 20} Marks
                           </span>
                         </div>
                       </div>
@@ -582,13 +584,13 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-1">
                         <div className="flex items-center justify-between text-[11px] text-slate-400">
                           <span>Studio Elements Drawn:</span>
-                          <span className="font-mono text-cyan-400 font-bold">{sub.elementCount} Geometry Entities</span>
+                          <span className="font-mono text-cyan-400 font-bold">{sub?.elementCount || 0} Geometry Entities</span>
                         </div>
                         <div className="flex items-center justify-between text-[11px] text-slate-400">
                           <span>Marking Rubric:</span>
                           <span className="text-emerald-400 font-semibold">WAEC Technical Drawing Scheme</span>
                         </div>
-                        {sub.notes && (
+                        {sub?.notes && (
                           <p className="text-[11px] text-slate-400 italic mt-1 border-t border-slate-800/80 pt-1">
                             "{sub.notes}"
                           </p>
@@ -601,7 +603,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                           Verified Studio Construction
                         </span>
                         <span className="text-[10px] font-mono text-slate-500">
-                          ID: {sub.taskId}
+                          ID: {sub?.taskId || idx}
                         </span>
                       </div>
                     </div>
@@ -618,8 +620,8 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               <div className="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-bold text-white">{activeProfile.teacherRemarks.teacherName}</h4>
-                    <span className="text-xs text-slate-400 font-mono">Official Weekly Assessment • {activeProfile.teacherRemarks.date}</span>
+                    <h4 className="text-sm font-bold text-white">{activeProfile?.teacherRemarks?.teacherName || 'Technical Drawing Department'}</h4>
+                    <span className="text-xs text-slate-400 font-mono">Official Assessment • {activeProfile?.teacherRemarks?.date || 'Current Term'}</span>
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-semibold">
                     Approved by HOD
@@ -627,7 +629,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-900/90 border border-slate-800 text-xs text-slate-200 leading-relaxed">
-                  "{activeProfile.teacherRemarks.comment}"
+                  "{activeProfile?.teacherRemarks?.comment || 'Student is making steady progress in curriculum drawing tasks.'}"
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -637,7 +639,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       <span>Observed Strengths</span>
                     </h5>
                     <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
-                      {activeProfile.teacherRemarks.strengths.map((str, i) => (
+                      {(activeProfile?.teacherRemarks?.strengths || []).map((str, i) => (
                         <li key={i}>{str}</li>
                       ))}
                     </ul>
@@ -648,7 +650,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Target for Next Week</span>
                     </h5>
-                    <p className="text-xs text-slate-300">{activeProfile.teacherRemarks.focusForNextWeek}</p>
+                    <p className="text-xs text-slate-300">{activeProfile?.teacherRemarks?.focusForNextWeek || 'Complete practice exercises and revise geometric constructions.'}</p>
                   </div>
                 </div>
               </div>
@@ -752,12 +754,12 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {activeProfile.recentAssessments.map((ass, i) => (
+                    {(activeProfile?.recentAssessments || []).map((ass, i) => (
                       <tr key={i} className="border-b border-slate-200">
-                        <td className="p-2.5 font-medium border-r border-slate-200">{ass.topicTitle}</td>
-                        <td className="p-2.5 text-center font-mono font-bold border-r border-slate-200">{ass.score}/{ass.maxScore}</td>
-                        <td className="p-2.5 text-center font-mono font-bold text-emerald-700 border-r border-slate-200">{ass.waecGrade}</td>
-                        <td className="p-2.5 text-slate-600 italic">{ass.teacherComment}</td>
+                        <td className="p-2.5 font-medium border-r border-slate-200">{ass?.topicTitle || 'Technical Drawing Assessment'}</td>
+                        <td className="p-2.5 text-center font-mono font-bold border-r border-slate-200">{ass?.score ?? 0}/{ass?.maxScore ?? 20}</td>
+                        <td className="p-2.5 text-center font-mono font-bold text-emerald-700 border-r border-slate-200">{ass?.waecGrade || 'C4'}</td>
+                        <td className="p-2.5 text-slate-600 italic">{ass?.teacherComment || 'Satisfactory attempt.'}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -51,7 +51,7 @@ export const StepPlayerControls: React.FC<StepPlayerControlsProps> = ({
     <div className="p-3.5 bg-slate-900 border-t border-slate-800 flex flex-col gap-2.5 shrink-0 select-none">
       {/* Scrubber dots / Step tabs */}
       <div className="flex items-center gap-1.5 w-full">
-        {Array.from({ length: totalSteps }).map((_, idx) => {
+        {Array.from({ length: Math.max(1, typeof totalSteps === 'number' && !isNaN(totalSteps) ? totalSteps : 1) }).map((_, idx) => {
           const stepNum = idx + 1;
           const isCompleted = stepNum < currentStep;
           const isCurrent = stepNum === currentStep;

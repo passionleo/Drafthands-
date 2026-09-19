@@ -1,10 +1,11 @@
 import { DrawingTopic, TopicSelfAssessment, AssessmentMCQ, PracticalDrawingTask } from '../types/curriculum';
 
 // Helper to determine whether a topic is purely theoretical vs practical/construction
-export function isTheoreticalTopic(topic: DrawingTopic): boolean {
+export function isTheoreticalTopic(topic?: DrawingTopic | null): boolean {
+  if (!topic) return true;
   if (topic.category === 'TECHNICAL_FOUNDATIONS') return true;
-  const tId = topic.id.toLowerCase();
-  const tTitle = topic.title.toLowerCase();
+  const tId = (topic.id || '').toLowerCase();
+  const tTitle = (topic.title || '').toLowerCase();
   if (
     tId.includes('intro') ||
     tId.includes('safety') ||
@@ -434,9 +435,20 @@ export const CURATED_TOPIC_ASSESSMENTS: Record<string, TopicSelfAssessment> = {
 };
 
 // DYNAMIC FALLBACK ASSESSMENT GENERATOR FOR ANY TOPIC
-export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment {
-  if (CURATED_TOPIC_ASSESSMENTS[topic.id]) {
-    return CURATED_TOPIC_ASSESSMENTS[topic.id];
+export function getTopicSelfAssessment(topic?: DrawingTopic | null): TopicSelfAssessment {
+  const safeId = topic?.id || 'general-technical-drawing';
+  const safeTitle = topic?.title || 'Technical & Engineering Drawing';
+  const safeNerdc = topic?.standards?.nerdcRef || 'NERDC Technical Drawing Standards';
+  const safeWaec = topic?.standards?.waecRef || 'WAEC TD Syllabus';
+  const safeIso = topic?.standards?.isoRef || 'ISO 128 / ISO 5457 Standards';
+
+  if (safeId && CURATED_TOPIC_ASSESSMENTS[safeId]) {
+    const curated = CURATED_TOPIC_ASSESSMENTS[safeId];
+    return {
+      ...curated,
+      mcqs: curated.mcqs || [],
+      practicalTasks: curated.practicalTasks || []
+    };
   }
 
   const isTheory = isTheoreticalTopic(topic);
@@ -444,25 +456,25 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
   if (isTheory) {
     // 5 Dynamic MCQs for Theoretical Topics
     return {
-      topicId: topic.id,
+      topicId: safeId,
       format: 'THEORY_5_MCQ',
       passScorePercentage: 70,
       mcqs: [
         {
-          id: `${topic.id}-q1`,
-          question: `According to Nigerian NERDC & WAEC standards, what is the primary objective of studying "${topic.title}"?`,
+          id: `${safeId}-q1`,
+          question: `According to Nigerian NERDC & WAEC standards, what is the primary objective of studying "${safeTitle}"?`,
           options: [
-            `To master the fundamental technical conventions, safety rules, and graphic standards required for ${topic.title}`,
+            `To master the fundamental technical conventions, safety rules, and graphic standards required for ${safeTitle}`,
             'To replace all engineering drawings with freehand abstract artistic paintings',
             'To memorize formulas without ever practicing technical drawing instruments',
             'To ignore ISO line thickness conventions and sheet layout rules'
           ],
           correctIndex: 0,
-          explanation: `In the NERDC curriculum, ${topic.title} establishes core procedural fluency and theoretical principles codified under ${topic.standards.nerdcRef} and ${topic.standards.isoRef}.`,
-          waecReference: `${topic.standards.waecRef} / ${topic.standards.nerdcRef}`
+          explanation: `In the NERDC curriculum, ${safeTitle} establishes core procedural fluency and theoretical principles codified under ${safeNerdc} and ${safeIso}.`,
+          waecReference: `${safeWaec} / ${safeNerdc}`
         },
         {
-          id: `${topic.id}-q2`,
+          id: `${safeId}-q2`,
           question: `Which pencil hardness grade is specified by ISO 128 for drawing faint construction lines in this module?`,
           options: [
             '6B soft sketch pencil',
@@ -475,7 +487,7 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
           waecReference: 'ISO 128 Line Conventions / WAEC Section 1'
         },
         {
-          id: `${topic.id}-q3`,
+          id: `${safeId}-q3`,
           question: `What is the standard ISO line weight for the final finished outlines of an engineering drawing?`,
           options: [
             '0.25 mm continuous thin line',
@@ -488,7 +500,7 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
           waecReference: 'ISO 128-20 Outline Definition'
         },
         {
-          id: `${topic.id}-q4`,
+          id: `${safeId}-q4`,
           question: `What is the role of dimensional and geometric accuracy in technical drafting exercises?`,
           options: [
             'Dimensions are purely decorative and can vary by ±20mm without consequence',
@@ -501,7 +513,7 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
           waecReference: 'NERDC Technical Drawing Objectives'
         },
         {
-          id: `${topic.id}-q5`,
+          id: `${safeId}-q5`,
           question: `When completing an examination drawing for WAEC, where must the candidate identification and title block be located?`,
           options: [
             'In the center of the drawing area overlapping the object',
@@ -513,19 +525,20 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
           explanation: 'ISO 5457 and WAEC examination guidelines dictate a standard 10mm border with the Title Block firmly grounded in the bottom right.',
           waecReference: 'WAEC Examination Paper Instructions'
         }
-      ]
+      ],
+      practicalTasks: []
     };
   }
 
   // 2 MCQs + 3 Practical Drawing Tasks for Practical / Construction Topics
   return {
-    topicId: topic.id,
+    topicId: safeId,
     format: 'HYBRID_PRACTICAL',
     passScorePercentage: 70,
     mcqs: [
       {
-        id: `${topic.id}-mcq1`,
-        question: `In the construction of "${topic.title}", what is the key geometric principle governing accuracy?`,
+        id: `${safeId}-mcq1`,
+        question: `In the construction of "${safeTitle}", what is the key geometric principle governing accuracy?`,
         options: [
           'Drawing without any reference lines or geometric constraints',
           'Strict adherence to geometric loci, compass intersection points, and ISO line weight differentiation',
@@ -533,11 +546,11 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
           'Using soft 4B pencils for all preliminary construction arcs'
         ],
         correctIndex: 1,
-        explanation: `Under ${topic.standards.waecRef}, candidates lose marks if construction arcs are erased or if line weights lack proper 2H/HB contrast.`,
-        waecReference: `${topic.standards.waecRef} Marking Scheme`
+        explanation: `Under ${safeWaec}, candidates lose marks if construction arcs are erased or if line weights lack proper 2H/HB contrast.`,
+        waecReference: `${safeWaec} Marking Scheme`
       },
       {
-        id: `${topic.id}-mcq2`,
+        id: `${safeId}-mcq2`,
         question: `Which drawing instrument combination is mandatory for establishing accurate alignment in this construction?`,
         options: [
           'T-square firmly seated against board edge paired with 30°-60° or 45° set-squares and precision compass',
@@ -552,10 +565,10 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
     ],
     practicalTasks: [
       {
-        id: `${topic.id}-task1`,
+        id: `${safeId}-task1`,
         taskNumber: 3,
-        taskTitle: `Core Construction Step: ${topic.title}`,
-        taskPrompt: `In the Interactive Drawing Studio, construct the foundational geometry for ${topic.title} following WAEC procedural specifications.`,
+        taskTitle: `Core Construction Step: ${safeTitle}`,
+        taskPrompt: `In the Interactive Drawing Studio, construct the foundational geometry for ${safeTitle} following WAEC procedural specifications.`,
         specifications: [
           'Establish the horizontal baseline and primary centerlines using faint 2H construction lines (0.25mm).',
           'Set compass accurately to specified radius parameters without parallax error.',
@@ -568,10 +581,10 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
         expectedOutcome: 'Accurate geometric construction showing visible, faint 2H construction lines and bold HB outlines.'
       },
       {
-        id: `${topic.id}-task2`,
+        id: `${safeId}-task2`,
         taskNumber: 4,
-        taskTitle: `Intermediate Variation & Dimensioning for ${topic.title}`,
-        taskPrompt: `Apply the principles of ${topic.title} with modified parameters and add complete ISO 129 dimensions.`,
+        taskTitle: `Intermediate Variation & Dimensioning for ${safeTitle}`,
+        taskPrompt: `Apply the principles of ${safeTitle} with modified parameters and add complete ISO 129 dimensions.`,
         specifications: [
           'Construct the geometry with 25% increased scale or altered parameters.',
           'Add dimension extension lines leaving a 1mm gap from the object outline.',
@@ -584,10 +597,10 @@ export function getTopicSelfAssessment(topic: DrawingTopic): TopicSelfAssessment
         expectedOutcome: 'Correctly dimensioned technical drawing meeting ISO 129 standards.'
       },
       {
-        id: `${topic.id}-task3`,
+        id: `${safeId}-task3`,
         taskNumber: 5,
-        taskTitle: `Advanced WAEC Exam Question Application for ${topic.title}`,
-        taskPrompt: `Complete an authentic WAEC/NECO examination problem based on ${topic.title} and submit your drawing for portfolio grading.`,
+        taskTitle: `Advanced WAEC Exam Question Application for ${safeTitle}`,
+        taskPrompt: `Complete an authentic WAEC/NECO examination problem based on ${safeTitle} and submit your drawing for portfolio grading.`,
         specifications: [
           'Draw the complete composite figure combining multiple geometric features.',
           'Maintain clean sheet layout and uniform lettering in the title block.',
