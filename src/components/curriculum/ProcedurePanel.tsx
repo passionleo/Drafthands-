@@ -250,35 +250,24 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
           )}
         </div>
 
-        {/* END-OF-TOPIC 5-QUESTION SELF-ASSESSMENT */}
+        {/* PRACTICE & EXAM CHALLENGE */}
         {onOpenPractice && (
-          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-950/40 via-slate-950 to-emerald-950/40 border border-amber-500/40 space-y-2 shadow-lg">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-amber-400" />
-                End-of-Topic Self-Assessment
-              </span>
-              <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                5 Questions System
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              {topic?.category === 'TECHNICAL_FOUNDATIONS' || (topic?.id && topic.id.includes('intro'))
-                ? '5 Dynamic Multiple Choice Questions (MCQs) with instant grading & explanations.'
-                : 'Hybrid format: 2 Theory MCQs + 3 Practical Tasks linking directly to the Drawing Studio.'}
-            </p>
-            <button
-              id="btn-procedure-take-assessment"
-              onClick={onOpenPractice}
-              className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-white font-bold text-xs flex items-center justify-between transition-all shadow-md shadow-emerald-950/50 cursor-pointer group"
-            >
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Launch 5-Question Assessment</span>
+          <button
+            id="btn-procedure-take-practice"
+            onClick={onOpenPractice}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-950 hover:from-emerald-900/90 hover:to-slate-900 border border-emerald-500/40 text-xs font-bold text-emerald-200 flex items-center justify-between transition-all shadow-md group cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Award className="w-4 h-4" />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+              <div className="text-left">
+                <span className="block text-white font-bold text-xs">Topic Practice & Quiz</span>
+                <span className="block text-[10px] text-emerald-400/90 font-mono">Interactive WAEC Exam Practice</span>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         )}
 
         {/* ISO 128 DIAGRAM VIEWER TRIGGER */}

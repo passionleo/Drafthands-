@@ -29,7 +29,6 @@ import { SAMPLE_WARD_PROFILES, getWardProfile } from '../../data/parentData';
 import { StudentWardProfile } from '../../types/parent';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payForParentWardSponsorship, formatNaira } from '../../utils/paystack';
-import { subscribeAssessmentUpdates } from '../../services/assessmentStorage';
 
 interface ParentPortalModalProps {
   isOpen: boolean;
@@ -58,13 +57,9 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   const [isPayingSponsorship, setIsPayingSponsorship] = useState<boolean>(false);
   const [sponsorshipReceiptRef, setSponsorshipReceiptRef] = useState<string | null>(null);
 
-  // Sync live assessments whenever opened or ward changes
+  // Load ward profile when opened or ward code changes
   useEffect(() => {
     setActiveProfile(getWardProfile(wardCodeInput));
-    const unsubscribe = subscribeAssessmentUpdates(() => {
-      setActiveProfile(getWardProfile(wardCodeInput));
-    });
-    return () => unsubscribe();
   }, [wardCodeInput, isOpen]);
 
   if (!isOpen) return null;
