@@ -62,9 +62,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     onAuthSuccess(selectedRole, {
-      name: fullName || (selectedRole === 'STUDENT' ? 'Tunde Bakare' : selectedRole === 'TEACHER' ? 'Engr. D. Adebayo' : selectedRole === 'PARENT' ? 'Mrs. Folashade Adeyemi' : 'Prof. Kwesi Mensah'),
-      email: emailOrPhone || 'user@drafthands.edu',
-      institution: institutionName || 'Federal Technical College, Lagos',
+      name: fullName || (selectedRole === 'STUDENT' ? 'Demo Student 1' : selectedRole === 'TEACHER' ? 'Demo Instructor' : selectedRole === 'PARENT' ? 'Demo Parent Guardian' : 'Demo Academic Dean'),
+      email: emailOrPhone || 'user@test-academy.edu.ng',
+      institution: institutionName || 'Test Technical Academy',
       isEmailVerified: true
     });
     onClose();
@@ -85,9 +85,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setTimeout(() => {
       setIsVerifying(false);
       onAuthSuccess('STUDENT', {
-        name: fullName || 'Tunde Bakare (SS2 Technical)',
-        email: emailOrPhone || 'student@school.edu.ng',
-        institution: institutionName || 'Federal Science & Technical College',
+        name: fullName || 'Demo Student 1 (SS2 Technical)',
+        email: emailOrPhone || 'student@test-academy.edu.ng',
+        institution: institutionName || 'Test Technical Academy',
         isEmailVerified: true
       });
       onClose();
@@ -97,27 +97,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleQuickDemo = (role: UserRoleType) => {
     const demoConfigs: Record<UserRoleType, { name: string; email: string; institution: string; isEmailVerified: boolean }> = {
       STUDENT: {
-        name: 'Tunde Bakare (SS2 Technical)',
-        email: 'tunde.b@student.drafthands.edu',
-        institution: 'King’s College, Lagos',
+        name: 'Demo Student 1 (SS2 Technical)',
+        email: 'demo.student1@test-academy.edu.ng',
+        institution: 'Test Technical Academy',
         isEmailVerified: true
       },
       TEACHER: {
-        name: 'Engr. D. Adebayo (Technical Instructor)',
-        email: 'adebayo.engr@drafthands.edu',
-        institution: 'Federal Science & Technical College, Yaba',
+        name: 'Demo Technical Instructor',
+        email: 'demo.teacher@test-academy.edu.ng',
+        institution: 'Test Technical Academy',
         isEmailVerified: true
       },
       PARENT: {
-        name: 'Mrs. Folashade Bakare (Guardian)',
-        email: 'folashade.b@parent.drafthands.edu',
-        institution: 'Guardian of Tunde Bakare',
+        name: 'Demo Parent Guardian',
+        email: 'demo.parent@test-academy.edu.ng',
+        institution: 'Guardian of Demo Student 1',
         isEmailVerified: true
       },
       ADMIN: {
-        name: 'Prof. Kwesi Mensah (Academic Dean)',
-        email: 'dean.mensah@polytechnic.drafthands.edu',
-        institution: 'Accra Technical University',
+        name: 'Demo Academic Dean',
+        email: 'demo.dean@test-academy.edu.ng',
+        institution: 'Test Technical Academy',
         isEmailVerified: true
       }
     };

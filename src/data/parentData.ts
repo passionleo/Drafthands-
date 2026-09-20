@@ -1,12 +1,12 @@
 import { StudentWardProfile } from '../types/parent';
 
 export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
-  'WARD-DH-2025-88': {
-    wardCode: 'WARD-DH-2025-88',
-    studentName: 'Emeka Okafor',
-    admissionNo: 'FSTC/2024/0488',
+  'WARD-DEMO-001': {
+    wardCode: 'WARD-DEMO-001',
+    studentName: 'Demo Student 1',
+    admissionNo: 'DEMO-REG-001',
     classTier: 'SS1',
-    schoolName: 'Federal Science & Technical College, Yaba',
+    schoolName: 'Test Technical Academy',
     term: '1st Term',
     academicYear: '2025/2026',
     overallScore: 84,
@@ -84,9 +84,9 @@ export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
       }
     ],
     teacherRemarks: {
-      teacherName: 'Engr. D. K. Adeleke (HOD Technical Drawing)',
+      teacherName: 'Demo Instructor (Technical Drawing Lead)',
       date: '08 Nov 2025',
-      comment: 'Emeka displays keen aptitude for technical graphics and spatial reasoning. His practice time on the digital canvas is commendable (18.5 hours). With slight refinement on line weight contrast and lettering guidelines, he is on track for a distinction (A1) in WAEC Technical Drawing.',
+      comment: 'Demo Student 1 displays keen aptitude for technical graphics and spatial reasoning. Practice time on the digital canvas is commendable (18.5 hours). With slight refinement on line weight contrast and lettering guidelines, the student is on track for a distinction (A1).',
       strengths: [
         'Excellent understanding of T-square and set-square manipulation',
         'Consistently punctual with weekly digital drafting assignments',
@@ -95,12 +95,12 @@ export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
       focusForNextWeek: 'Focus on practicing ISO 128 line weight samples and 75° inclined lettering exercises in Module 4 & 5.'
     }
   },
-  'WARD-DH-2025-42': {
-    wardCode: 'WARD-DH-2025-42',
-    studentName: 'Amina Bello',
-    admissionNo: 'FSTC/2023/0142',
+  'WARD-DEMO-002': {
+    wardCode: 'WARD-DEMO-002',
+    studentName: 'Demo Student 2',
+    admissionNo: 'DEMO-REG-002',
     classTier: 'SS2',
-    schoolName: 'Queens College, Yaba',
+    schoolName: 'Sample Engineering College',
     term: '1st Term',
     academicYear: '2025/2026',
     overallScore: 91,
@@ -144,23 +144,27 @@ export const SAMPLE_WARD_PROFILES: Record<string, StudentWardProfile> = {
       }
     ],
     teacherRemarks: {
-      teacherName: 'Mrs. F. O. Ibrahim (Senior Graphics Tutor)',
+      teacherName: 'Demo Senior Graphics Tutor',
       date: '06 Nov 2025',
-      comment: 'Amina is one of our top-performing drafting students. Her linework is exceptionally clean and mathematically precise. Highly recommended for the National STEM Olympiad.',
+      comment: 'Demo Student 2 is a top-performing drafting candidate. Linework is exceptionally clean and mathematically precise. Demonstrates strong spatial visualization.',
       strengths: ['Superior 3D spatial visualization', 'Perfect diagonal scale reading'],
       focusForNextWeek: 'Revise internal and external tangency locus principles.'
     }
   }
 };
 
+// Also support legacy demo code aliases so existing bookmarked links or quick selections don't break
+SAMPLE_WARD_PROFILES['WARD-DH-2025-88'] = SAMPLE_WARD_PROFILES['WARD-DEMO-001'];
+SAMPLE_WARD_PROFILES['WARD-DH-2025-42'] = SAMPLE_WARD_PROFILES['WARD-DEMO-002'];
+
 export function getWardProfile(code: string): StudentWardProfile {
   const trimmed = code.trim().toUpperCase();
   const baseProfile: StudentWardProfile = SAMPLE_WARD_PROFILES[trimmed] || {
-    wardCode: trimmed || 'WARD-CUSTOM',
-    studentName: 'Student Candidate',
-    admissionNo: 'STU/2025/' + Math.floor(1000 + Math.random() * 9000),
+    wardCode: trimmed || 'WARD-DEMO-CUSTOM',
+    studentName: 'Demo Student Candidate',
+    admissionNo: 'DEMO-REG-' + Math.floor(1000 + Math.random() * 9000),
     classTier: 'SS1',
-    schoolName: 'Nigerian Technical Education Academy',
+    schoolName: 'Test Technical Academy',
     term: '1st Term',
     academicYear: '2025/2026',
     overallScore: 78,

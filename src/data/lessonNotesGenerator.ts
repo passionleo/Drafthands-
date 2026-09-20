@@ -11,8 +11,8 @@ export function generateLessonPlanForTopic(
     date?: string;
   }
 ): LessonPlanData {
-  const school = customParams?.schoolName || 'Government Technical College / Federal Science & Technical College';
-  const teacher = customParams?.teacherName || 'Engr. Drafthands Faculty Lead';
+  const school = customParams?.schoolName || 'Test Technical Academy';
+  const teacher = customParams?.teacherName || 'Demo Technical Instructor';
   const term = customParams?.term || topic.termLabel || (topic.term === 'TERM_2' ? 'Second Term' : topic.term === 'TERM_3' ? 'Third Term' : 'First Term');
   const week = customParams?.week || (topic.week ? `Week ${topic.week}` : 'Week 4');
 

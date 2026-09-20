@@ -48,7 +48,7 @@ export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, on
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                {userProfile?.institution || 'Federal Science & Technical College, Yaba'} • Session 2025/2026
+                {userProfile?.institution || 'Test Technical Academy'} • Session 2025/2026
               </p>
             </div>
           </div>
@@ -193,10 +193,10 @@ export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, on
 
               <div className="space-y-2">
                 {[
-                  { code: 'FSTC-YABA-SS1-2025', seats: '50 Seats', tier: 'SS1 Plane Geometry', status: 'Active (48 claimed)' },
-                  { code: 'FSTC-YABA-SS2-2025', seats: '50 Seats', tier: 'SS2 Solid & Orthographic', status: 'Active (49 claimed)' },
-                  { code: 'FSTC-YABA-SS3-2025', seats: '40 Seats', tier: 'SS3 WAEC Past Question Pack', status: 'Active (37 claimed)' },
-                  { code: 'FSTC-TEACHER-FACULTY', seats: '10 Seats', tier: 'Full Educator Lesson Note Suite', status: 'Active (8 claimed)' }
+                  { code: 'TEST-ACADEMY-SS1-2025', seats: '50 Seats', tier: 'SS1 Plane Geometry', status: 'Active (48 claimed)' },
+                  { code: 'TEST-ACADEMY-SS2-2025', seats: '50 Seats', tier: 'SS2 Solid & Orthographic', status: 'Active (49 claimed)' },
+                  { code: 'TEST-ACADEMY-SS3-2025', seats: '40 Seats', tier: 'SS3 WAEC Past Question Pack', status: 'Active (37 claimed)' },
+                  { code: 'TEST-FACULTY-LICENSE', seats: '10 Seats', tier: 'Full Educator Lesson Note Suite', status: 'Active (8 claimed)' }
                 ].map((key, i) => (
                   <div key={i} className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
                     <div>
@@ -220,11 +220,11 @@ export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, on
               </div>
               <div className="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
                 {[
-                  { name: 'Tunde Bakare', email: 'tunde.b@student.drafthands.edu', role: 'STUDENT', class: 'SS2 Tech', verified: true },
-                  { name: 'Engr. D. Adebayo', email: 'adebayo.engr@drafthands.edu', role: 'TEACHER', class: 'Head of TD', verified: true },
-                  { name: 'Mrs. Folashade Bakare', email: 'folashade.b@parent.drafthands.edu', role: 'PARENT', class: 'Guardian', verified: true },
-                  { name: 'Chukwuma Obi', email: 'c.obi@student.drafthands.edu', role: 'STUDENT', class: 'SS1 Tech', verified: true },
-                  { name: 'Aminu Mohammed', email: 'a.mohammed@student.drafthands.edu', role: 'STUDENT', class: 'SS3 Revision', verified: true }
+                  { name: 'Demo Student 1', email: 'demo.student1@test-academy.edu.ng', role: 'STUDENT', class: 'SS2 Tech', verified: true },
+                  { name: 'Demo Instructor', email: 'demo.teacher@test-academy.edu.ng', role: 'TEACHER', class: 'Head of TD', verified: true },
+                  { name: 'Demo Parent Guardian', email: 'demo.parent@test-academy.edu.ng', role: 'PARENT', class: 'Guardian', verified: true },
+                  { name: 'Demo Student 2', email: 'demo.student2@test-academy.edu.ng', role: 'STUDENT', class: 'SS1 Tech', verified: true },
+                  { name: 'Demo Student 3', email: 'demo.student3@test-academy.edu.ng', role: 'STUDENT', class: 'SS3 Revision', verified: true }
                 ].map((user, i) => (
                   <div key={i} className="p-3 flex items-center justify-between text-xs">
                     <div>

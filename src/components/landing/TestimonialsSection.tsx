@@ -5,25 +5,25 @@ export const TestimonialsSection: React.FC = () => {
   const testimonials = [
     {
       quote: "Before Drafthands, explaining 3rd angle projection and sectional views on a traditional chalkboard was cumbersome. Now, our students visualize isometric slicing in 3D and manipulate the cutting plane directly. Our WAEC Technical Drawing distinction rate jumped from 45% to 89%.",
-      author: "Engr. Emmanuel O. Ogunleye",
-      role: "Chief Examiner & Head of Technical Education",
-      institution: "Federal Science & Technical College (FSTC), Yaba, Lagos",
-      badge: "WAEC Examiner",
+      author: "Demo Technical Educator",
+      role: "Lead Instructor & Head of Technical Education",
+      institution: "Test Technical Academy",
+      badge: "Technical Instructor",
       rating: 5
     },
     {
       quote: "The fidelity of the virtual T-Square, 30°/60° set squares, and compass line weights (2H vs HB) is unmatched. Our engineering freshmen transition into CAD drafting with extraordinary spatial confidence and true European/ISO drafting standards compliance.",
-      author: "Dr. Kwesi Mensah",
-      role: "Senior Lecturer in Mechanical Drafting",
-      institution: "Faculty of Mechanical & Manufacturing Engineering, KNUST Ghana",
-      badge: "University Faculty",
+      author: "Demo Engineering Lecturer",
+      role: "Lecturer in Mechanical Drafting",
+      institution: "Sample Polytechnic Institute",
+      badge: "Faculty Educator",
       rating: 5
     },
     {
       quote: "I used to lose marks in WAEC Paper 2 because I kept erasing my compass bisection lines. Drafthands taught me the exact marking scheme and how to keep 2H construction lines crisp. I scored an A1 in Technical Drawing and won the National Olympiad!",
-      author: "Blessing C. Eze",
-      role: "SS3 Technical Student & Engineering Scholar",
-      institution: "Queen's College, Yaba",
+      author: "Demo Student 1",
+      role: "SS3 Technical Student & Drafting Scholar",
+      institution: "Model Science College",
       badge: "A1 Distinction Student",
       rating: 5
     }

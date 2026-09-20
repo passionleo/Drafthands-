@@ -51,9 +51,9 @@ const DEFAULT_STATE: UserSubscriptionState = {
   activeUntil: null,
   userRole: 'STUDENT',
   userProfile: {
-    name: 'Tunde Bakare',
-    email: 'tunde.b@student.drafthands.edu',
-    institution: 'King’s College, Lagos',
+    name: 'Demo Student 1',
+    email: 'demo.student1@test-academy.edu.ng',
+    institution: 'Test Technical Academy',
     role: 'STUDENT',
     isEmailVerified: true
   },
@@ -64,6 +64,7 @@ const DEFAULT_STATE: UserSubscriptionState = {
 const VOUCHER_CODES: Record<string, { plan: SubscriptionPlanType; role: UserRoleType; note: string }> = {
   'DRAFTHANDS-VIP': { plan: 'STUDENT_SESSION', role: 'STUDENT', note: 'VIP Full Session Access' },
   'WAEC-SCHOLAR-2025': { plan: 'STUDENT_SESSION', role: 'STUDENT', note: 'WAEC Scholar Academic Grant' },
+  'TEST-FACULTY-PASS': { plan: 'TEACHER_PRO', role: 'TEACHER', note: 'Technical College Faculty License' },
   'FSTC-TEACHER': { plan: 'TEACHER_PRO', role: 'TEACHER', note: 'Technical College Faculty License' },
   'EDTECH-PRO': { plan: 'INSTITUTION_PASS', role: 'ADMIN', note: 'Institutional Master License' },
   'TEACHER-FREE-PASS': { plan: 'TEACHER_PRO', role: 'TEACHER', note: 'Teacher Lesson Planner Pass' }
@@ -133,8 +134,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ...prev,
       userRole: role,
       userProfile: prev.userProfile ? { ...prev.userProfile, role } : {
-        name: role === 'STUDENT' ? 'Tunde Bakare' : role === 'TEACHER' ? 'Engr. D. Adebayo' : role === 'PARENT' ? 'Mrs. Folashade Bakare' : 'Prof. Kwesi Mensah',
-        email: `${role.toLowerCase()}@drafthands.edu`,
+        name: role === 'STUDENT' ? 'Demo Student 1' : role === 'TEACHER' ? 'Demo Technical Instructor' : role === 'PARENT' ? 'Demo Parent Guardian' : 'Demo Academic Dean',
+        email: `${role.toLowerCase()}@test-academy.edu.ng`,
         role,
         isEmailVerified: true
       }

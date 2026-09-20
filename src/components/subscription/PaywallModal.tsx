@@ -371,7 +371,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                   <span>Have a School Access Code or Scholarship Voucher?</span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  e.g. DRAFTHANDS-VIP, WAEC-SCHOLAR-2025, FSTC-TEACHER
+                  e.g. DRAFTHANDS-VIP, WAEC-SCHOLAR-2025, TEST-FACULTY-PASS
                 </span>
               </div>
 

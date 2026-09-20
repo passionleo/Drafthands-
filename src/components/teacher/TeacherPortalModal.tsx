@@ -62,9 +62,9 @@ export const TeacherPortalModal: React.FC<TeacherPortalModalProps> = ({
   const [teacherPaymentSuccessRef, setTeacherPaymentSuccessRef] = useState<string | null>(null);
 
   // Editable Teacher Metadata
-  const [schoolName, setSchoolName] = useState<string>('Federal Science and Technical College (FSTC)');
-  const [teacherName, setTeacherName] = useState<string>('Engr. Drafthands Faculty Lead');
-  const [teacherEmail, setTeacherEmail] = useState<string>('teacher@drafthands.edu.ng');
+  const [schoolName, setSchoolName] = useState<string>('Test Technical Academy');
+  const [teacherName, setTeacherName] = useState<string>('Demo Technical Instructor');
+  const [teacherEmail, setTeacherEmail] = useState<string>('demo.teacher@test-academy.edu.ng');
 
   const handleTeacherProPaystack = () => {
     setIsProcessingPaystack(true);

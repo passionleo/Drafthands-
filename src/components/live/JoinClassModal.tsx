@@ -45,8 +45,8 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
   const [activeTab, setActiveTab] = useState<'HOST' | 'JOIN'>('HOST');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState(activeTopic.id);
-  const [userName, setUserName] = useState('Engr. D. Adebayo');
-  const [studentName, setStudentName] = useState('Chioma Okonkwo');
+  const [userName, setUserName] = useState('Demo Technical Instructor');
+  const [studentName, setStudentName] = useState('Demo Student 1');
   const [gradeClass, setGradeClass] = useState('SS2 Technical');
   
   // Hardware test state
@@ -336,7 +336,7 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     className="w-full bg-slate-950 text-slate-100 text-xs px-3 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-cyan-500"
-                    placeholder="e.g. Chioma Okonkwo"
+                    placeholder="e.g. Demo Student 1"
                   />
                 </div>
 

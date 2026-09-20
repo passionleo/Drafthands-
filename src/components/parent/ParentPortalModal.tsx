@@ -43,16 +43,16 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
 }) => {
   const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
 
-  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DH-2025-88');
+  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DEMO-001');
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
-    SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
+    SAMPLE_WARD_PROFILES['WARD-DEMO-001']
   );
   const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'practicalSubmissions' | 'teacherNotes' | 'reportCard' | 'sponsorship'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
   const [isFeedbackSent, setIsFeedbackSent] = useState<boolean>(false);
 
   // Paystack Ward Sponsorship State
-  const [parentEmail, setParentEmail] = useState<string>('folashade.b@parent.drafthands.edu');
+  const [parentEmail, setParentEmail] = useState<string>('parent.demo@test-academy.edu.ng');
   const [sponsorshipPlan, setSponsorshipPlan] = useState<'STUDENT_TERMLY' | 'STUDENT_SESSION'>('STUDENT_SESSION');
   const [isPayingSponsorship, setIsPayingSponsorship] = useState<boolean>(false);
   const [sponsorshipReceiptRef, setSponsorshipReceiptRef] = useState<string | null>(null);
@@ -158,29 +158,29 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
             <span className="text-slate-500 hidden sm:inline">Demo Wards:</span>
             <button
               onClick={() => {
-                setWardCodeInput('WARD-DH-2025-88');
-                handleSearchWard('WARD-DH-2025-88');
+                setWardCodeInput('WARD-DEMO-001');
+                handleSearchWard('WARD-DEMO-001');
               }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors ${
-                activeProfile.wardCode === 'WARD-DH-2025-88'
+                activeProfile.wardCode === 'WARD-DEMO-001' || activeProfile.wardCode === 'WARD-DH-2025-88'
                   ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
             >
-              Emeka (SS1)
+              Demo Student 1 (SS1)
             </button>
             <button
               onClick={() => {
-                setWardCodeInput('WARD-DH-2025-42');
-                handleSearchWard('WARD-DH-2025-42');
+                setWardCodeInput('WARD-DEMO-002');
+                handleSearchWard('WARD-DEMO-002');
               }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors ${
-                activeProfile.wardCode === 'WARD-DH-2025-42'
+                activeProfile.wardCode === 'WARD-DEMO-002' || activeProfile.wardCode === 'WARD-DH-2025-42'
                   ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
             >
-              Amina (SS2)
+              Demo Student 2 (SS2)
             </button>
           </div>
         </div>
@@ -671,7 +671,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       rows={3}
                       value={parentFeedbackMsg}
                       onChange={(e) => setParentFeedbackMsg(e.target.value)}
-                      placeholder="e.g. Thank you for the detailed feedback. We have ensured Emeka spends 30 minutes every evening on the Drafthands digital canvas practicing ISO lines..."
+                      placeholder="e.g. Thank you for the detailed feedback. We have ensured Demo Student 1 spends 30 minutes every evening on the Drafthands digital canvas practicing ISO lines..."
                       className="w-full bg-slate-900 text-white text-xs p-3 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
                     />
                     <button
@@ -764,7 +764,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] uppercase font-mono text-slate-500 block">Head of Department Signature:</span>
-                    <p className="font-bold text-xs text-slate-900 font-serif mt-1">Engr. D. K. Adeleke, MNSE, Reg. Engr.</p>
+                    <p className="font-bold text-xs text-slate-900 font-serif mt-1">Lead Instructor (Technical Education Dept)</p>
                     <p className="text-[10px] text-slate-500">Verified via Drafthands EdTech Learning Management System</p>
                   </div>
                   <div className="border-2 border-emerald-600 rounded-lg p-2 text-center text-emerald-800 font-mono text-[10px] font-bold uppercase tracking-wider rotate-[-2deg]">

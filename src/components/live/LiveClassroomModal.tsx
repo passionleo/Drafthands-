@@ -128,7 +128,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
   const [participants, setParticipants] = useState<LiveParticipant[]>([
     {
       id: 'teacher-1',
-      name: initialRole === 'TEACHER' ? initialUserName : 'Engr. D. Adebayo',
+      name: initialRole === 'TEACHER' ? initialUserName : 'Demo Technical Instructor',
       role: 'TEACHER',
       avatarBg: '#7c3aed',
       isAudioMuted: false,
@@ -143,7 +143,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     },
     {
       id: 'student-1',
-      name: initialRole === 'STUDENT' ? initialUserName : 'Chioma Okonkwo',
+      name: initialRole === 'STUDENT' ? initialUserName : 'Demo Student 1',
       role: 'STUDENT',
       avatarBg: '#0891b2',
       isAudioMuted: true,
@@ -158,7 +158,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     },
     {
       id: 'student-2',
-      name: 'Tunde Bakare',
+      name: 'Demo Student 2',
       role: 'STUDENT',
       avatarBg: '#ea580c',
       isAudioMuted: true,
@@ -173,7 +173,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     },
     {
       id: 'student-3',
-      name: 'Fatima Bello',
+      name: 'Demo Student 3',
       role: 'STUDENT',
       avatarBg: '#16a34a',
       isAudioMuted: false,
@@ -188,7 +188,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     },
     {
       id: 'student-4',
-      name: 'Emeka Eze',
+      name: 'Demo Student 4',
       role: 'STUDENT',
       avatarBg: '#2563eb',
       isAudioMuted: true,
@@ -208,7 +208,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     {
       id: 'msg-1',
       senderId: 'teacher-1',
-      senderName: 'Engr. D. Adebayo',
+      senderName: 'Demo Technical Instructor',
       senderRole: 'TEACHER',
       text: `Good day class! Today we are practicing ${activeTopic.title}. Pay close attention to the construction line weights (2H pencil vs HB outline).`,
       timestamp: '10:00 AM'
@@ -216,7 +216,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     {
       id: 'msg-2',
       senderId: 'student-2',
-      senderName: 'Tunde Bakare',
+      senderName: 'Demo Student 2',
       senderRole: 'STUDENT',
       text: 'Sir, what scale ratio should we use on the triangular scale rule for this exercise?',
       timestamp: '10:02 AM',
