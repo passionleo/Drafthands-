@@ -32,6 +32,7 @@ import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { SUBSCRIPTION_PLANS, UserRoleType } from '../../types/subscription';
+import { PWAInstallButton } from '../pwa/PWAInstallButton';
 
 interface HeaderProps {
   activeTier: CurriculumTier;
@@ -563,6 +564,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
+
+        {/* PWA Direct Home Screen Install Button */}
+        <PWAInstallButton variant="header" />
 
         {/* Export Drawing */}
         <button

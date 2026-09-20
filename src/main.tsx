@@ -89,6 +89,20 @@ if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
     console.error('[Drafthands Unhandled Rejection]', event.reason);
   });
+
+  // PWA Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .then((reg) => {
+          console.log('[DraftHands PWA] Service Worker active with scope:', reg.scope);
+        })
+        .catch((err) => {
+          console.warn('[DraftHands PWA] Service Worker registration failed:', err);
+        });
+    });
+  }
 }
 
 const rootElement = document.getElementById('root');

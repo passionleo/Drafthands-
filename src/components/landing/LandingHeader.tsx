@@ -15,6 +15,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
+import { PWAInstallButton } from '../pwa/PWAInstallButton';
 
 interface LandingHeaderProps {
   onOpenAuth: (mode?: 'SIGN_IN' | 'REGISTER') => void;
@@ -145,6 +146,9 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             <span>Platform Tour</span>
           </button>
 
+          {/* PWA Home Screen Install Button */}
+          <PWAInstallButton variant="landing" className="hidden sm:flex" />
+
           {/* Sign In / Register */}
           <button
             onClick={() => onOpenAuth('SIGN_IN')}
@@ -209,6 +213,10 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               <Video className="w-4 h-4 text-purple-400" />
               <span>Live Virtual Classroom & Projection</span>
             </button>
+          </div>
+
+          <div className="pt-2">
+            <PWAInstallButton variant="mobile" />
           </div>
 
           <div className="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2">

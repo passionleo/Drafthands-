@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="brassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="50%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.35" />
+
+  <!-- Technical Blueprint Grid -->
+  <g stroke="#1e293b" stroke-width="1.2" opacity="0.65">
+    <line x1="64" y1="0" x2="64" y2="512" />
+    <line x1="128" y1="0" x2="128" y2="512" />
+    <line x1="192" y1="0" x2="192" y2="512" />
+    <line x1="256" y1="0" x2="256" y2="512" stroke="#38bdf8" stroke-dasharray="8 4" stroke-opacity="0.4" />
+    <line x1="320" y1="0" x2="320" y2="512" />
+    <line x1="384" y1="0" x2="384" y2="512" />
+    <line x1="448" y1="0" x2="448" y2="512" />
+
+    <line x1="0" y1="64" x2="512" y2="64" />
+    <line x1="0" y1="128" x2="512" y2="128" />
+    <line x1="0" y1="192" x2="512" y2="192" />
+    <line x1="0" y1="256" x2="512" y2="256" stroke="#38bdf8" stroke-dasharray="8 4" stroke-opacity="0.4" />
+    <line x1="0" y1="320" x2="512" y2="320" />
+    <line x1="0" y1="384" x2="512" y2="384" />
+    <line x1="0" y1="448" x2="512" y2="448" />
+  </g>
+
+  <!-- Circular Construction Arc with Degree Ticks -->
+  <circle cx="256" cy="140" r="300" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.45" />
+
+  <!-- 30/60 Technical Set-Square (Behind Compass) -->
+  <path d="M 100,430 L 412,430 L 100,180 Z" fill="#0284c7" fill-opacity="0.18" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" />
+  <path d="M 135,400 L 335,400 L 135,245 Z" fill="#090d16" stroke="#0284c7" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round" />
+
+  <!-- Set Square Scale Markings on Bottom Edge -->
+  <g stroke="#38bdf8" stroke-width="1.5" opacity="0.7">
+    <line x1="160" y1="430" x2="160" y2="420" />
+    <line x1="190" y1="430" x2="190" y2="415" />
+    <line x1="220" y1="430" x2="220" y2="420" />
+    <line x1="250" y1="430" x2="250" y2="412" />
+    <line x1="280" y1="430" x2="280" y2="420" />
+    <line x1="310" y1="430" x2="310" y2="415" />
+    <line x1="340" y1="430" x2="340" y2="420" />
+    <line x1="370" y1="430" x2="370" y2="412" />
+  </g>
+
+  <!-- Horizontal Fine Adjustment Spindle with Brass Dial -->
+  <line x1="185" y1="270" x2="327" y2="270" stroke="url(#steelGrad)" stroke-width="5" stroke-linecap="round" />
+  <circle cx="256" cy="270" r="14" fill="url(#brassGrad)" stroke="#78350f" stroke-width="1.5" />
+  <circle cx="256" cy="270" r="7" fill="#451a03" />
+
+  <!-- Compass Top Knurled Handle -->
+  <rect x="250" y="65" width="12" height="42" rx="4" fill="url(#steelGrad)" stroke="#334155" stroke-width="1" />
+  <line x1="250" y1="75" x2="262" y2="75" stroke="#334155" stroke-width="1" />
+  <line x1="250" y1="85" x2="262" y2="85" stroke="#334155" stroke-width="1" />
+  <line x1="250" y1="95" x2="262" y2="95" stroke="#334155" stroke-width="1" />
+
+  <!-- Left Compass Leg (Steel Needle) -->
+  <line x1="256" y1="140" x2="130" y2="410" stroke="url(#cyanGrad)" stroke-width="12" stroke-linecap="round" filter="url(#glow)" />
+  <line x1="256" y1="140" x2="130" y2="410" stroke="#f0f9ff" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <!-- Steel Needle Tip -->
+  <path d="M 130,410 L 122,442 L 134,416 Z" fill="url(#steelGrad)" />
+
+  <!-- Right Compass Leg (Pencil Chuck & Lead) -->
+  <line x1="256" y1="140" x2="382" y2="410" stroke="url(#cyanGrad)" stroke-width="12" stroke-linecap="round" filter="url(#glow)" />
+  <line x1="256" y1="140" x2="382" y2="410" stroke="#f0f9ff" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <!-- Pencil Chuck & Graphite Lead Tip -->
+  <rect x="375" y="410" width="14" height="18" rx="2" fill="#334155" transform="rotate(-30 382 419)" />
+  <polygon points="378,426 384,422 396,444" fill="#0f172a" />
+
+  <!-- Central Circular Compass Joint Hinge -->
+  <circle cx="256" cy="140" r="26" fill="url(#cyanGrad)" stroke="#090d16" stroke-width="3" />
+  <circle cx="256" cy="140" r="16" fill="url(#bgGrad)" stroke="#38bdf8" stroke-width="2" />
+  <circle cx="256" cy="140" r="6" fill="#f8fafc" />
+
+  <!-- Monogram DH Brand Text in Tech Stencil -->
+  <text x="256" y="485" fill="#38bdf8" font-size="22" font-weight="900" font-family="system-ui, -apple-system, sans-serif" letter-spacing="6" text-anchor="middle" opacity="0.95">DRAFTHANDS</text>
+</svg>

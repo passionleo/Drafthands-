@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Drafthands - Technical & Engineering Drawing Academy</title>
+    <meta name="theme-color" content="#090d16" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DraftHands" />
+    <meta name="application-name" content="DraftHands" />
+
+    <!-- Web App Manifest & App Icons -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <!-- Open Graph & Social Cards -->
     <meta name="description" content="Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula." />
     <meta property="og:title" content="Drafthands - Technical & Engineering Drawing Academy" />
     <meta property="og:description" content="Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula." />
@@ -11,6 +27,21 @@
     <meta name="twitter:card" content="summary_large_image" />
     <!-- Paystack Official Inline Checkout SDK (Loaded asynchronously so it never blocks page startup) -->
     <script async src="https://js.paystack.co/v1/inline.js"></script>
+
+    <!-- Progressive Web App (PWA) Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function(reg) {
+              console.log('[DraftHands PWA] Service Worker registered with scope:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[DraftHands PWA] Service Worker registration failed:', err);
+            });
+        });
+      }
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-100 min-h-screen m-0 p-0 antialiased selection:bg-cyan-500 selection:text-slate-950">
     <div id="root" class="min-h-screen w-full bg-slate-950"></div>

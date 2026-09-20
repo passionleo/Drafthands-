@@ -32,6 +32,7 @@ import { LandingPage } from './components/landing/LandingPage';
 import { UserRoleType } from './components/landing/AuthModal';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
+import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { Mail, CheckCircle2 } from 'lucide-react';
 
 function AppContent() {
@@ -850,6 +851,9 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {/* PWA Network Connectivity & Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
