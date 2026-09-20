@@ -9,6 +9,7 @@ import { TestimonialsSection } from './TestimonialsSection';
 import { LandingFooter } from './LandingFooter';
 import { NavigationVideoModal } from './NavigationVideoModal';
 import { AuthModal, UserRoleType } from './AuthModal';
+import { LandingPWAInstallModal } from '../pwa/LandingPWAInstallModal';
 import { CurriculumTier } from '../../types/curriculum';
 
 interface LandingPageProps {
@@ -131,6 +132,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
         initialMode={authMode}
         onAuthSuccess={handleAuthSuccess}
       />
+
+      {/* Automated Non-Intrusive PWA Install Prompt Modal */}
+      <LandingPWAInstallModal autoPromptDelay={1200} />
     </div>
   );
 };

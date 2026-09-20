@@ -28,8 +28,23 @@
     <!-- Paystack Official Inline Checkout SDK (Loaded asynchronously so it never blocks page startup) -->
     <script async src="https://js.paystack.co/v1/inline.js"></script>
 
-    <!-- Progressive Web App (PWA) Service Worker Registration -->
+    <!-- Progressive Web App (PWA) Global Capture & Service Worker Registration -->
     <script>
+      // Capture beforeinstallprompt immediately at the window level
+      window.__drafthandsInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__drafthandsInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('drafthands:pwa-prompt-captured'));
+        console.log('[DraftHands PWA] Global beforeinstallprompt captured successfully');
+      });
+
+      window.addEventListener('appinstalled', function() {
+        window.__drafthandsInstallPrompt = null;
+        window.dispatchEvent(new CustomEvent('drafthands:pwa-app-installed'));
+        console.log('[DraftHands PWA] Application installed to device');
+      });
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js', { scope: '/' })
