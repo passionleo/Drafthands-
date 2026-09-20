@@ -356,14 +356,42 @@ export const SAMPLE_THEORY_QUESTIONS: TheoryQuestion[] = [
           <g>
             <circle cx="250" cy="200" r="140" fill="none" stroke="#60a5fa" strokeWidth="1" opacity="0.4" />
             <circle cx="250" cy="200" r="95" fill="none" stroke="#a78bfa" strokeWidth="1" opacity="0.4" />
-            {/* Example projection grid */}
-            <line x1="371" y1="130" x2="371" y2="152" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
-            <line x1="332" y1="152" x2="371" y2="152" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
-            <circle cx="371" cy="152" r="3.5" fill="#f59e0b" />
-            <line x1="320" y1="78" x2="320" y2="117" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
-            <line x1="297" y1="117" x2="320" y2="117" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
-            <circle cx="320" cy="117" r="3.5" fill="#f59e0b" />
-            <text x="380" y="160" fill="#f59e0b" fontSize="10" fontFamily="monospace">Locus Intersection P</text>
+            {/* Symmetrical orthogonal coordinate projections */}
+            {/* Quadrant 1: P1(371, 153), P2(320, 118) */}
+            <line x1="371" y1="130" x2="371" y2="153" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <line x1="332" y1="153" x2="371" y2="153" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <circle cx="371" cy="153" r="3.5" fill="#f59e0b" />
+            <text x="378" y="150" fill="#f59e0b" fontSize="10" fontFamily="monospace" fontWeight="bold">P1</text>
+
+            <line x1="320" y1="79" x2="320" y2="118" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <line x1="298" y1="118" x2="320" y2="118" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <circle cx="320" cy="118" r="3.5" fill="#f59e0b" />
+            <text x="326" y="112" fill="#f59e0b" fontSize="10" fontFamily="monospace" fontWeight="bold">P2</text>
+
+            {/* Quadrant 2 Symmetrical Mirrored Counterparts: P2'(180, 118), P1'(129, 153) */}
+            <line x1="180" y1="79" x2="180" y2="118" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <line x1="202" y1="118" x2="180" y2="118" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <circle cx="180" cy="118" r="3.5" fill="#f59e0b" />
+            <text x="160" y="112" fill="#f59e0b" fontSize="10" fontFamily="monospace" fontWeight="bold">P2'</text>
+
+            <line x1="129" y1="130" x2="129" y2="153" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <line x1="168" y1="153" x2="129" y2="153" stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="2 2" />
+            <circle cx="129" cy="153" r="3.5" fill="#f59e0b" />
+            <text x="108" y="150" fill="#f59e0b" fontSize="10" fontFamily="monospace" fontWeight="bold">P1'</text>
+
+            {/* Lower Half Symmetrical Mirrored Counterparts */}
+            <circle cx="129" cy="247" r="3" fill="#f59e0b" opacity="0.8" />
+            <text x="104" y="253" fill="#f59e0b" fontSize="9" fontFamily="monospace">P1''</text>
+            <circle cx="180" cy="282" r="3" fill="#f59e0b" opacity="0.8" />
+            <text x="156" y="290" fill="#f59e0b" fontSize="9" fontFamily="monospace">P2''</text>
+            <circle cx="320" cy="282" r="3" fill="#f59e0b" opacity="0.8" />
+            <text x="326" y="290" fill="#f59e0b" fontSize="9" fontFamily="monospace">P2'''</text>
+            <circle cx="371" cy="247" r="3" fill="#f59e0b" opacity="0.8" />
+            <text x="378" y="253" fill="#f59e0b" fontSize="9" fontFamily="monospace">P1'''</text>
+
+            <text x="250" y="45" fill="#94a3b8" fontSize="10" fontFamily="monospace" textAnchor="middle">
+              Orthogonal Intersections: x = a·cos(θ), y = b·sin(θ)
+            </text>
           </g>
         )
       },

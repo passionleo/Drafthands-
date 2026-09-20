@@ -1504,12 +1504,20 @@ function createDiagramGeometry(type: string): {
             isFinalResult: true
           },
 
-          // Coordinate intersection nodes along trajectory
+          // Coordinate intersection nodes along trajectory with bilateral symmetry & prime notation
           { id: 'par-p-v', type: 'POINT', lineWeight: 'OUTLINE_HB', cx: 400, cy: 160, label: 'V (Vertex / Apex)', labelPosition: 'top' },
           { id: 'par-p-f', type: 'POINT', lineWeight: 'OUTLINE_HB', cx: 400, cy: 194, label: 'F (Focus)', labelPosition: 'right' },
-          { id: 'par-p-r1', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 445, cy: 175, label: 'P1', labelPosition: 'top-right' },
-          { id: 'par-p-r2', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 490, cy: 220, label: 'P2', labelPosition: 'top-right' },
-          { id: 'par-p-r3', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 535, cy: 295, label: 'P3', labelPosition: 'top-right' },
+          
+          // Left Symmetrical Locus Points
+          { id: 'par-p-l3', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 265, cy: 295, label: 'P1', labelPosition: 'top-left' },
+          { id: 'par-p-l2', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 310, cy: 220, label: 'P2', labelPosition: 'top-left' },
+          { id: 'par-p-l1', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 355, cy: 175, label: 'P3', labelPosition: 'top-left' },
+
+          // Right Symmetrical Counterpart Points (Prime Notation)
+          { id: 'par-p-r1', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 445, cy: 175, label: "P3'", labelPosition: 'top-right' },
+          { id: 'par-p-r2', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 490, cy: 220, label: "P2'", labelPosition: 'top-right' },
+          { id: 'par-p-r3', type: 'POINT', lineWeight: 'CONSTRUCTION_2H', cx: 535, cy: 295, label: "P1'", labelPosition: 'top-right' },
+
           { id: 'par-p-b', type: 'POINT', lineWeight: 'OUTLINE_HB', cx: 580, cy: 400, label: 'B (End)', labelPosition: 'bottom-right' },
           { id: 'par-p-a', type: 'POINT', lineWeight: 'OUTLINE_HB', cx: 220, cy: 400, label: 'A (End)', labelPosition: 'bottom-left' },
 

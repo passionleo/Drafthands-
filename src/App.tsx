@@ -23,6 +23,7 @@ import { LiveProjectionMode } from './components/projection/LiveProjectionMode';
 import { AssignmentManagementModal } from './components/teacher/AssignmentManagementModal';
 import { StudentAssignmentsModal } from './components/student/StudentAssignmentsModal';
 import { TeacherAssignment } from './types/assignments';
+import { prepareSvgForExport } from './utils/svgGeometryUtils';
 import { WorkspaceMode } from './types/whiteboard';
 import { LiveClassroomModal } from './components/live/LiveClassroomModal';
 import { JoinClassModal } from './components/live/JoinClassModal';
@@ -289,11 +290,14 @@ function AppContent() {
     }
   }, []);
 
-  // Export SVG as technical vector file
+  // Export SVG as technical vector file with ISO standard sanitization and anti-clipping
   const handleExportSvg = useCallback(() => {
     if (!svgRef.current) return;
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const sanitizedSvg = prepareSvgForExport(svgRef.current, {
+      backgroundColor: '#090d16',
+      title: `${activeTopic.title} - Step ${currentStep}`
+    });
+    const svgBlob = new Blob([sanitizedSvg], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
     const downloadLink = document.createElement('a');
     downloadLink.href = svgUrl;
@@ -302,7 +306,7 @@ function AppContent() {
     downloadLink.click();
     document.body.removeChild(downloadLink);
     URL.revokeObjectURL(svgUrl);
-  }, [activeTopic.id, currentStep]);
+  }, [activeTopic.id, activeTopic.title, currentStep]);
 
   // Reset View handler
   const handleResetView = useCallback(() => {

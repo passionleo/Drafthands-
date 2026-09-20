@@ -3,6 +3,7 @@ import { ConstructionElement, DrawingTopic, InstrumentState, LineWeightType } fr
 import { InstrumentsOverlay } from './InstrumentsOverlay';
 import { SheetTitleBlock } from './SheetTitleBlock';
 import { GridMode, ToolDock } from './ToolDock';
+import { computeLabelPlacement, sanitizeOriginPlacement, LabelPosition } from '../../utils/svgGeometryUtils';
 
 interface DrawingCanvasProps {
   topic: DrawingTopic;
@@ -394,27 +395,54 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                     />
                   );
 
-                case 'POINT':
+                case 'POINT': {
+                  const ptX = el.cx || 0;
+                  const ptY = el.cy || 0;
+                  const placement = el.label
+                    ? computeLabelPlacement(
+                        ptX,
+                        ptY,
+                        el.label,
+                        (el.labelPosition as LabelPosition) || 'top-right',
+                        12,
+                        11
+                      )
+                    : null;
+
                   return (
                     <g key={el.id} className="point-node">
                       <circle
-                        cx={el.cx}
-                        cy={el.cy}
+                        cx={ptX}
+                        cy={ptY}
                         r={el.lineWeight === 'THICK_CONTINUOUS' ? 3.5 : 2.5}
                         className={el.isNew ? 'fill-cyan-400 stroke-white stroke-[1] animate-pulse' : 'fill-slate-100 stroke-slate-900 stroke-[1]'}
                       />
-                      {el.label && (
-                        <text
-                          x={(el.cx || 0) + (el.labelPosition === 'left' ? -12 : el.labelPosition === 'right' ? 12 : el.labelPosition === 'top' ? 0 : 0)}
-                          y={(el.cy || 0) + (el.labelPosition === 'top' ? -10 : el.labelPosition === 'bottom' ? 16 : 4)}
-                          textAnchor={el.labelPosition === 'left' ? 'end' : el.labelPosition === 'right' ? 'start' : 'middle'}
-                          className="fill-slate-200 text-[11px] font-mono font-bold select-none drop-shadow-sm"
-                        >
-                          {el.label}
-                        </text>
+                      {el.label && placement && (
+                        <g className="point-label-group select-none">
+                          {/* Collision prevention backdrop badge */}
+                          <rect
+                            x={placement.badgeX}
+                            y={placement.badgeY}
+                            width={placement.badgeWidth}
+                            height={placement.badgeHeight}
+                            rx={3}
+                            className="fill-slate-950/85 stroke-slate-700/50 stroke-[0.5]"
+                          />
+                          <text
+                            x={placement.x}
+                            y={placement.y}
+                            textAnchor={placement.textAnchor}
+                            dominantBaseline={placement.dominantBaseline}
+                            className="fill-slate-100 text-[11px] font-mono font-bold select-none"
+                            style={{ paintOrder: 'stroke fill', stroke: '#020617', strokeWidth: '2.5px', strokeLinejoin: 'round' }}
+                          >
+                            {el.label}
+                          </text>
+                        </g>
                       )}
                     </g>
                   );
+                }
 
                 case 'DIMENSION':
                   return (
@@ -466,15 +494,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
                 case 'TEXT_LABEL':
                   return (
-                    <text
-                      key={el.id}
-                      x={el.cx}
-                      y={el.cy}
-                      textAnchor="middle"
-                      className="fill-slate-300 text-[11px] font-mono font-bold tracking-wider"
-                    >
-                      {el.label}
-                    </text>
+                    <g key={el.id} className="cad-text-label">
+                      <text
+                        x={el.cx}
+                        y={el.cy}
+                        textAnchor="middle"
+                        className="fill-slate-200 text-[11px] font-mono font-bold tracking-wider"
+                        style={{ paintOrder: 'stroke fill', stroke: '#020617', strokeWidth: '3px', strokeLinejoin: 'round' }}
+                      >
+                        {el.label}
+                      </text>
+                    </g>
                   );
 
                 default:

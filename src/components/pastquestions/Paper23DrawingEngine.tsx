@@ -23,6 +23,7 @@ import { TheoryQuestion, ConstructionStep } from '../../types/pastQuestions';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payWithPaystack, formatNaira } from '../../utils/paystack';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { prepareSvgForExport } from '../../utils/svgGeometryUtils';
 
 interface Paper23DrawingEngineProps {
   questions: TheoryQuestion[];
@@ -133,10 +134,13 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
   };
 
   const handleDownloadSvg = () => {
-    const svgElement = document.getElementById(`theory-svg-${activeQuestion.id}`);
+    const svgElement = document.getElementById(`theory-svg-${activeQuestion.id}`) as unknown as SVGSVGElement | null;
     if (!svgElement) return;
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const sanitizedSvg = prepareSvgForExport(svgElement, {
+      backgroundColor: '#090d16',
+      title: `${examBody} ${year} ${paperType === 'PAPER_2' ? 'Paper 2' : 'Paper 3'} Q${activeQuestion.questionNumber}`
+    });
+    const blob = new Blob([sanitizedSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -354,6 +358,13 @@ export const Paper23DrawingEngine: React.FC<Paper23DrawingEngineProps> = ({
                   viewBox="0 0 500 400"
                   className="w-full h-full select-none"
                 >
+                  <defs>
+                    <style>{`
+                      text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+                      .cad-label { font-weight: bold; }
+                    `}</style>
+                  </defs>
+
                   {/* Drawing Sheet Inner Frame (ISO 20mm margin) */}
                   <rect x="15" y="15" width="470" height="370" fill="none" stroke="#334155" strokeWidth="1.5" />
                   

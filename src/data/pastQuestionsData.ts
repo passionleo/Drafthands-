@@ -253,7 +253,7 @@ export const PARABOLA_THEORY_QUESTION: TheoryQuestion = {
       markAllocation: '4 Marks',
       svgData: `
         <rect x="70" y="80" width="360" height="240" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 4" />
-        <line x1="250" y1="60" x2="250" y2="340" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="14 3 3 3" />
+        <line x1="250" y1="55" x2="250" y2="340" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="14 3 3 3" />
         <line x1="70" y1="320" x2="430" y2="320" stroke="#94a3b8" stroke-width="2" />
         <circle cx="250" cy="80" r="4" fill="#38bdf8" />
         <circle cx="250" cy="320" r="3.5" fill="#38bdf8" />
@@ -261,43 +261,43 @@ export const PARABOLA_THEORY_QUESTION: TheoryQuestion = {
         <text x="438" y="325" fill="#38bdf8" font-size="12" font-weight="bold">B</text>
         <text x="50" y="85" fill="#94a3b8" font-size="12">D</text>
         <text x="438" y="85" fill="#94a3b8" font-size="12">C</text>
-        <text x="256" y="78" fill="#38bdf8" font-size="13" font-weight="bold">V (Vertex)</text>
-        <text x="256" y="338" fill="#94a3b8" font-size="11" font-family="monospace">O (Midpoint)</text>
-        <text x="220" y="35" fill="#94a3b8" font-size="10" font-family="monospace">Span: 120mm | Rise: 80mm</text>
+        <text x="250" y="68" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">V (Vertex)</text>
+        <text x="250" y="342" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="middle">O (Datum)</text>
+        <text x="250" y="35" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="middle">Span: 120mm | Rise: 80mm</text>
       `
     },
     {
       stepNumber: 2,
       title: 'Divide Half-Bases and Vertical Sides into 4 Equal Parts',
       label: 'Divide Half-Bases and Vertical Sides into 4 Equal Parts',
-      instruction: 'Divide left half-base AO and right half-base OB into 4 equal divisions (points 1, 2, 3). Divide vertical side AD and side BC into the same number of equal divisions (points 1\', 2\', 3\').',
+      instruction: 'Divide left half-base AO into 4 equal parts (1, 2, 3) and right half-base OB into 4 equal parts (3\', 2\', 1\'). Divide left vertical side AD into (1, 2, 3) and right vertical side BC into (1\', 2\', 3\').',
       pencilGrade: '3H (Construction Thin 0.20mm)',
       lineTypeISO: 'ISO 128 Type B (Thin)',
       compassSetting: 'Dividers set to 45px (15mm) and 60px (20mm)',
       markAllocation: '4 Marks',
       svgData: `
-        <!-- Base Division Points -->
-        <circle cx="115" cy="320" r="3" fill="#f59e0b" /><text x="111" y="338" fill="#f59e0b" font-size="10">1</text>
-        <circle cx="160" cy="320" r="3" fill="#f59e0b" /><text x="156" y="338" fill="#f59e0b" font-size="10">2</text>
-        <circle cx="205" cy="320" r="3" fill="#f59e0b" /><text x="201" y="338" fill="#f59e0b" font-size="10">3</text>
-        <circle cx="295" cy="320" r="3" fill="#f59e0b" /><text x="291" y="338" fill="#f59e0b" font-size="10">3</text>
-        <circle cx="340" cy="320" r="3" fill="#f59e0b" /><text x="336" y="338" fill="#f59e0b" font-size="10">2</text>
-        <circle cx="385" cy="320" r="3" fill="#f59e0b" /><text x="381" y="338" fill="#f59e0b" font-size="10">1</text>
+        <!-- Base Division Points: Left (1, 2, 3) & Right (3', 2', 1') -->
+        <circle cx="115" cy="320" r="3" fill="#f59e0b" /><text x="115" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">1</text>
+        <circle cx="160" cy="320" r="3" fill="#f59e0b" /><text x="160" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">2</text>
+        <circle cx="205" cy="320" r="3" fill="#f59e0b" /><text x="205" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">3</text>
+        <circle cx="295" cy="320" r="3" fill="#f59e0b" /><text x="295" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">3'</text>
+        <circle cx="340" cy="320" r="3" fill="#f59e0b" /><text x="340" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">2'</text>
+        <circle cx="385" cy="320" r="3" fill="#f59e0b" /><text x="385" y="336" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">1'</text>
 
-        <!-- Vertical Side Division Points (AD & BC) -->
-        <circle cx="70" cy="260" r="3" fill="#f59e0b" /><text x="52" y="264" fill="#f59e0b" font-size="10">1'</text>
-        <circle cx="70" cy="200" r="3" fill="#f59e0b" /><text x="52" y="204" fill="#f59e0b" font-size="10">2'</text>
-        <circle cx="70" cy="140" r="3" fill="#f59e0b" /><text x="52" y="144" fill="#f59e0b" font-size="10">3'</text>
-        <circle cx="430" cy="260" r="3" fill="#f59e0b" /><text x="436" y="264" fill="#f59e0b" font-size="10">1'</text>
-        <circle cx="430" cy="200" r="3" fill="#f59e0b" /><text x="436" y="204" fill="#f59e0b" font-size="10">2'</text>
-        <circle cx="430" cy="140" r="3" fill="#f59e0b" /><text x="436" y="144" fill="#f59e0b" font-size="10">3'</text>
+        <!-- Vertical Side Division Points: Left AD (1, 2, 3) & Right BC (1', 2', 3') -->
+        <circle cx="70" cy="260" r="3" fill="#f59e0b" /><text x="56" y="264" fill="#f59e0b" font-size="10" text-anchor="end" font-family="monospace">1</text>
+        <circle cx="70" cy="200" r="3" fill="#f59e0b" /><text x="56" y="204" fill="#f59e0b" font-size="10" text-anchor="end" font-family="monospace">2</text>
+        <circle cx="70" cy="140" r="3" fill="#f59e0b" /><text x="56" y="144" fill="#f59e0b" font-size="10" text-anchor="end" font-family="monospace">3</text>
+        <circle cx="430" cy="260" r="3" fill="#f59e0b" /><text x="444" y="264" fill="#f59e0b" font-size="10" text-anchor="start" font-family="monospace">1'</text>
+        <circle cx="430" cy="200" r="3" fill="#f59e0b" /><text x="444" y="204" fill="#f59e0b" font-size="10" text-anchor="start" font-family="monospace">2'</text>
+        <circle cx="430" cy="140" r="3" fill="#f59e0b" /><text x="444" y="144" fill="#f59e0b" font-size="10" text-anchor="start" font-family="monospace">3'</text>
       `
     },
     {
       stepNumber: 3,
       title: 'Project Vertical Parallel Rays & Radiate Rays from Vertex V',
       label: 'Project Vertical Parallel Rays & Radiate Rays from Vertex V',
-      instruction: 'From base divisions 1, 2, 3, draw vertical lines parallel to axis VO toward the top edge. From vertex V, draw radiating inclined rays connecting to side divisions 1\', 2\', 3\' on both sides.',
+      instruction: 'From base divisions 1, 2, 3, draw vertical lines parallel to axis VO toward the top edge. From vertex V, draw radiating inclined rays connecting to side divisions 1, 2, 3 on left and 1\', 2\', 3\' on right.',
       pencilGrade: '3H / 4H (Construction Thin 0.20mm)',
       lineTypeISO: 'ISO 128 Type B',
       compassSetting: 'Set-square sliding on T-square',
@@ -311,7 +311,7 @@ export const PARABOLA_THEORY_QUESTION: TheoryQuestion = {
         <line x1="340" y1="320" x2="340" y2="80" stroke="#64748b" stroke-width="1" stroke-dasharray="3 3" />
         <line x1="385" y1="320" x2="385" y2="80" stroke="#64748b" stroke-width="1" stroke-dasharray="3 3" />
 
-        <!-- Rays radiating from Vertex V -->
+        <!-- Rays radiating from Vertex V to Side Divisions -->
         <line x1="250" y1="80" x2="70" y2="260" stroke="#a78bfa" stroke-width="1" />
         <line x1="250" y1="80" x2="70" y2="200" stroke="#a78bfa" stroke-width="1" />
         <line x1="250" y1="80" x2="70" y2="140" stroke="#a78bfa" stroke-width="1" />
@@ -324,28 +324,27 @@ export const PARABOLA_THEORY_QUESTION: TheoryQuestion = {
       stepNumber: 4,
       title: 'Plot Locus Intersection Points on the Parabola',
       label: 'Plot Locus Intersection Points on the Parabola',
-      instruction: 'Mark the intersection of vertical line 1 with ray V-1\', vertical line 2 with ray V-2\', and vertical line 3 with ray V-3\' on both left and right sides. Highlight each intersection point clearly.',
+      instruction: 'Mark the intersection of vertical line 1 with ray V-1, vertical line 2 with ray V-2, and vertical line 3 with ray V-3 on the left. On the right, mark corresponding intersections with primed rays to locate P3\', P2\', P1\'.',
       pencilGrade: '2H (Plotting Points 0.25mm)',
       lineTypeISO: 'ISO 128 Type B (Point Markers)',
       compassSetting: 'Lead point alignment',
       markAllocation: '4 Marks',
       svgData: `
-        <!-- Intersection Locus Points -->
-        <!-- Left half: (x, y) = (115, 275), (160, 215), (205, 140) -->
-        <circle cx="115" cy="275" r="4" fill="#10b981" />
-        <text x="122" y="278" fill="#10b981" font-size="9" font-family="monospace">P1</text>
-        <circle cx="160" cy="215" r="4" fill="#10b981" />
-        <text x="167" y="218" fill="#10b981" font-size="9" font-family="monospace">P2</text>
-        <circle cx="205" cy="140" r="4" fill="#10b981" />
-        <text x="212" y="143" fill="#10b981" font-size="9" font-family="monospace">P3</text>
+        <!-- Left Symmetrical Locus Points: P1(115, 215), P2(160, 140), P3(205, 95) -->
+        <circle cx="115" cy="215" r="4" fill="#10b981" />
+        <text x="103" y="219" fill="#10b981" font-size="9" font-family="monospace" text-anchor="end">P1</text>
+        <circle cx="160" cy="140" r="4" fill="#10b981" />
+        <text x="148" y="144" fill="#10b981" font-size="9" font-family="monospace" text-anchor="end">P2</text>
+        <circle cx="205" cy="95" r="4" fill="#10b981" />
+        <text x="193" y="99" fill="#10b981" font-size="9" font-family="monospace" text-anchor="end">P3</text>
 
-        <!-- Right half: (295, 140), (340, 215), (385, 275) -->
-        <circle cx="295" cy="140" r="4" fill="#10b981" />
-        <text x="277" y="143" fill="#10b981" font-size="9" font-family="monospace">P3'</text>
-        <circle cx="340" cy="215" r="4" fill="#10b981" />
-        <text x="347" y="218" fill="#10b981" font-size="9" font-family="monospace">P2'</text>
-        <circle cx="385" cy="275" r="4" fill="#10b981" />
-        <text x="392" y="278" fill="#10b981" font-size="9" font-family="monospace">P1'</text>
+        <!-- Right Symmetrical Counterpart Points: P3'(295, 95), P2'(340, 140), P1'(385, 215) -->
+        <circle cx="295" cy="95" r="4" fill="#10b981" />
+        <text x="307" y="99" fill="#10b981" font-size="9" font-family="monospace" text-anchor="start">P3'</text>
+        <circle cx="340" cy="140" r="4" fill="#10b981" />
+        <text x="352" y="144" fill="#10b981" font-size="9" font-family="monospace" text-anchor="start">P2'</text>
+        <circle cx="385" cy="215" r="4" fill="#10b981" />
+        <text x="397" y="219" fill="#10b981" font-size="9" font-family="monospace" text-anchor="start">P1'</text>
       `
     },
     {
@@ -358,12 +357,12 @@ export const PARABOLA_THEORY_QUESTION: TheoryQuestion = {
       compassSetting: 'French Curve positioning',
       markAllocation: '4 Marks',
       svgData: `
-        <!-- Finished Parabola Outline -->
-        <path d="M 70,320 Q 250,-20 430,320" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+        <!-- Finished Mathematically Exact Symmetrical Parabola Outline -->
+        <path d="M 70,320 Q 250,-160 430,320" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
         <!-- Base line AB -->
         <line x1="70" y1="320" x2="430" y2="320" stroke="#38bdf8" stroke-width="2.5" />
-        <text x="210" y="230" fill="#38bdf8" font-size="12" font-weight="bold">PARABOLA</text>
-        <text x="215" y="246" fill="#94a3b8" font-size="9" font-family="monospace">e = 1.0 (Unity)</text>
+        <text x="250" y="225" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">PARABOLA</text>
+        <text x="250" y="242" fill="#94a3b8" font-size="9" font-family="monospace" text-anchor="middle">e = 1.0 (Unity)</text>
       `
     }
   ]

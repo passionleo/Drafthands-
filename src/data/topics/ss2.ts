@@ -1183,7 +1183,7 @@ const ss2CoreTopics: DrawingTopic[] = [
         {
           stepIndex: 4,
           title: 'Project Vertical Lines from Major Circle and Horizontal Lines from Minor Circle',
-          instruction: `From each intersection on the major circle, draw a vertical line towards the major axis. From the corresponding intersection on the minor circle, draw a horizontal line outward to intersect at points P1 through P12.`,
+          instruction: `From each intersection on the major circle, draw a vertical line towards the major axis. From the corresponding intersection on the minor circle, draw a horizontal line outward to intersect at points P1, P2 and symmetrical counterparts P2', P1'.`,
           detailedNotes: 'The intersections P1 to P12 are exact points on the perimeter of the ellipse.',
           technicalPrinciple: 'Parametric intersection theorem: x = a*cos(theta), y = b*sin(theta).',
           activeInstrument: {
@@ -1196,16 +1196,52 @@ const ss2CoreTopics: DrawingTopic[] = [
           elements: [
             { id: 'circle-major', type: 'CIRCLE', lineWeight: 'THIN_CONTINUOUS', cx: cx, cy: cy, r: a },
             { id: 'circle-minor', type: 'CIRCLE', lineWeight: 'THIN_CONTINUOUS', cx: cx, cy: cy, r: b },
-            ...ellipsePts.map((pt, idx) => ({
-              id: `pt-ellipse-${idx}`,
-              type: 'POINT' as const,
-              lineWeight: 'THICK_CONTINUOUS' as const,
-              cx: pt[0],
-              cy: pt[1],
-              label: `P${idx + 1}`,
-              labelPosition: 'top-right' as const,
-              isNew: true
-            }))
+            // Orthogonal projection coordinate guidelines
+            ...angles.map((_, idx) => ({
+              id: `proj-vert-${idx}`,
+              type: 'SEGMENT' as const,
+              lineWeight: 'THIN_CONTINUOUS' as const,
+              x1: majorPts[idx][0],
+              y1: majorPts[idx][1],
+              x2: ellipsePts[idx][0],
+              y2: ellipsePts[idx][1]
+            })),
+            ...angles.map((_, idx) => ({
+              id: `proj-horiz-${idx}`,
+              type: 'SEGMENT' as const,
+              lineWeight: 'THIN_CONTINUOUS' as const,
+              x1: minorPts[idx][0],
+              y1: minorPts[idx][1],
+              x2: ellipsePts[idx][0],
+              y2: ellipsePts[idx][1]
+            })),
+            ...ellipsePts.map((pt, idx) => {
+              const labelMap: Record<number, { label: string; pos: 'top' | 'bottom' | 'left' | 'right' | 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right' }> = {
+                0: { label: 'B', pos: 'right' },
+                1: { label: 'P1', pos: 'top-right' },
+                2: { label: 'P2', pos: 'top-right' },
+                3: { label: 'C', pos: 'top' },
+                4: { label: "P2'", pos: 'top-left' },
+                5: { label: "P1'", pos: 'top-left' },
+                6: { label: 'A', pos: 'left' },
+                7: { label: "P1''", pos: 'bottom-left' },
+                8: { label: "P2''", pos: 'bottom-left' },
+                9: { label: 'D', pos: 'bottom' },
+                10: { label: "P2'''", pos: 'bottom-right' },
+                11: { label: "P1'''", pos: 'bottom-right' }
+              };
+              const info = labelMap[idx] || { label: `P${idx + 1}`, pos: 'top-right' as const };
+              return {
+                id: `pt-ellipse-${idx}`,
+                type: 'POINT' as const,
+                lineWeight: 'THICK_CONTINUOUS' as const,
+                cx: pt[0],
+                cy: pt[1],
+                label: info.label,
+                labelPosition: info.pos,
+                isNew: true
+              };
+            })
           ]
         },
         {
@@ -1347,9 +1383,9 @@ const ss2CoreTopics: DrawingTopic[] = [
         {
           stepIndex: 2,
           title: `Divide Base Halves and Vertical Sides into ${N} Equal Parts`,
-          instruction: `Divide half-base AV into ${N} equal parts (1, 2, 3) and vertical side AD into ${N} equal parts (1', 2', 3'). Repeat symmetrically for the right side.`,
+          instruction: `Divide left half-base AO into ${N} equal parts (1, 2, 3) and right half-base OB into (3', 2', 1'). Divide left vertical side AD into (1, 2, 3) and right vertical side BC into (1', 2', 3').`,
           detailedNotes: 'The number of divisions on the base must equal the number of divisions on the vertical sides.',
-          technicalPrinciple: 'Proportional grid division.',
+          technicalPrinciple: 'Proportional bilateral grid division with mirrored prime notation.',
           activeInstrument: {
             toolType: 'DIVIDER',
             x: ax,
@@ -1358,11 +1394,11 @@ const ss2CoreTopics: DrawingTopic[] = [
             actionText: `Divide sides into ${N} equal parts`
           },
           elements: [
+            // Left Half-Base Divisions (1, 2, 3)
             ...Array.from({ length: N - 1 }).map((_, idx) => {
               const xL = ax + ((idx + 1) * (L / 2)) / N;
-              const xR = cx + ((idx + 1) * (L / 2)) / N;
               return {
-                id: `div-base-${idx + 1}`,
+                id: `div-base-l-${idx + 1}`,
                 type: 'POINT' as const,
                 lineWeight: 'THIN_CONTINUOUS' as const,
                 cx: xL,
@@ -1371,15 +1407,58 @@ const ss2CoreTopics: DrawingTopic[] = [
                 labelPosition: 'bottom' as const,
                 isNew: true
               };
+            }),
+            // Right Half-Base Divisions (3', 2', 1')
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const xR = cx + ((idx + 1) * (L / 2)) / N;
+              const labelNum = N - 1 - idx;
+              return {
+                id: `div-base-r-${labelNum}`,
+                type: 'POINT' as const,
+                lineWeight: 'THIN_CONTINUOUS' as const,
+                cx: xR,
+                cy: cyBase,
+                label: `${labelNum}'`,
+                labelPosition: 'bottom' as const,
+                isNew: true
+              };
+            }),
+            // Left Vertical Side AD Divisions (1, 2, 3)
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const ySide = cyBase - ((idx + 1) * H) / N;
+              return {
+                id: `div-side-l-${idx + 1}`,
+                type: 'POINT' as const,
+                lineWeight: 'THIN_CONTINUOUS' as const,
+                cx: ax,
+                cy: ySide,
+                label: `${idx + 1}`,
+                labelPosition: 'left' as const,
+                isNew: true
+              };
+            }),
+            // Right Vertical Side BC Divisions (1', 2', 3')
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const ySide = cyBase - ((idx + 1) * H) / N;
+              return {
+                id: `div-side-r-${idx + 1}`,
+                type: 'POINT' as const,
+                lineWeight: 'THIN_CONTINUOUS' as const,
+                cx: bx,
+                cy: ySide,
+                label: `${idx + 1}'`,
+                labelPosition: 'right' as const,
+                isNew: true
+              };
             })
           ]
         },
         {
           stepIndex: 3,
           title: 'Project Vertical Grid Lines and Radiating Rays from Vertex V',
-          instruction: `Erect vertical lines upward from base division points. Draw radiating rays from vertex V to vertical side divisions. The corresponding intersections give points on the parabola.`,
-          detailedNotes: 'Line 1 intersects ray V-1\', Line 2 intersects ray V-2\', etc.',
-          technicalPrinciple: 'Parametric intersection for parabola.',
+          instruction: `Erect vertical lines upward from base division points. Draw radiating rays from vertex V to vertical side divisions. Intersections define symmetrical points P1, P2, P3 on left and P3', P2', P1' on right.`,
+          detailedNotes: 'Line 1 intersects ray V-1, Line 2 intersects ray V-2; mirrored on right side with primed rays.',
+          technicalPrinciple: 'Bilateral parametric coordinate intersection for parabola.',
           activeInstrument: {
             toolType: 'RULER',
             x: cx,
@@ -1390,16 +1469,85 @@ const ss2CoreTopics: DrawingTopic[] = [
             actionText: `Draw rays from vertex V to side divisions`
           },
           elements: [
-            ...pts.map((pt, idx) => ({
-              id: `pt-parabola-${idx}`,
-              type: 'POINT' as const,
-              lineWeight: 'THICK_CONTINUOUS' as const,
-              cx: pt[0],
-              cy: pt[1],
-              label: `P${idx}`,
-              labelPosition: 'top' as const,
-              isNew: true
-            }))
+            // Vertical parallel lines from base divisions
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const xL = ax + ((idx + 1) * (L / 2)) / N;
+              const xR = cx + ((idx + 1) * (L / 2)) / N;
+              return [
+                {
+                  id: `vert-line-l-${idx + 1}`,
+                  type: 'SEGMENT' as const,
+                  lineWeight: 'THIN_CONTINUOUS' as const,
+                  x1: xL,
+                  y1: cyBase,
+                  x2: xL,
+                  y2: cyVertex
+                },
+                {
+                  id: `vert-line-r-${idx + 1}`,
+                  type: 'SEGMENT' as const,
+                  lineWeight: 'THIN_CONTINUOUS' as const,
+                  x1: xR,
+                  y1: cyBase,
+                  x2: xR,
+                  y2: cyVertex
+                }
+              ];
+            }).flat(),
+            // Radiating rays from Vertex V to vertical side divisions
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const ySide = cyBase - ((idx + 1) * H) / N;
+              return [
+                {
+                  id: `ray-v-l-${idx + 1}`,
+                  type: 'SEGMENT' as const,
+                  lineWeight: 'THIN_CONTINUOUS' as const,
+                  x1: cx,
+                  y1: cyVertex,
+                  x2: ax,
+                  y2: ySide
+                },
+                {
+                  id: `ray-v-r-${idx + 1}`,
+                  type: 'SEGMENT' as const,
+                  lineWeight: 'THIN_CONTINUOUS' as const,
+                  x1: cx,
+                  y1: cyVertex,
+                  x2: bx,
+                  y2: ySide
+                }
+              ];
+            }).flat(),
+            // Locus intersection points with bilateral prime notation
+            ...pts.map((pt, idx) => {
+              // idx from 0 to 2N (0 = A, N = V, 2N = B)
+              if (idx === 0 || idx === 2 * N) return null; // A and B already exist
+              if (idx === N) {
+                return {
+                  id: 'pt-parabola-v',
+                  type: 'POINT' as const,
+                  lineWeight: 'THICK_CONTINUOUS' as const,
+                  cx: pt[0],
+                  cy: pt[1],
+                  label: 'V',
+                  labelPosition: 'top' as const,
+                  isNew: true
+                };
+              }
+              const isLeft = idx < N;
+              const tag = isLeft ? `P${idx}` : `P${2 * N - idx}'`;
+              const pos = isLeft ? ('top-left' as const) : ('top-right' as const);
+              return {
+                id: `pt-parabola-${idx}`,
+                type: 'POINT' as const,
+                lineWeight: 'THICK_CONTINUOUS' as const,
+                cx: pt[0],
+                cy: pt[1],
+                label: tag,
+                labelPosition: pos,
+                isNew: true
+              };
+            }).filter(Boolean) as any[]
           ]
         },
         {
@@ -1518,7 +1666,7 @@ const ss2CoreTopics: DrawingTopic[] = [
           },
           elements: [
             { id: 'circle-base', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy, r: R, isNew: true },
-            { id: 'pt-O', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy, label: 'O', labelPosition: 'center' },
+            { id: 'pt-O', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy, label: 'O (Center)', labelPosition: 'bottom-left' },
             { id: 'line-circum', type: 'SEGMENT', lineWeight: 'THIN_CONTINUOUS', x1: cx, y1: cy + R, x2: cx + circum, y2: cy + R, isNew: true },
             { id: 'dim-circum', type: 'DIMENSION', lineWeight: 'DIMENSION_LINE', x1: cx, y1: cy + R + 35, x2: cx + circum, y2: cy + R + 35, dimensionText: `C = πD = ${(circum).toFixed(1)} mm` }
           ]
@@ -1557,8 +1705,8 @@ const ss2CoreTopics: DrawingTopic[] = [
           stepIndex: 3,
           title: 'Erect Perpendicular Tangents and Step Off Unwound Lengths',
           instruction: `At each division point on the circle, draw a tangent line perpendicular to the radius. Step off tangent lengths L1 = C/8, L2 = 2C/8, L3 = 3C/8, etc.`,
-          detailedNotes: 'The end of each tangent line is a locus point on the involute.',
-          technicalPrinciple: 'Locus of unwound cord endpoint.',
+          detailedNotes: 'The end of each tangent line is an exact locus point on the involute.',
+          technicalPrinciple: 'Locus of unwound cord endpoint along tangent vectors.',
           activeInstrument: {
             toolType: 'SET_SQUARE_30_60',
             x: cx,
@@ -1568,16 +1716,42 @@ const ss2CoreTopics: DrawingTopic[] = [
           },
           elements: [
             { id: 'circle-base', type: 'CIRCLE', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cy, r: R },
-            ...pts.map((pt, k) => ({
-              id: `pt-involute-${k}`,
-              type: 'POINT' as const,
-              lineWeight: 'THICK_CONTINUOUS' as const,
-              cx: pt[0],
-              cy: pt[1],
-              label: `P${k}`,
-              labelPosition: 'top-right' as const,
-              isNew: true
-            }))
+            // Tangent construction segments from circle perimeter to unwound locus points
+            ...Array.from({ length: N }).map((_, k) => {
+              const theta = ((k + 1) * 2 * Math.PI) / N;
+              return {
+                id: `tangent-seg-${k + 1}`,
+                type: 'SEGMENT' as const,
+                lineWeight: 'THIN_CONTINUOUS' as const,
+                x1: cx + R * Math.cos(theta),
+                y1: cy - R * Math.sin(theta),
+                x2: pts[k + 1][0],
+                y2: pts[k + 1][1]
+              };
+            }),
+            ...pts.map((pt, k) => {
+              const posList: ('top-right' | 'top-left' | 'bottom-left' | 'bottom-right')[] = [
+                'bottom-right',
+                'top-right',
+                'top-right',
+                'top-left',
+                'top-left',
+                'bottom-left',
+                'bottom-left',
+                'bottom-right',
+                'bottom-right'
+              ];
+              return {
+                id: `pt-involute-${k}`,
+                type: 'POINT' as const,
+                lineWeight: 'THICK_CONTINUOUS' as const,
+                cx: pt[0],
+                cy: pt[1],
+                label: `P${k}`,
+                labelPosition: posList[k] || 'top-right',
+                isNew: true
+              };
+            })
           ]
         },
         {
