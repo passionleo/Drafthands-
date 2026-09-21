@@ -166,6 +166,27 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
                 );
               })}
             </div>
+
+            {/* Quick AI Prompt Trigger */}
+            <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-cyan-400" />
+                <span>AI Prompt to CAD:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const input = document.getElementById('ai-cad-prompt-input') as HTMLInputElement;
+                  input?.focus();
+                  input?.select();
+                }}
+                className="text-[10px] font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900 px-2 py-0.5 rounded border border-cyan-500/40 transition-all cursor-pointer flex items-center gap-1"
+                title="Focus AI Command Bar (or press /)"
+              >
+                <span>Type natural prompt</span>
+                <span className="text-[9px] bg-cyan-800/60 px-1 rounded text-cyan-200">/</span>
+              </button>
+            </div>
           </div>
         )}
 

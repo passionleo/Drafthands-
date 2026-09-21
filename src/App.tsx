@@ -33,6 +33,8 @@ import { UserRoleType } from './components/landing/AuthModal';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
+import { AiPromptToCadBar } from './components/drafting/AiPromptToCadBar';
+import { ParsedCadResult } from './utils/aiCadPromptParser';
 import { Mail, CheckCircle2 } from 'lucide-react';
 
 function AppContent() {
@@ -290,6 +292,42 @@ function AppContent() {
       setIsWhiteboardStudioOpen(true);
     }
   }, []);
+
+  // AI Prompt-to-CAD command execution handler
+  const handleAiCadCommand = useCallback((result: ParsedCadResult, mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
+    if (!result.matched) return;
+
+    if (result.tier) {
+      setActiveTier(result.tier);
+    }
+
+    const targetTopic = getTopicById(result.topicId) || activeTopic;
+    if (result.topicId && result.topicId !== activeTopicId) {
+      setActiveTopicId(result.topicId);
+    }
+
+    // Instate extracted geometric parameters into reactive vector engine
+    setParameters(prev => ({
+      ...prev,
+      ...result.parameters
+    }));
+
+    // Direct render or step simulation
+    try {
+      const genSteps = targetTopic.generateSteps(result.parameters) || [];
+      const totalCount = genSteps.length || 1;
+      if (mode === 'RENDER_FINAL') {
+        setCurrentStep(totalCount);
+        setIsPlaying(false);
+      } else {
+        setCurrentStep(1);
+        setIsPlaying(true);
+      }
+    } catch (e) {
+      console.warn('Step computation error:', e);
+      setCurrentStep(1);
+    }
+  }, [activeTopic, activeTopicId]);
 
   // Export SVG as technical vector file with ISO standard sanitization and anti-clipping
   const handleExportSvg = useCallback(() => {
@@ -573,6 +611,13 @@ function AppContent() {
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 md:border-l border-slate-800">
+              {/* Top AI PROMPT-TO-CAD COMMAND BAR */}
+              <AiPromptToCadBar
+                onExecuteCadCommand={handleAiCadCommand}
+                activeTopic={activeTopic}
+                currentParameters={parameters}
+              />
+
               {/* Interactive Vector Canvas Stage */}
               <div className="flex-1 min-h-0 relative">
                 <DrawingCanvas

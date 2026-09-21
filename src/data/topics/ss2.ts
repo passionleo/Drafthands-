@@ -1068,8 +1068,8 @@ const ss2CoreTopics: DrawingTopic[] = [
         label: 'Major Axis (2a)',
         symbol: '2a',
         defaultValue: 320,
-        min: 220,
-        max: 420,
+        min: 80,
+        max: 500,
         step: 10,
         unit: 'mm',
         description: 'Total width across major axis'
@@ -1079,8 +1079,8 @@ const ss2CoreTopics: DrawingTopic[] = [
         label: 'Minor Axis (2b)',
         symbol: '2b',
         defaultValue: 200,
-        min: 120,
-        max: 280,
+        min: 40,
+        max: 350,
         step: 10,
         unit: 'mm',
         description: 'Total height across minor axis'
@@ -1311,8 +1311,8 @@ const ss2CoreTopics: DrawingTopic[] = [
         label: 'Base Span (L)',
         symbol: 'L',
         defaultValue: 320,
-        min: 200,
-        max: 440,
+        min: 60,
+        max: 500,
         step: 10,
         unit: 'mm',
         description: 'Base width of the parabola'
@@ -1322,8 +1322,8 @@ const ss2CoreTopics: DrawingTopic[] = [
         label: 'Altitude / Height (H)',
         symbol: 'H',
         defaultValue: 180,
-        min: 120,
-        max: 260,
+        min: 40,
+        max: 350,
         step: 10,
         unit: 'mm',
         description: 'Height of parabola vertex above base'
@@ -1552,22 +1552,84 @@ const ss2CoreTopics: DrawingTopic[] = [
         },
         {
           stepIndex: 4,
-          title: 'Draw the Smooth Parabolic Curve',
-          instruction: `Join all intersection points through vertex V with a smooth continuous thick line using a French curve and HB pencil.`,
-          detailedNotes: 'The parabolic curve is complete.',
-          technicalPrinciple: 'Finished parabola: 0.5mm Continuous Thick outline.',
+          title: 'Draw the Smooth Parabolic Curve and Dimensioning',
+          instruction: `Join all intersection points through vertex V with a smooth continuous thick line (HB pencil). Base Span AB = ${L} mm, Altitude VO = ${H} mm.`,
+          detailedNotes: 'The parabolic curve is complete with full WAEC/ISO standard dimensioning and construction grid lines.',
+          technicalPrinciple: 'Finished parabola: 0.5mm Continuous Thick outline with 0.25mm dimension lines.',
           activeInstrument: {
             toolType: 'PENCIL_HB',
             x: pts[0][0],
             y: pts[0][1],
             visible: true,
-            actionText: `Draw smooth parabolic curve`
+            actionText: `Draw smooth parabolic curve (Span ${L}mm, Rise ${H}mm)`
           },
           elements: [
+            // Base line & enclosing rectangle
+            { id: 'line-base', type: 'SEGMENT', lineWeight: 'THICK_CONTINUOUS', x1: ax, y1: cyBase, x2: bx, y2: cyBase },
+            { id: 'rect-l', type: 'SEGMENT', lineWeight: 'THIN_CONTINUOUS', x1: ax, y1: cyBase, x2: ax, y2: cyVertex },
+            { id: 'rect-r', type: 'SEGMENT', lineWeight: 'THIN_CONTINUOUS', x1: bx, y1: cyBase, x2: bx, y2: cyVertex },
+            { id: 'rect-top', type: 'SEGMENT', lineWeight: 'THIN_CONTINUOUS', x1: ax, y1: cyVertex, x2: bx, y2: cyVertex },
+            { id: 'axis-center', type: 'SEGMENT', lineWeight: 'THIN_CHAIN', x1: cx, y1: cyVertex - 20, x2: cx, y2: cyBase + 20 },
+            // Vertical parallel projectors from base divisions
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const xL = ax + ((idx + 1) * (L / 2)) / N;
+              const xR = cx + ((idx + 1) * (L / 2)) / N;
+              return [
+                { id: `vert-line-l-${idx + 1}`, type: 'SEGMENT' as const, lineWeight: 'THIN_CONTINUOUS' as const, x1: xL, y1: cyBase, x2: xL, y2: cyVertex },
+                { id: `vert-line-r-${idx + 1}`, type: 'SEGMENT' as const, lineWeight: 'THIN_CONTINUOUS' as const, x1: xR, y1: cyBase, x2: xR, y2: cyVertex }
+              ];
+            }).flat(),
+            // Radiating rays from Vertex V to side divisions
+            ...Array.from({ length: N - 1 }).map((_, idx) => {
+              const ySide = cyBase - ((idx + 1) * H) / N;
+              return [
+                { id: `ray-v-l-${idx + 1}`, type: 'SEGMENT' as const, lineWeight: 'THIN_CONTINUOUS' as const, x1: cx, y1: cyVertex, x2: ax, y2: ySide },
+                { id: `ray-v-r-${idx + 1}`, type: 'SEGMENT' as const, lineWeight: 'THIN_CONTINUOUS' as const, x1: cx, y1: cyVertex, x2: bx, y2: ySide }
+              ];
+            }).flat(),
+            // Locus points
+            ...pts.map((pt, idx) => {
+              if (idx === 0 || idx === 2 * N) return null;
+              if (idx === N) return null;
+              const isLeft = idx < N;
+              const tag = isLeft ? `P${idx}` : `P${2 * N - idx}'`;
+              const pos = isLeft ? ('top-left' as const) : ('top-right' as const);
+              return {
+                id: `pt-parabola-${idx}`,
+                type: 'POINT' as const,
+                lineWeight: 'THICK_CONTINUOUS' as const,
+                cx: pt[0],
+                cy: pt[1],
+                label: tag,
+                labelPosition: pos
+              };
+            }).filter(Boolean) as any[],
+            // Finished Parabolic Outline
             { id: 'poly-parabola', type: 'POLYGON', lineWeight: 'THICK_CONTINUOUS', points: pts, isNew: true, isFinalResult: true },
             { id: 'pt-A', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: ax, cy: cyBase, label: 'A', labelPosition: 'bottom-left' },
             { id: 'pt-B', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: bx, cy: cyBase, label: 'B', labelPosition: 'bottom-right' },
-            { id: 'pt-V', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cyVertex, label: 'V', labelPosition: 'top' }
+            { id: 'pt-V', type: 'POINT', lineWeight: 'THICK_CONTINUOUS', cx: cx, cy: cyVertex, label: 'V (Vertex)', labelPosition: 'top' },
+            // ISO Dimensioning
+            {
+              id: 'dim-span',
+              type: 'DIMENSION',
+              lineWeight: 'THIN_CONTINUOUS',
+              x1: ax,
+              y1: cyBase + 35,
+              x2: bx,
+              y2: cyBase + 35,
+              dimensionText: `Span = ${L} mm`
+            },
+            {
+              id: 'dim-rise',
+              type: 'DIMENSION',
+              lineWeight: 'THIN_CONTINUOUS',
+              x1: bx + 35,
+              y1: cyBase,
+              x2: bx + 35,
+              y2: cyVertex,
+              dimensionText: `Rise = ${H} mm`
+            }
           ]
         }
       ];
