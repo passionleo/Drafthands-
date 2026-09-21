@@ -101,15 +101,18 @@ export const Header: React.FC<HeaderProps> = ({
     userRole, 
     userProfile, 
     setUserRole, 
-    logout 
+    logout,
+    isMasterAdmin,
+    enableMasterAdminBypass,
+    disableMasterAdminBypass
   } = useSubscription();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const currentPlan = SUBSCRIPTION_PLANS[subscription.plan];
-  const isStudent = userRole === 'STUDENT';
-  const isTeacher = userRole === 'TEACHER';
-  const isParent = userRole === 'PARENT';
-  const isAdmin = userRole === 'ADMIN';
+  const isStudent = userRole === 'STUDENT' && !isMasterAdmin;
+  const isTeacher = userRole === 'TEACHER' || isMasterAdmin;
+  const isParent = userRole === 'PARENT' || isMasterAdmin;
+  const isAdmin = userRole === 'ADMIN' || isMasterAdmin;
 
   // Role labels and badge styling
   const roleConfig: Record<UserRoleType, { label: string; badgeClass: string; icon: any }> = {
@@ -129,9 +132,11 @@ export const Header: React.FC<HeaderProps> = ({
       icon: Users
     },
     ADMIN: {
-      label: 'School Admin',
-      badgeClass: 'bg-amber-950/80 border-amber-500/50 text-amber-300 hover:bg-amber-900/60',
-      icon: School
+      label: isMasterAdmin ? 'Master Owner / Admin' : 'School Admin',
+      badgeClass: isMasterAdmin 
+        ? 'bg-amber-950/90 border-amber-400 text-amber-200 hover:bg-amber-900/80 shadow-md shadow-amber-500/20'
+        : 'bg-amber-950/80 border-amber-500/50 text-amber-300 hover:bg-amber-900/60',
+      icon: isMasterAdmin ? ShieldCheck : School
     }
   };
 
@@ -506,14 +511,48 @@ export const Header: React.FC<HeaderProps> = ({
           {isRoleDropdownOpen && (
             <div className="absolute right-0 top-full mt-2 w-72 p-2.5 bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95">
               <div className="p-2 border-b border-slate-800 mb-2">
-                <div className="text-xs font-bold text-white truncate">
-                  {userProfile?.name || 'Technical Scholar'}
+                <div className="flex items-center justify-between gap-1">
+                  <div className="text-xs font-bold text-white truncate">
+                    {userProfile?.name || 'Technical Scholar'}
+                  </div>
+                  {isMasterAdmin && (
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-mono font-bold shrink-0">
+                      👑 Master Owner
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-slate-400 font-mono truncate">
                   {userProfile?.email || 'user@drafthands.edu'}
                 </div>
                 <div className="text-[10px] text-cyan-400 mt-0.5">
                   {userProfile?.institution || 'Technical College'}
+                </div>
+
+                {/* Master Admin Bypass Status Indicator */}
+                <div className="mt-2 p-2 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-center justify-between text-[11px]">
+                  <div>
+                    <span className="font-bold text-amber-300 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                      Master Bypass: {isMasterAdmin ? 'Active' : 'Off'}
+                    </span>
+                    <p className="text-[10px] text-slate-400">All paywalls & modules unlocked</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (isMasterAdmin) {
+                        disableMasterAdminBypass();
+                      } else {
+                        enableMasterAdminBypass('passion4dami@gmail.com');
+                      }
+                    }}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      isMasterAdmin 
+                        ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40' 
+                        : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                    }`}
+                  >
+                    {isMasterAdmin ? 'Disable' : 'Enable'}
+                  </button>
                 </div>
               </div>
 

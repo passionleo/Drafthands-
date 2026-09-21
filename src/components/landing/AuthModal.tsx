@@ -61,6 +61,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    const isOwner = emailOrPhone.trim().toLowerCase().includes('passion4dami') || 
+                    emailOrPhone.trim().toLowerCase().includes('admin@drafthands') ||
+                    emailOrPhone.trim().toLowerCase().includes('owner@drafthands');
+    if (isOwner) {
+      onAuthSuccess('ADMIN', {
+        name: fullName || 'Engr. Dami (Platform Owner)',
+        email: 'passion4dami@gmail.com',
+        institution: 'DraftHands Technical College',
+        isEmailVerified: true
+      });
+      onClose();
+      return;
+    }
+
     onAuthSuccess(selectedRole, {
       name: fullName || (selectedRole === 'STUDENT' ? 'Demo Student 1' : selectedRole === 'TEACHER' ? 'Demo Instructor' : selectedRole === 'PARENT' ? 'Demo Parent Guardian' : 'Demo Academic Dean'),
       email: emailOrPhone || 'user@test-academy.edu.ng',
@@ -115,9 +129,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         isEmailVerified: true
       },
       ADMIN: {
-        name: 'Demo Academic Dean',
-        email: 'demo.dean@test-academy.edu.ng',
-        institution: 'Test Technical Academy',
+        name: 'Engr. Dami (Platform Owner)',
+        email: 'passion4dami@gmail.com',
+        institution: 'DraftHands Technical College',
         isEmailVerified: true
       }
     };
@@ -447,10 +461,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleQuickDemo('ADMIN')}
-                className="p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-left text-xs text-slate-300 transition-all flex items-center gap-2"
+                className="p-2 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/50 hover:border-amber-400 text-left text-xs text-amber-200 transition-all flex items-center gap-2 shadow-sm"
               >
                 <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                <span className="truncate font-semibold">Demo as School Principal</span>
+                <span className="truncate font-semibold">👑 Master Owner / Admin</span>
               </button>
             </div>
           </div>

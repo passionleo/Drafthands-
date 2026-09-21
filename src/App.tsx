@@ -115,7 +115,8 @@ function AppContent() {
     isSubscribed,
     isEmailVerified,
     setUserRole,
-    verifyEmail
+    verifyEmail,
+    isMasterAdmin
   } = useSubscription();
 
   // Code entry state for verification modal if unverified student is active
@@ -409,34 +410,34 @@ function AppContent() {
   }, [isSubscribed, openPaywall]);
 
   const handleOpenProjectionMode = useCallback(() => {
-    // Hide and restrict educator tools when in Student role
-    if (userRole === 'STUDENT') return;
+    // Hide and restrict educator tools when in Student role (unless master admin)
+    if (userRole === 'STUDENT' && !isMasterAdmin) return;
     if (!isSubscribed) {
       openPaywall();
       return;
     }
     setIsProjectionModeOpen(true);
-  }, [userRole, isSubscribed, openPaywall]);
+  }, [userRole, isSubscribed, openPaywall, isMasterAdmin]);
 
   const handleOpenTeacherPortal = useCallback(() => {
-    if (userRole === 'STUDENT') return;
+    if (userRole === 'STUDENT' && !isMasterAdmin) return;
     setIsTeacherPortalOpen(true);
-  }, [userRole]);
+  }, [userRole, isMasterAdmin]);
 
   const handleOpenTeacherAssignments = useCallback(() => {
-    if (userRole === 'STUDENT') return;
+    if (userRole === 'STUDENT' && !isMasterAdmin) return;
     setIsTeacherAssignmentsOpen(true);
-  }, [userRole]);
+  }, [userRole, isMasterAdmin]);
 
   const handleOpenParentPortal = useCallback(() => {
-    if (userRole === 'STUDENT') return;
+    if (userRole === 'STUDENT' && !isMasterAdmin) return;
     setIsParentPortalOpen(true);
-  }, [userRole]);
+  }, [userRole, isMasterAdmin]);
 
   const handleOpenAdminConsole = useCallback(() => {
-    if (userRole !== 'ADMIN') return;
+    if (userRole !== 'ADMIN' && !isMasterAdmin) return;
     setIsAdminConsoleOpen(true);
-  }, [userRole]);
+  }, [userRole, isMasterAdmin]);
 
   // Transition from Public Landing Page into Active Studio Workspace or Past Questions
   const handleEnterStudioFromLanding = useCallback((options?: {

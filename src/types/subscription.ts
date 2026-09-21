@@ -39,6 +39,7 @@ export interface UserSubscriptionState {
   userProfile?: UserProfile;
   unlockedTopicIds: string[];
   isDemo?: boolean;
+  isMasterAdmin?: boolean;
 }
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanType, SubscriptionPlan> = {

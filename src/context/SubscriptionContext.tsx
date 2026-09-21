@@ -16,12 +16,15 @@ export interface SubscriptionContextType {
   hasActivePaidSubscription: boolean;
   isDemoMode: boolean;
   isTeacherOrAdmin: boolean;
+  isMasterAdmin: boolean;
   userRole: UserRoleType;
   userProfile?: UserProfile;
   currentPlan: SubscriptionPlan;
   isEmailVerified: boolean;
   setUserRole: (role: UserRoleType) => void;
   setUserProfile: (profile: UserProfile) => void;
+  enableMasterAdminBypass: (ownerEmail?: string) => void;
+  disableMasterAdminBypass: () => void;
   verifyEmail: (code: string) => { success: boolean; message: string };
   logout: () => void;
   checkTopicAccess: (topic: DrawingTopic, topicsInTier: DrawingTopic[]) => {
@@ -44,24 +47,44 @@ export interface SubscriptionContextType {
 }
 
 const STORAGE_KEY = 'drafthands_subscription_v1';
+export const MASTER_BYPASS_STORAGE_KEY = 'drafthands_master_admin_bypass';
+
+export const MASTER_ADMIN_EMAILS = [
+  'passion4dami@gmail.com',
+  'admin@drafthands.com.ng',
+  'owner@drafthands.com.ng'
+];
+
+export const isOwnerOrMasterEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const clean = email.trim().toLowerCase();
+  return MASTER_ADMIN_EMAILS.includes(clean) || clean.includes('passion4dami');
+};
 
 const DEFAULT_STATE: UserSubscriptionState = {
-  plan: 'FREE',
-  isSubscribed: false,
-  activeUntil: null,
-  userRole: 'STUDENT',
+  plan: 'INSTITUTION_PASS',
+  isSubscribed: true,
+  activeUntil: '2099-12-31T23:59:59.999Z',
+  licenseKey: 'MASTER-OWNER-PASS-PERMANENT',
+  userRole: 'ADMIN',
+  isMasterAdmin: true,
   userProfile: {
-    name: 'Demo Student 1',
-    email: 'demo.student1@test-academy.edu.ng',
-    institution: 'Test Technical Academy',
-    role: 'STUDENT',
-    isEmailVerified: true
+    name: 'Engr. Dami (Platform Owner)',
+    email: 'passion4dami@gmail.com',
+    institution: 'DraftHands Technical College',
+    role: 'ADMIN',
+    isEmailVerified: true,
+    registeredAt: '2025-01-01T00:00:00.000Z'
   },
   unlockedTopicIds: []
 };
 
 // Valid promo / school license codes
 const VOUCHER_CODES: Record<string, { plan: SubscriptionPlanType; role: UserRoleType; note: string }> = {
+  'PASSION4DAMI': { plan: 'INSTITUTION_PASS', role: 'ADMIN', note: 'Master Owner Permanent Bypass' },
+  'OWNER-BYPASS': { plan: 'INSTITUTION_PASS', role: 'ADMIN', note: 'Master Owner Full Bypass' },
+  'ADMIN-BYPASS': { plan: 'INSTITUTION_PASS', role: 'ADMIN', note: 'Administrative Master Pass' },
+  'MASTER-ADMIN': { plan: 'INSTITUTION_PASS', role: 'ADMIN', note: 'Institutional Master License' },
   'DRAFTHANDS-VIP': { plan: 'STUDENT_SESSION', role: 'STUDENT', note: 'VIP Full Session Access' },
   'WAEC-SCHOLAR-2025': { plan: 'STUDENT_SESSION', role: 'STUDENT', note: 'WAEC Scholar Academic Grant' },
   'TEST-FACULTY-PASS': { plan: 'TEACHER_PRO', role: 'TEACHER', note: 'Technical College Faculty License' },
@@ -75,21 +98,29 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [subscription, setSubscription] = useState<UserSubscriptionState>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const storedBypass = typeof window !== 'undefined' ? localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) : null;
+      // Default to permanent bypass active unless explicitly turned off
+      const isMasterSaved = storedBypass !== 'false';
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
+          const isMaster = isMasterSaved || parsed.isMasterAdmin || isOwnerOrMasterEmail(parsed.userProfile?.email);
           return {
             ...DEFAULT_STATE,
             ...parsed,
-            userRole: parsed.userRole || 'STUDENT',
+            isMasterAdmin: isMaster ? true : Boolean(parsed.isMasterAdmin),
+            isSubscribed: isMaster ? true : Boolean(parsed.isSubscribed),
+            plan: isMaster ? 'INSTITUTION_PASS' : (parsed.plan || 'FREE'),
+            userRole: parsed.userRole || (isMaster ? 'ADMIN' : 'STUDENT'),
             userProfile: parsed.userProfile || {
               ...DEFAULT_STATE.userProfile!,
-              role: parsed.userRole || 'STUDENT'
+              role: parsed.userRole || (isMaster ? 'ADMIN' : 'STUDENT')
             }
           };
         }
       }
+      return DEFAULT_STATE;
     } catch (e) {
       console.warn('Failed to load subscription from localStorage', e);
     }
@@ -113,21 +144,33 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const isEmailVerified = userProfile ? Boolean(userProfile.isEmailVerified) : true;
   const currentPlan = SUBSCRIPTION_PLANS[subscription?.plan || 'FREE'] || SUBSCRIPTION_PLANS.FREE;
 
-  const isDemoMode = Boolean(
+  const isMasterAdmin = Boolean(
+    subscription?.isMasterAdmin ||
+    isOwnerOrMasterEmail(subscription?.userProfile?.email) ||
+    (typeof window !== 'undefined' && localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) !== 'false')
+  );
+
+  const isDemoMode = !isMasterAdmin && Boolean(
     subscription?.isDemo || 
     (subscription?.licenseKey && subscription.licenseKey.startsWith('DEMO-'))
   );
 
-  // Strictly check for an active, paid non-demo subscription
+  // Strictly check for an active, paid non-demo subscription (or Master Admin bypass)
   const hasActivePaidSubscription = Boolean(
-    subscription?.isSubscribed && 
+    isMasterAdmin ||
+    (subscription?.isSubscribed && 
     subscription?.plan !== 'FREE' && 
-    !isDemoMode
+    !isDemoMode)
   );
 
-  // isSubscribed reflects strict active paid status
-  const isSubscribed = hasActivePaidSubscription;
-  const isTeacherOrAdmin = userRole === 'TEACHER' || userRole === 'ADMIN' || (hasActivePaidSubscription && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'));
+  // isSubscribed reflects strict active paid status or master bypass
+  const isSubscribed = Boolean(isMasterAdmin || hasActivePaidSubscription);
+  const isTeacherOrAdmin = Boolean(
+    isMasterAdmin ||
+    userRole === 'TEACHER' || 
+    userRole === 'ADMIN' || 
+    (hasActivePaidSubscription && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'))
+  );
 
   const setUserRole = (role: UserRoleType) => {
     setSubscription(prev => ({
@@ -143,10 +186,76 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const setUserProfile = (profile: UserProfile) => {
+    const isOwner = isOwnerOrMasterEmail(profile.email);
+    if (isOwner && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+      } catch (e) {
+        console.warn(e);
+      }
+    }
     setSubscription(prev => ({
       ...prev,
+      isMasterAdmin: isOwner ? true : prev.isMasterAdmin,
+      isSubscribed: isOwner ? true : prev.isSubscribed,
+      plan: isOwner ? 'INSTITUTION_PASS' : prev.plan,
       userRole: profile.role,
       userProfile: profile
+    }));
+  };
+
+  const enableMasterAdminBypass = (ownerEmail: string = 'passion4dami@gmail.com') => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    setSubscription(prev => ({
+      ...prev,
+      plan: 'INSTITUTION_PASS',
+      isSubscribed: true,
+      isMasterAdmin: true,
+      activeUntil: '2099-12-31T23:59:59.999Z',
+      licenseKey: 'MASTER-OWNER-PASS-PERMANENT',
+      userRole: 'ADMIN',
+      userProfile: {
+        name: 'Engr. Dami (Platform Owner)',
+        email: ownerEmail,
+        institution: 'DraftHands Technical College',
+        role: 'ADMIN',
+        isEmailVerified: true,
+        registeredAt: prev.userProfile?.registeredAt || new Date().toISOString()
+      },
+      unlockedTopicIds: []
+    }));
+    setIsPaywallOpen(false);
+    setPaywallTargetTopic(null);
+  };
+
+  const disableMasterAdminBypass = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'false');
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    setSubscription(prev => ({
+      ...prev,
+      isMasterAdmin: false,
+      plan: 'FREE',
+      isSubscribed: false,
+      userRole: 'STUDENT',
+      userProfile: {
+        name: 'Demo Student 1',
+        email: 'demo.student1@test-academy.edu.ng',
+        institution: 'Test Technical Academy',
+        role: 'STUDENT',
+        isEmailVerified: true
+      },
+      unlockedTopicIds: []
     }));
   };
 
@@ -173,8 +282,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkTopicAccess = (topic: DrawingTopic, topicsInTier: DrawingTopic[]) => {
-    // If user has an active paid subscription, all syllabus modules are unlocked
-    if (hasActivePaidSubscription) {
+    // If master admin or active paid subscription, all syllabus modules are fully unlocked
+    if (isMasterAdmin || hasActivePaidSubscription) {
       return { isAllowed: true, isFreeTier: false, tierIndex: 0 };
     }
 
@@ -195,6 +304,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkFeatureAccess = (featureKey: '3D_VIEWPORT' | 'EXAM_ARCHIVE_DOWNLOAD' | 'PROJECTION_MODE' | 'TEACHER_TOOLS' | 'ADMIN_TOOLS') => {
+    // Master admin bypass allows all features unconditionally
+    if (isMasterAdmin) {
+      return { isAllowed: true };
+    }
+
     // RBAC check
     if (featureKey === 'TEACHER_TOOLS') {
       if (userRole === 'STUDENT') {
@@ -255,7 +369,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isEmailVerified: true
       } : undefined,
       unlockedTopicIds: [],
-      isDemo
+      isDemo,
+      isMasterAdmin: subscription.isMasterAdmin
     };
 
     setSubscription(newState);
@@ -281,6 +396,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const voucher = VOUCHER_CODES[code];
 
     if (voucher) {
+      if (voucher.note.includes('Master') || code.includes('PASSION4DAMI') || code.includes('OWNER')) {
+        enableMasterAdminBypass('passion4dami@gmail.com');
+        return {
+          success: true,
+          message: 'Master Owner Permanent Bypass Activated! Full access granted across all modules.',
+          plan: 'INSTITUTION_PASS' as SubscriptionPlanType
+        };
+      }
+
       subscribeToPlan(voucher.plan, `VOUCHER-${code}`);
       return {
         success: true,
@@ -308,9 +432,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const resetSubscription = () => {
     setSubscription(DEFAULT_STATE);
     localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+    }
   };
 
   const openPaywall = (topic?: DrawingTopic) => {
+    if (isMasterAdmin) {
+      console.info('[DraftHands] Master Owner Admin Bypass active. Paywall modal blocked.');
+      return;
+    }
     if (topic) {
       setPaywallTargetTopic(topic);
     }
@@ -330,12 +461,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         hasActivePaidSubscription,
         isDemoMode,
         isTeacherOrAdmin,
+        isMasterAdmin,
         userRole,
         userProfile,
         currentPlan,
         isEmailVerified,
         setUserRole,
         setUserProfile,
+        enableMasterAdminBypass,
+        disableMasterAdminBypass,
         verifyEmail,
         logout,
         checkTopicAccess,

@@ -36,7 +36,13 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   onClose,
   targetTopic
 }) => {
-  const { subscribeToPlan, enableDemoMode, redeemVoucherCode } = useSubscription();
+  const { 
+    subscribeToPlan, 
+    enableDemoMode, 
+    redeemVoucherCode,
+    isMasterAdmin,
+    enableMasterAdminBypass
+  } = useSubscription();
 
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>('STUDENT_SESSION');
   const [payerEmail, setPayerEmail] = useState<string>('student@drafthands.edu.ng');
@@ -45,6 +51,17 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   const [voucherFeedback, setVoucherFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   if (!isOpen) return null;
+
+  const handleApplyMasterBypass = () => {
+    enableMasterAdminBypass('passion4dami@gmail.com');
+    setVoucherFeedback({
+      success: true,
+      message: 'Master Owner Bypass applied for passion4dami@gmail.com! All modules unlocked.'
+    });
+    setTimeout(() => {
+      onClose();
+    }, 900);
+  };
 
   const selectedPlan = SUBSCRIPTION_PLANS[selectedPlanType] || SUBSCRIPTION_PLANS.STUDENT_SESSION;
 
@@ -122,6 +139,27 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Master Admin Bypass Notice */}
+          {isMasterAdmin && (
+            <div className="mx-4 sm:mx-6 mt-4 p-3.5 bg-gradient-to-r from-amber-500/20 via-emerald-500/15 to-cyan-500/20 border border-amber-400/50 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold text-amber-200">Master Owner Permanent Bypass is Active</span>
+                  <p className="text-[11px] text-slate-300">
+                    Logged in as Platform Owner (<span className="text-amber-300 font-mono">passion4dami@gmail.com</span>). All modules and tools are fully unlocked.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-colors shrink-0 shadow-md shadow-amber-500/20"
+              >
+                Dismiss / Continue Testing
+              </button>
+            </div>
+          )}
 
           {/* Modal Content Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
@@ -388,6 +426,15 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition-colors shadow-md shadow-amber-600/20"
                 >
                   Redeem Code
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyMasterBypass}
+                  className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5"
+                  title="Activate Permanent Master Admin Bypass for passion4dami@gmail.com"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Owner Bypass (passion4dami@gmail.com)</span>
                 </button>
               </form>
 
