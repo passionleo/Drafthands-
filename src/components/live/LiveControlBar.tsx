@@ -20,7 +20,8 @@ import {
   Pointer,
   Columns,
   Square,
-  Maximize2
+  Maximize2,
+  PictureInPicture
 } from 'lucide-react';
 import { DrawingPermissionMode, VideoLayoutMode } from '../../types/liveClass';
 
@@ -232,13 +233,17 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
             <span className="hidden xl:inline">Video Focus</span>
           </button>
           <button
-            onClick={() => onChangeLayoutMode('FLOATING_PIP')}
-            className={`p-1.5 rounded-lg text-xs transition-colors ${
-              layoutMode === 'FLOATING_PIP' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
+            id="btn-toggle-pip"
+            onClick={() => onChangeLayoutMode(layoutMode === 'FLOATING_PIP' ? 'SPLIT_EQUAL' : 'FLOATING_PIP')}
+            className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1.5 transition-all ${
+              layoutMode === 'FLOATING_PIP' 
+                ? 'bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-900/50' 
+                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
             }`}
-            title="Floating Picture-in-Picture Video Tiles"
+            title="Toggle Draggable Picture-in-Picture Student Monitoring View"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <PictureInPicture className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden xl:inline">Student PiP</span>
           </button>
           <button
             onClick={() => onChangeLayoutMode('FULL_BOARD')}
