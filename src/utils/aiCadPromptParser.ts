@@ -27,7 +27,8 @@ export interface ParsedCadResult {
 /**
  * Clean and normalize natural language prompt
  */
-function normalizePrompt(prompt: string): string {
+function normalizePrompt(prompt: unknown): string {
+  if (typeof prompt !== 'string') return '';
   return prompt
     .toLowerCase()
     .trim()
@@ -40,23 +41,29 @@ function normalizePrompt(prompt: string): string {
  * e.g. "span 120mm", "span of 120", "span: 120", "120mm span"
  */
 function extractNumberWithKeywords(text: string, keywords: string[]): number | null {
+  if (!text || typeof text !== 'string' || !Array.isArray(keywords)) return null;
   for (const kw of keywords) {
-    // Pattern 1: keyword + optional separator + number + optional unit
-    // e.g., "span 120", "span: 120mm", "span of 120", "span = 120.5"
-    const p1 = new RegExp(`(?:\\b${kw}\\b)[\\s:=ofis]*([0-9]+(?:\\.[0-9]+)?)\\s*(?:mm|cm|m|deg|°)?`, 'i');
-    const m1 = text.match(p1);
-    if (m1 && m1[1]) {
-      const val = parseFloat(m1[1]);
-      if (!isNaN(val)) return val;
-    }
+    if (!kw || typeof kw !== 'string') continue;
+    try {
+      // Pattern 1: keyword + optional separator + number + optional unit
+      // e.g., "span 120", "span: 120mm", "span of 120", "span = 120.5"
+      const p1 = new RegExp(`(?:\\b${kw}\\b)[\\s:=ofis]*([0-9]+(?:\\.[0-9]+)?)\\s*(?:mm|cm|m|deg|°)?`, 'i');
+      const m1 = text.match(p1);
+      if (m1 && m1[1]) {
+        const val = parseFloat(m1[1]);
+        if (!isNaN(val)) return val;
+      }
 
-    // Pattern 2: number + optional unit + keyword
-    // e.g., "120mm span", "120 span", "80mm rise"
-    const p2 = new RegExp(`([0-9]+(?:\\.[0-9]+)?)\\s*(?:mm|cm|m|deg|°)?\\s*(?:\\b${kw}\\b)`, 'i');
-    const m2 = text.match(p2);
-    if (m2 && m2[1]) {
-      const val = parseFloat(m2[1]);
-      if (!isNaN(val)) return val;
+      // Pattern 2: number + optional unit + keyword
+      // e.g., "120mm span", "120 span", "80mm rise"
+      const p2 = new RegExp(`([0-9]+(?:\\.[0-9]+)?)\\s*(?:mm|cm|m|deg|°)?\\s*(?:\\b${kw}\\b)`, 'i');
+      const m2 = text.match(p2);
+      if (m2 && m2[1]) {
+        const val = parseFloat(m2[1]);
+        if (!isNaN(val)) return val;
+      }
+    } catch {
+      // Safely continue if pattern cannot compile
     }
   }
   return null;
@@ -66,11 +73,16 @@ function extractNumberWithKeywords(text: string, keywords: string[]): number | n
  * Extracts dimension pair like "120x80", "120 x 80", "120 by 80"
  */
 function extractDimensionPair(text: string): [number, number] | null {
-  const m = text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?\s*(?:x|by|\*|\/)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?/i);
-  if (m && m[1] && m[2]) {
-    const val1 = parseFloat(m[1]);
-    const val2 = parseFloat(m[2]);
-    if (!isNaN(val1) && !isNaN(val2)) return [val1, val2];
+  if (!text || typeof text !== 'string') return null;
+  try {
+    const m = text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?\s*(?:x|by|\*|\/)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?/i);
+    if (m && m[1] && m[2]) {
+      const val1 = parseFloat(m[1]);
+      const val2 = parseFloat(m[2]);
+      if (!isNaN(val1) && !isNaN(val2)) return [val1, val2];
+    }
+  } catch {
+    // Ignore regex failure
   }
   return null;
 }
@@ -79,9 +91,14 @@ function extractDimensionPair(text: string): [number, number] | null {
  * Extracts all freestanding numbers in text
  */
 function extractAllNumbers(text: string): number[] {
-  const matches = text.match(/\b([0-9]+(?:\.[0-9]+)?)\b/g);
-  if (!matches) return [];
-  return matches.map(n => parseFloat(n)).filter(n => !isNaN(n));
+  if (!text || typeof text !== 'string') return [];
+  try {
+    const matches = text.match(/\b([0-9]+(?:\.[0-9]+)?)\b/g);
+    if (!matches) return [];
+    return matches.map(n => parseFloat(n)).filter(n => !isNaN(n));
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -89,9 +106,30 @@ function extractAllNumbers(text: string): number[] {
  * Analyzes natural language instructions, extracts geometric parameters,
  * and produces ready-to-render CAD directives.
  */
-export function parseNaturalLanguageCadPrompt(rawPrompt: string): ParsedCadResult {
-  const clean = normalizePrompt(rawPrompt);
+export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefined): ParsedCadResult {
+  const safePrompt = typeof rawPrompt === 'string' ? rawPrompt : '';
+  const clean = normalizePrompt(safePrompt);
   const matchedKeywords: string[] = [];
+
+  if (!clean) {
+    return {
+      matched: false,
+      rawPrompt: safePrompt,
+      geometryType: 'UNKNOWN',
+      geometryTitle: 'No CAD Instruction Provided',
+      topicId: 'ss1-bisect-line',
+      tier: 'SS1',
+      confidence: 0,
+      description: 'Please enter a natural language CAD instruction (e.g. "Construct a parabola with span 120mm and rise 80mm").',
+      parameters: {},
+      extractedParams: [],
+      matchedKeywords: [],
+      executionPlan: 'Awaiting CAD instruction input.',
+      cadCommandEcho: ''
+    };
+  }
+
+  try {
 
   // ==========================================
   // 1. PARABOLA (Rectangular / Tangent Method)
@@ -608,20 +646,38 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string): ParsedCadResul
     };
   }
 
-  // Could not match known geometric pattern
-  return {
-    matched: false,
-    rawPrompt,
-    geometryType: 'UNKNOWN',
-    geometryTitle: 'Unrecognized CAD Instruction',
-    topicId: 'ss2-parabola-construction',
-    tier: 'SS2',
-    confidence: 0,
-    description: 'Could not identify specific geometric parameters. Please try e.g. "Construct a parabola with span 120mm and rise 80mm".',
-    parameters: {},
-    extractedParams: [],
-    matchedKeywords: [],
-    executionPlan: 'Command unrecognized. Please review supported CAD examples.',
-    cadCommandEcho: `ERROR: UNRECOGNIZED_COMMAND "${rawPrompt}"`
-  };
+    // Could not match known geometric pattern
+    return {
+      matched: false,
+      rawPrompt: safePrompt,
+      geometryType: 'UNKNOWN',
+      geometryTitle: 'Unrecognized CAD Instruction',
+      topicId: 'ss1-bisect-line',
+      tier: 'SS1',
+      confidence: 0,
+      description: 'Could not identify specific geometric parameters. Please try e.g. "Construct a parabola with span 120mm and rise 80mm".',
+      parameters: {},
+      extractedParams: [],
+      matchedKeywords: [],
+      executionPlan: 'Command unrecognized. Please review supported CAD examples.',
+      cadCommandEcho: `ERROR: UNRECOGNIZED_COMMAND "${safePrompt}"`
+    };
+  } catch (err) {
+    console.warn('[AI CAD Prompt Parser Exception Handled]', err);
+    return {
+      matched: false,
+      rawPrompt: safePrompt,
+      geometryType: 'UNKNOWN',
+      geometryTitle: 'CAD Instruction Processing Recovered',
+      topicId: 'ss1-bisect-line',
+      tier: 'SS1',
+      confidence: 0,
+      description: 'A parsing error occurred while interpreting this instruction. Try a standard format (e.g. "Construct an ellipse with major axis 180mm and minor axis 110mm").',
+      parameters: {},
+      extractedParams: [],
+      matchedKeywords: [],
+      executionPlan: 'Instruction parsing recovered safely.',
+      cadCommandEcho: 'ERROR: PARSE_EXCEPTION'
+    };
+  }
 }

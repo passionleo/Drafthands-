@@ -35,6 +35,7 @@ import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { AiPromptToCadBar } from './components/drafting/AiPromptToCadBar';
 import { ParsedCadResult } from './utils/aiCadPromptParser';
+import { CadErrorBoundary } from './components/common/CadErrorBoundary';
 import { Mail, CheckCircle2 } from 'lucide-react';
 
 function AppContent() {
@@ -299,37 +300,44 @@ function AppContent() {
 
   // AI Prompt-to-CAD command execution handler
   const handleAiCadCommand = useCallback((result: ParsedCadResult, mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
-    if (!result.matched) return;
+    if (!result || !result.matched) return;
 
-    if (result.tier) {
-      setActiveTier(result.tier);
-    }
-
-    const targetTopic = getTopicById(result.topicId) || activeTopic;
-    if (result.topicId && result.topicId !== activeTopicId) {
-      setActiveTopicId(result.topicId);
-    }
-
-    // Instate extracted geometric parameters into reactive vector engine
-    setParameters(prev => ({
-      ...prev,
-      ...result.parameters
-    }));
-
-    // Direct render or step simulation
     try {
-      const genSteps = targetTopic.generateSteps(result.parameters) || [];
-      const totalCount = genSteps.length || 1;
-      if (mode === 'RENDER_FINAL') {
-        setCurrentStep(totalCount);
-        setIsPlaying(false);
+      if (result.tier) {
+        setActiveTier(result.tier);
+      }
+
+      const targetTopic = (result.topicId ? getTopicById(result.topicId) : null) || activeTopic;
+      if (result.topicId && result.topicId !== activeTopicId) {
+        setActiveTopicId(result.topicId);
+      }
+
+      // Instate extracted geometric parameters into reactive vector engine
+      const safeParams = result.parameters || {};
+      setParameters(prev => ({
+        ...prev,
+        ...safeParams
+      }));
+
+      // Direct render or step simulation
+      if (targetTopic && typeof targetTopic.generateSteps === 'function') {
+        const genSteps = targetTopic.generateSteps(safeParams) || [];
+        const totalCount = genSteps.length || 1;
+        if (mode === 'RENDER_FINAL') {
+          setCurrentStep(totalCount);
+          setIsPlaying(false);
+        } else {
+          setCurrentStep(1);
+          setIsPlaying(true);
+        }
       } else {
         setCurrentStep(1);
-        setIsPlaying(true);
+        setIsPlaying(false);
       }
     } catch (e) {
-      console.warn('Step computation error:', e);
+      console.warn('Step computation error in handleAiCadCommand:', e);
       setCurrentStep(1);
+      setIsPlaying(false);
     }
   }, [activeTopic, activeTopicId]);
 
@@ -569,16 +577,24 @@ function AppContent() {
         {/* B. MAIN WORKSPACE: PROCEDURAL SIMULATION OR INTERACTIVE WHITEBOARD STUDIO */}
         {isWhiteboardStudioOpen ? (
           <main className="flex flex-1 flex-col min-w-0 min-h-0 relative bg-slate-950">
-            <WhiteboardStudio
-              topic={activeTopic}
-              onClose={() => setIsWhiteboardStudioOpen(false)}
-              initialTemplateElements={currentStepData.elements}
-              assignment={activeAssignmentForStudio}
-              initialMode={studioInitialMode}
-              onSubmitAssignment={() => {
-                // Submitted from Interactive Drawing Studio
+            <CadErrorBoundary
+              title="Interactive CAD & Whiteboard Studio"
+              fallbackMessage="An unexpected error occurred in the interactive CAD drawing canvas. You can recover the session or return to the standard drafting board."
+              onReset={() => {
+                setIsWhiteboardStudioOpen(false);
               }}
-            />
+            >
+              <WhiteboardStudio
+                topic={activeTopic}
+                onClose={() => setIsWhiteboardStudioOpen(false)}
+                initialTemplateElements={currentStepData.elements}
+                assignment={activeAssignmentForStudio}
+                initialMode={studioInitialMode}
+                onSubmitAssignment={() => {
+                  // Submitted from Interactive Drawing Studio
+                }}
+              />
+            </CadErrorBoundary>
           </main>
         ) : (
           <main className="flex flex-1 flex-col md:flex-row min-w-0 overflow-hidden">
@@ -617,25 +633,42 @@ function AppContent() {
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 md:border-l border-slate-800">
               {/* Top AI PROMPT-TO-CAD COMMAND BAR */}
-              <AiPromptToCadBar
-                onExecuteCadCommand={handleAiCadCommand}
-                activeTopic={activeTopic}
-                currentParameters={parameters}
-              />
+              <CadErrorBoundary
+                compact
+                title="AI Prompt-to-CAD Engine"
+                fallbackMessage="CAD prompt parsing encountered an issue. Recovering input field."
+                onReset={() => {
+                  // Safe reset
+                }}
+              >
+                <AiPromptToCadBar
+                  onExecuteCadCommand={handleAiCadCommand}
+                  activeTopic={activeTopic}
+                  currentParameters={parameters}
+                />
+              </CadErrorBoundary>
 
               {/* Interactive Vector Canvas Stage */}
               <div className="flex-1 min-h-0 relative">
-                <DrawingCanvas
-                  topic={activeTopic}
-                  elements={currentStepData.elements}
-                  instrument={currentStepData.activeInstrument}
-                  activeStep={currentStep}
-                  totalSteps={totalSteps}
-                  gridMode={gridMode}
-                  onSelectGridMode={setGridMode}
-                  svgRef={svgRef}
-                  onOpenProjection={handleOpenProjectionMode}
-                />
+                <CadErrorBoundary
+                  title="CAD Vector Canvas Recovery"
+                  fallbackMessage="An unexpected state or rendering exception occurred in the technical drawing canvas. Click below to reset to standard geometric coordinates."
+                  onReset={() => {
+                    handleResetSteps();
+                  }}
+                >
+                  <DrawingCanvas
+                    topic={activeTopic}
+                    elements={currentStepData.elements}
+                    instrument={currentStepData.activeInstrument}
+                    activeStep={currentStep}
+                    totalSteps={totalSteps}
+                    gridMode={gridMode}
+                    onSelectGridMode={setGridMode}
+                    svgRef={svgRef}
+                    onOpenProjection={handleOpenProjectionMode}
+                  />
+                </CadErrorBoundary>
               </div>
 
               {/* Bottom Step Simulation Playback Controls */}

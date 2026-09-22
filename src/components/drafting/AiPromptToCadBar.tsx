@@ -108,52 +108,64 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
   }, []);
 
   // Live lightweight parser preview as user types
-  const liveParseResult: ParsedCadResult | null = promptInput.trim()
+  const liveParseResult: ParsedCadResult | null = (promptInput && typeof promptInput === 'string' && promptInput.trim())
     ? parseNaturalLanguageCadPrompt(promptInput)
     : null;
 
   const handleExecute = (mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
-    const query = promptInput.trim();
-    if (!query) return;
+    try {
+      const query = (promptInput || '').trim();
+      if (!query) return;
 
-    const startTime = performance.now();
-    const result = parseNaturalLanguageCadPrompt(query);
-    const durationMs = Math.max(1, Math.round(performance.now() - startTime));
+      const startTime = performance.now();
+      const result = parseNaturalLanguageCadPrompt(query);
+      const durationMs = Math.max(1, Math.round(performance.now() - startTime));
 
-    if (result.matched) {
-      setLastExecution({
-        result,
-        timestamp: Date.now(),
-        durationMs
-      });
-      // Add to recent history (avoid duplicates)
-      setRecentHistory(prev => [query, ...prev.filter(p => p.toLowerCase() !== query.toLowerCase())].slice(0, 8));
-      onExecuteCadCommand(result, mode);
-    } else {
-      setLastExecution({
-        result,
-        timestamp: Date.now(),
-        durationMs
-      });
+      if (result && result.matched) {
+        setLastExecution({
+          result,
+          timestamp: Date.now(),
+          durationMs
+        });
+        // Add to recent history (avoid duplicates)
+        setRecentHistory(prev => [query, ...(Array.isArray(prev) ? prev : []).filter(p => p && p.toLowerCase() !== query.toLowerCase())].slice(0, 8));
+        if (typeof onExecuteCadCommand === 'function') {
+          onExecuteCadCommand(result, mode);
+        }
+      } else if (result) {
+        setLastExecution({
+          result,
+          timestamp: Date.now(),
+          durationMs
+        });
+      }
+    } catch (err) {
+      console.warn('Execution error in CAD Prompt bar:', err);
     }
   };
 
   const handleSelectPreset = (presetText: string) => {
-    setPromptInput(presetText);
-    const startTime = performance.now();
-    const result = parseNaturalLanguageCadPrompt(presetText);
-    const durationMs = Math.max(1, Math.round(performance.now() - startTime));
+    try {
+      setPromptInput(presetText);
+      const startTime = performance.now();
+      const result = parseNaturalLanguageCadPrompt(presetText);
+      const durationMs = Math.max(1, Math.round(performance.now() - startTime));
 
-    if (result.matched) {
-      setLastExecution({
-        result,
-        timestamp: Date.now(),
-        durationMs
-      });
-      setRecentHistory(prev => [presetText, ...prev.filter(p => p.toLowerCase() !== presetText.toLowerCase())].slice(0, 8));
-      onExecuteCadCommand(result, 'RENDER_FINAL');
+      if (result && result.matched) {
+        setLastExecution({
+          result,
+          timestamp: Date.now(),
+          durationMs
+        });
+        setRecentHistory(prev => [presetText, ...(Array.isArray(prev) ? prev : []).filter(p => p && p.toLowerCase() !== presetText.toLowerCase())].slice(0, 8));
+        if (typeof onExecuteCadCommand === 'function') {
+          onExecuteCadCommand(result, 'RENDER_FINAL');
+        }
+      }
+      inputRef.current?.focus();
+    } catch (err) {
+      console.warn('Preset selection error in CAD Prompt bar:', err);
     }
-    inputRef.current?.focus();
   };
 
   return (
@@ -259,9 +271,9 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
             </span>
             
             <div className="flex items-center gap-1.5">
-              {liveParseResult.extractedParams.map((param) => (
+              {Array.isArray(liveParseResult.extractedParams) && liveParseResult.extractedParams.map((param) => (
                 <span
-                  key={param.key}
+                  key={param.key || param.label}
                   className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-bold"
                 >
                   <span className="text-cyan-400 mr-1">{param.label}:</span>
@@ -296,7 +308,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
                   <>
                     <strong className="text-emerald-200">{lastExecution.result.geometryTitle}</strong> synthesized instantly.
                     <span className="text-emerald-400/80 ml-1.5 hidden md:inline">
-                      ({lastExecution.result.extractedParams.map(p => `${p.label}: ${p.value}${p.unit}`).join(', ')})
+                      ({(Array.isArray(lastExecution.result.extractedParams) ? lastExecution.result.extractedParams : []).map(p => `${p.label || ''}: ${p.value ?? ''}${p.unit || ''}`).join(', ')})
                     </span>
                   </>
                 ) : (

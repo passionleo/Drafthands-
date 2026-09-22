@@ -40,8 +40,37 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [showTitleBlock, setShowTitleBlock] = useState<boolean>(true);
   const [showGuideLines, setShowGuideLines] = useState<boolean>(true);
 
-  const viewBoxW = topic.defaultViewBox.width || 800;
-  const viewBoxH = topic.defaultViewBox.height || 600;
+  // Safe defaults for topic, elements, and instrument
+  const safeTopic: DrawingTopic = topic || {
+    id: 'default-cad-topic',
+    title: 'Engineering Technical Drawing',
+    moduleCode: 'TD-101',
+    shortDescription: 'Standard Technical Drawing Canvas',
+    tier: 'SS1',
+    category: 'GEOMETRIC_CONSTRUCTION',
+    standards: { nerdcRef: 'NERDC-TD-01', waecRef: 'WAEC / ISO-128', isoRef: 'ISO 128' },
+    theory: {
+      overview: 'Standard technical drawing practice',
+      historyAndApplication: '',
+      waecAndNERDCNotes: '',
+      keyPrinciples: [],
+      standardConventions: []
+    },
+    defaultViewBox: { width: 800, height: 600, defaultGrid: 'MILLIMETER' },
+    parameters: [],
+    generateSteps: () => []
+  };
+
+  const safeElements = Array.isArray(elements) ? elements : [];
+  const safeInstrument: InstrumentState = instrument || {
+    toolType: 'NONE',
+    x: 0,
+    y: 0,
+    visible: false
+  };
+
+  const viewBoxW = safeTopic.defaultViewBox?.width || 800;
+  const viewBoxH = safeTopic.defaultViewBox?.height || 600;
 
   // Handle Zoom
   const handleZoomIn = () => setZoom(z => Math.min(2.5, z + 0.15));
@@ -308,7 +337,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
           {/* GEOMETRIC CONSTRUCTION ELEMENTS */}
           <g className="construction-elements">
-            {elements.map((el) => {
+            {safeElements.map((el) => {
+              if (!el) return null;
               const style = getLineStyle(el.lineWeight, el.isNew, el.isFinalResult);
               const animClass = el.isNew ? 'vector-animated-element' : undefined;
 
@@ -514,7 +544,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           </g>
 
           {/* STANDARD LETTERING GUIDELINES LAYER (when topic is Lettering & Numbering) */}
-          {showGuideLines && (topic.id.includes('lettering') || topic.title.toLowerCase().includes('lettering')) && (
+          {showGuideLines && ((safeTopic.id && safeTopic.id.includes('lettering')) || (safeTopic.title && safeTopic.title.toLowerCase().includes('lettering'))) && (
             <g className="lettering-guidelines opacity-70 pointer-events-none">
               {/* Horizontal Guidelines: Cap (200), Waist (235), Base (270), Drop (305) */}
               <line x1={80} y1={200} x2={720} y2={200} stroke="#38bdf8" strokeWidth={0.8} strokeDasharray="5,3" />
@@ -548,13 +578,13 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
           {/* VIRTUAL INSTRUMENTS OVERLAY LAYER */}
           {showInstruments && (
-            <InstrumentsOverlay instrument={instrument} scale={zoom} showGuideLines={showGuideLines} />
+            <InstrumentsOverlay instrument={safeInstrument} scale={zoom} showGuideLines={showGuideLines} />
           )}
 
           {/* STANDARD SHEET BORDER & TITLE BLOCK */}
           {showTitleBlock && (
             <SheetTitleBlock
-              topic={topic}
+              topic={safeTopic}
               width={viewBoxW}
               height={viewBoxH}
               activeStep={activeStep}

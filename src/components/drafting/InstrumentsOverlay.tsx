@@ -8,7 +8,7 @@ interface InstrumentsOverlayProps {
 }
 
 export const InstrumentsOverlay: React.FC<InstrumentsOverlayProps> = ({ instrument, showGuideLines = true }) => {
-  if (!instrument.visible || instrument.toolType === 'NONE') {
+  if (!instrument || !instrument.visible || instrument.toolType === 'NONE') {
     return null;
   }
 

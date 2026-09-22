@@ -62,10 +62,10 @@ export const SheetTitleBlock: React.FC<SheetTitleBlockProps> = ({
         {/* Row 1: Academy & Level */}
         <rect x={0} y={0} width={blockW} height={24} className="fill-cyan-950/40 stroke-cyan-500/40 stroke-[0.8]" />
         <text x={10} y={16} className="fill-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider">
-          DRAFTHANDS ACADEMY • {topic.tier}
+          DRAFTHANDS ACADEMY • {topic?.tier || 'SS1'}
         </text>
         <text x={blockW - 10} y={16} textAnchor="end" className="fill-slate-400 text-[9px] font-mono">
-          {topic.standards.waecRef.slice(0, 18)}
+          {(topic?.standards?.waecRef || 'WAEC / ISO-128').slice(0, 18)}
         </text>
 
         {/* Row 2: Drawing Title */}
@@ -74,7 +74,7 @@ export const SheetTitleBlock: React.FC<SheetTitleBlockProps> = ({
           DRAWING TITLE
         </text>
         <text x={10} y={50} className="fill-slate-100 text-[11px] font-semibold tracking-tight truncate max-w-[260px]">
-          {topic.title.length > 36 ? `${topic.title.slice(0, 34)}...` : topic.title}
+          {(topic?.title || 'Technical Drawing').length > 36 ? `${(topic?.title || 'Technical Drawing').slice(0, 34)}...` : (topic?.title || 'Technical Drawing')}
         </text>
 
         {/* Row 3: Metadata Details (Scale, Projection Symbol, Step, Module) */}
@@ -89,7 +89,7 @@ export const SheetTitleBlock: React.FC<SheetTitleBlockProps> = ({
 
         {/* Cell 2: Module Code */}
         <text x={78} y={64} className="fill-slate-500 text-[7px] font-mono uppercase">MODULE</text>
-        <text x={78} y={76} className="fill-cyan-300 text-[9px] font-mono font-bold">{topic.moduleCode}</text>
+        <text x={78} y={76} className="fill-cyan-300 text-[9px] font-mono font-bold">{topic?.moduleCode || 'TD-101'}</text>
 
         {/* Cell 3: Projection Symbol */}
         <text x={156} y={64} className="fill-slate-500 text-[7px] font-mono uppercase">PROJECTION</text>
