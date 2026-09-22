@@ -26,6 +26,7 @@ import {
   Film
 } from 'lucide-react';
 import { LiveParticipant } from '../../types/liveClass';
+import { MediaStreamErrorDetails } from '../../services/mediaStreamService';
 import africanStudentsImg from '../../assets/images/african_students_technical_drawing_1788361928984.jpg';
 import africanCadLabImg from '../../assets/images/african_higher_inst_cad_lab_1788361956625.jpg';
 
@@ -36,6 +37,9 @@ interface FloatingStudentPipOverlayProps {
   participants: LiveParticipant[];
   localParticipantId: string;
   localStream: MediaStream | null;
+  remoteStreams?: Record<string, MediaStream>;
+  mediaError?: MediaStreamErrorDetails | null;
+  onRetryMedia?: () => void;
   isTeacher: boolean;
   onToggleSpotlight?: (id: string) => void;
   onToggleParticipantAudio?: (id: string) => void;
@@ -52,6 +56,9 @@ export const FloatingStudentPipOverlay: React.FC<FloatingStudentPipOverlayProps>
   participants,
   localParticipantId,
   localStream,
+  remoteStreams = {},
+  mediaError,
+  onRetryMedia,
   isTeacher,
   onToggleSpotlight,
   onToggleParticipantAudio,
@@ -402,38 +409,67 @@ export const FloatingStudentPipOverlay: React.FC<FloatingStudentPipOverlayProps>
                 student.isHandRaised ? 'ring-2 ring-amber-500 shadow-amber-950/50' : ''
               }`}
             >
-              {/* Student Video Thumbnail or Fallback Avatar */}
-              {isLocal && localStream ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover mirror"
-                />
-              ) : !student.isVideoOff ? (
-                <div className="w-full h-full relative">
-                  <img
-                    src={photoUrl}
-                    alt={student.name}
-                    className="w-full h-full object-cover filter contrast-[1.05]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
-                </div>
-              ) : (
-                <div 
-                  className="w-full h-full flex flex-col items-center justify-center p-2 text-center"
-                  style={{ backgroundColor: `${student.avatarBg}20` }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md border border-white/20"
-                    style={{ backgroundColor: student.avatarBg }}
+              {/* Student Live Video or Fallback Avatar */}
+              {(() => {
+                const stream = isLocal ? localStream : remoteStreams[student.id];
+                const hasLiveVideoTrack = Boolean(
+                  stream && stream.getVideoTracks().some(track => track.enabled && track.readyState === 'live')
+                );
+                const shouldRenderVideo = !student.isVideoOff && hasLiveVideoTrack;
+
+                if (shouldRenderVideo && stream) {
+                  return (
+                    <video
+                      ref={el => {
+                        if (el && el.srcObject !== stream) {
+                          el.srcObject = stream;
+                          el.play().catch(() => {});
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted={isLocal}
+                      className={`w-full h-full object-cover ${isLocal ? 'scale-x-[-1]' : ''}`}
+                    />
+                  );
+                }
+
+                if (!student.isVideoOff && photoUrl && !isLocal) {
+                  return (
+                    <div className="w-full h-full relative">
+                      <img
+                        src={photoUrl}
+                        alt={student.name}
+                        className="w-full h-full object-cover filter contrast-[1.05]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div 
+                    className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-slate-900"
+                    style={{ backgroundColor: `${student.avatarBg}20` }}
                   >
-                    {student.name.substring(0, 2).toUpperCase()}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md border border-white/20 ${
+                        student.isSpeaking ? 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-950 animate-pulse' : ''
+                      }`}
+                      style={{ backgroundColor: student.avatarBg }}
+                    >
+                      {student.name.substring(0, 2).toUpperCase()}
+                    </div>
+                    {isLocal && mediaError ? (
+                      <span className="text-[9px] text-red-400 mt-1 font-mono">Camera Blocked</span>
+                    ) : (
+                      <span className="text-[9px] text-slate-400 mt-1 font-mono">
+                        {student.isVideoOff ? 'Camera Off' : 'Audio Only'}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 font-mono">Camera Off</span>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Hand Raised Banner */}
               {student.isHandRaised && (

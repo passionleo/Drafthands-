@@ -37,6 +37,9 @@ export interface LiveParticipant {
   joinedAt: number;
   gradeOrClass?: string;
   videoStreamUrl?: string;
+  hasCameraError?: boolean;
+  cameraStatusText?: string;
+  isPeerConnected?: boolean;
 }
 
 export interface LiveChatMessage {
@@ -102,7 +105,13 @@ export type LiveSyncEventType =
   | 'MEDIA_STATE_CHANGE'
   | 'PARTICIPANT_JOIN'
   | 'PARTICIPANT_LEAVE'
-  | 'REQUEST_FULL_SYNC';
+  | 'REQUEST_FULL_SYNC'
+  | 'WEBRTC_SIGNAL_JOIN'
+  | 'WEBRTC_SIGNAL_OFFER'
+  | 'WEBRTC_SIGNAL_ANSWER'
+  | 'WEBRTC_SIGNAL_ICE'
+  | 'WEBRTC_SIGNAL_LEAVE'
+  | 'MEDIA_STATUS_UPDATE';
 
 export interface LiveSyncMessage {
   id: string;

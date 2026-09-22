@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Mic, 
   MicOff, 
@@ -16,9 +16,13 @@ import {
   Users,
   CheckCircle2,
   VolumeX,
-  Radio
+  Radio,
+  AlertTriangle,
+  RotateCcw,
+  Compass
 } from 'lucide-react';
 import { LiveParticipant, VideoLayoutMode } from '../../types/liveClass';
+import { MediaStreamErrorDetails } from '../../services/mediaStreamService';
 import africanStudentsImg from '../../assets/images/african_students_technical_drawing_1788361928984.jpg';
 import africanCadLabImg from '../../assets/images/african_higher_inst_cad_lab_1788361956625.jpg';
 
@@ -26,6 +30,9 @@ interface VideoGridProps {
   participants: LiveParticipant[];
   localParticipantId: string;
   localStream: MediaStream | null;
+  remoteStreams?: Record<string, MediaStream>;
+  mediaError?: MediaStreamErrorDetails | null;
+  onRetryMedia?: () => void;
   layoutMode: VideoLayoutMode;
   onToggleSpotlight: (id: string) => void;
   onToggleParticipantAudio?: (id: string) => void;
@@ -36,10 +43,191 @@ interface VideoGridProps {
   activeTopicTitle?: string;
 }
 
+/**
+ * Robust Individual Participant Video Stream Card
+ * Seamlessly switches between live camera stream and high-fidelity fallback placeholder avatar
+ */
+const ParticipantVideoTile: React.FC<{
+  participant: LiveParticipant;
+  isLocal: boolean;
+  stream: MediaStream | null;
+  isStage: boolean;
+  mediaError?: MediaStreamErrorDetails | null;
+  onRetryMedia?: () => void;
+  fallbackPhoto?: string;
+}> = ({
+  participant,
+  isLocal,
+  stream,
+  isStage,
+  mediaError,
+  onRetryMedia,
+  fallbackPhoto
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const videoEl = videoRef.current;
+
+    if (videoEl && stream && !participant.isVideoOff) {
+      videoEl.srcObject = stream;
+      videoEl.play()
+        .then(() => {
+          if (isMounted) setIsVideoPlaying(true);
+        })
+        .catch(err => {
+          console.warn('[VideoGrid] Stream play prevented or deferred:', err);
+          if (isMounted) setIsVideoPlaying(false);
+        });
+    } else {
+      setIsVideoPlaying(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [stream, participant.isVideoOff]);
+
+  const hasLiveVideoTrack = Boolean(
+    stream && stream.getVideoTracks().some(track => track.enabled && track.readyState === 'live')
+  );
+  const shouldRenderVideo = !participant.isVideoOff && hasLiveVideoTrack;
+  const isInstructor = participant.role === 'TEACHER';
+
+  return (
+    <div className="absolute inset-0 bg-slate-950 flex items-center justify-center overflow-hidden">
+      {/* 1. REAL LIVE WEBRTC OR LOCAL MEDIA STREAM */}
+      {shouldRenderVideo && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={isLocal}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            isLocal ? 'scale-x-[-1]' : ''
+          } ${isVideoPlaying ? 'opacity-100' : 'opacity-80'}`}
+        />
+      )}
+
+      {/* 2. HIGH-FIDELITY FALLBACK PLACEHOLDER AVATAR */}
+      {!shouldRenderVideo && (
+        <div className="w-full h-full relative flex flex-col items-center justify-center p-3 select-none overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+          {/* Subtle blueprint grid pattern background */}
+          <div 
+            className="absolute inset-0 opacity-15 pointer-events-none"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 1px 1px, #38bdf8 1px, transparent 0)',
+              backgroundSize: '20px 20px'
+            }}
+          />
+
+          {/* Fallback ambient photo overlay with high dark vignette */}
+          {fallbackPhoto && !isLocal && (
+            <div className="absolute inset-0 opacity-20 filter contrast-125">
+              <img
+                src={fallbackPhoto}
+                alt=""
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-slate-950/80" />
+            </div>
+          )}
+
+          {/* Central Animated Avatar Badge */}
+          <div className="relative z-10 flex flex-col items-center gap-2">
+            {/* Pulsing speech ripple rings */}
+            <div className="relative">
+              {participant.isSpeaking && (
+                <>
+                  <span className="absolute -inset-2.5 rounded-full bg-emerald-500/25 animate-ping" />
+                  <span className="absolute -inset-1.5 rounded-full bg-emerald-500/40 animate-pulse" />
+                </>
+              )}
+
+              {/* Avatar Circle */}
+              <div
+                className={`relative rounded-full flex items-center justify-center font-bold text-white shadow-2xl ring-2 transition-all ${
+                  isStage ? 'w-16 h-16 text-xl' : 'w-12 h-12 text-sm'
+                } ${
+                  participant.isSpeaking 
+                    ? 'ring-emerald-400 ring-offset-2 ring-offset-slate-950 shadow-emerald-500/40' 
+                    : isInstructor 
+                    ? 'ring-amber-400/60 shadow-amber-500/20' 
+                    : 'ring-cyan-500/40 shadow-cyan-500/20'
+                }`}
+                style={{ backgroundColor: participant.avatarBg || (isInstructor ? '#7c3aed' : '#0891b2') }}
+              >
+                {participant.name
+                  .split(' ')
+                  .map(part => part[0])
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase() || (isInstructor ? 'TD' : 'ST')}
+
+                {/* Sub-badge: Crown or Compass icon */}
+                <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-slate-900 border border-slate-700 shadow-md">
+                  {isInstructor ? (
+                    <Crown className="w-3 h-3 text-amber-400" />
+                  ) : (
+                    <Compass className="w-3 h-3 text-cyan-400" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Status Feedback Label */}
+            <div className="flex flex-col items-center gap-1 text-center">
+              {isLocal && mediaError ? (
+                <div className="flex flex-col items-center gap-1">
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-mono">
+                    <AlertTriangle className="w-2.5 h-2.5 text-red-400" />
+                    <span>{mediaError.code === 'PERMISSION_DENIED' ? 'Camera Blocked' : 'Camera Unavailable'}</span>
+                  </span>
+                  {onRetryMedia && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRetryMedia();
+                      }}
+                      className="mt-0.5 flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold transition-colors shadow-sm"
+                      title="Retry camera media initialization"
+                    >
+                      <RotateCcw className="w-2.5 h-2.5" />
+                      <span>Retry Camera</span>
+                    </button>
+                  )}
+                </div>
+              ) : participant.isVideoOff ? (
+                <span className="flex items-center gap-1 text-[10px] font-mono text-slate-400">
+                  <VideoOff className="w-3 h-3 text-slate-500" />
+                  <span>Camera Paused</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[10px] font-mono text-cyan-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  <span>Connecting Stream...</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const VideoGrid: React.FC<VideoGridProps> = ({
   participants,
   localParticipantId,
   localStream,
+  remoteStreams = {},
+  mediaError,
+  onRetryMedia,
   layoutMode,
   onToggleSpotlight,
   onToggleParticipantAudio,
@@ -49,22 +237,12 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
   isTeacher,
   activeTopicTitle
 }) => {
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-
-  // Attach local media stream to local video element
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
-
   // Separate Teacher(s) from Students
   const teacher = participants.find(p => p.role === 'TEACHER') || participants[0];
   const students = participants.filter(p => p.id !== teacher?.id);
-
   const handsRaisedCount = students.filter(s => s.isHandRaised).length;
 
-  // Student simulated photo avatars
+  // Student fallback photo avatars map
   const studentPhotoMap: Record<string, string> = {
     'student-1': africanStudentsImg,
     'student-2': africanStudentsImg,
@@ -119,39 +297,16 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
               layoutMode === 'SPLIT_STAGE' ? 'h-64 sm:h-72' : layoutMode === 'SPLIT_EQUAL' ? 'h-48 sm:h-52' : 'h-44'
             }`}
           >
-            {/* Video or Photo Background */}
-            <div className="absolute inset-0 bg-slate-950 flex items-center justify-center overflow-hidden">
-              {teacher.id === localParticipantId && localStream && !teacher.isVideoOff ? (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover mirror"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-              ) : !teacher.isVideoOff ? (
-                <div className="w-full h-full relative">
-                  <img
-                    src={africanCadLabImg}
-                    alt={teacher.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-90 filter"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 text-slate-400 gap-1.5">
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-xl ring-2 ring-amber-400/40"
-                    style={{ backgroundColor: teacher.avatarBg || '#7c3aed' }}
-                  >
-                    {teacher.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                  </div>
-                  <span className="text-[11px] text-slate-400 font-medium">Camera Off</span>
-                </div>
-              )}
-            </div>
+            {/* Live Video or Fallback Avatar Tile */}
+            <ParticipantVideoTile
+              participant={teacher}
+              isLocal={teacher.id === localParticipantId}
+              stream={teacher.id === localParticipantId ? localStream : remoteStreams[teacher.id] || null}
+              isStage={true}
+              mediaError={teacher.id === localParticipantId ? mediaError : null}
+              onRetryMedia={onRetryMedia}
+              fallbackPhoto={africanCadLabImg}
+            />
 
             {/* Top Bar: Role Pill & Status */}
             <div className="relative z-10 p-2.5 flex items-center justify-between pointer-events-none">
@@ -227,6 +382,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
         }`}>
           {students.map((student) => {
             const isLocal = student.id === localParticipantId;
+            const peerStream = isLocal ? localStream : remoteStreams[student.id] || null;
 
             return (
               <div
@@ -242,39 +398,16 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
                   layoutMode === 'SPLIT_EQUAL' ? 'h-36 sm:h-40' : 'h-32'
                 }`}
               >
-                {/* Video / Photo Placeholder */}
-                <div className="absolute inset-0 bg-slate-950 flex items-center justify-center overflow-hidden">
-                  {isLocal && localStream && !student.isVideoOff ? (
-                    <video
-                      ref={localVideoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover mirror"
-                      style={{ transform: 'scaleX(-1)' }}
-                    />
-                  ) : !student.isVideoOff ? (
-                    <div className="w-full h-full relative">
-                      <img
-                        src={studentPhotoMap[student.id] || africanStudentsImg}
-                        alt={student.name}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-slate-400 gap-1">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
-                        style={{ backgroundColor: student.avatarBg || '#0891b2' }}
-                      >
-                        {student.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                      </div>
-                      <span className="text-[9px] text-slate-500 font-mono">Camera Off</span>
-                    </div>
-                  )}
-                </div>
+                {/* Live Video or Fallback Avatar Tile */}
+                <ParticipantVideoTile
+                  participant={student}
+                  isLocal={isLocal}
+                  stream={peerStream}
+                  isStage={false}
+                  mediaError={isLocal ? mediaError : null}
+                  onRetryMedia={onRetryMedia}
+                  fallbackPhoto={studentPhotoMap[student.id]}
+                />
 
                 {/* Top Badges: Class, Drawing Permission, Hand Raise */}
                 <div className="relative z-10 p-2 flex items-center justify-between pointer-events-none">
@@ -320,40 +453,20 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
                     </div>
                   )}
 
-                  {/* Teacher hover controls for student */}
-                  {isTeacher && !isLocal && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 absolute right-2 top-2 z-20 pointer-events-auto">
+                  {/* Teacher Quick-action Popover */}
+                  {isTeacher && onToggleParticipantDrawingPermission && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                       <button
-                        onClick={() => onToggleSpotlight(student.id)}
-                        className={`p-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 shadow ${
-                          student.isSpotlighted ? 'text-amber-400 border-amber-400/50' : ''
+                        onClick={() => onToggleParticipantDrawingPermission(student.id)}
+                        className={`p-1 rounded text-[10px] font-bold transition-colors ${
+                          student.hasDrawingPermission
+                            ? 'bg-cyan-500 text-slate-950'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                         }`}
-                        title={student.isSpotlighted ? 'Unspotlight' : 'Spotlight Student'}
+                        title={student.hasDrawingPermission ? 'Revoke drawing on board' : 'Grant permission to draw on board'}
                       >
-                        <Pin className="w-3 h-3" />
+                        <Pencil className="w-3 h-3" />
                       </button>
-                      {onToggleParticipantDrawingPermission && (
-                        <button
-                          onClick={() => onToggleParticipantDrawingPermission(student.id)}
-                          className={`p-1 rounded bg-slate-800/90 hover:bg-slate-700 border shadow ${
-                            student.hasDrawingPermission ? 'text-cyan-400 border-cyan-500/50' : 'text-slate-400 border-slate-700'
-                          }`}
-                          title={student.hasDrawingPermission ? 'Revoke Drawing Access' : 'Grant Drawing Board Access'}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                      )}
-                      {onToggleParticipantAudio && (
-                        <button
-                          onClick={() => onToggleParticipantAudio(student.id)}
-                          className={`p-1 rounded bg-slate-800/90 hover:bg-slate-700 border shadow ${
-                            student.isAudioMuted ? 'text-red-400 border-red-500/40' : 'text-emerald-400 border-emerald-500/40'
-                          }`}
-                          title={student.isAudioMuted ? 'Unmute Student' : 'Mute Student'}
-                        >
-                          {student.isAudioMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>

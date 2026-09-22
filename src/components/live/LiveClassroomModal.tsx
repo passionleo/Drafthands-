@@ -48,8 +48,9 @@ import {
   ClassroomResourceTab
 } from '../../types/liveClass';
 import { WhiteboardElement, OnScreenInstrument, WorkspaceMode } from '../../types/whiteboard';
-import { MediaStreamService } from '../../services/mediaStreamService';
+import { MediaStreamService, MediaStreamErrorDetails } from '../../services/mediaStreamService';
 import { LiveClassSyncService } from '../../services/liveClassSync';
+import { WebRtcPeerService } from '../../services/webRtcPeerService';
 import { VideoGrid } from './VideoGrid';
 import { FloatingStudentPipOverlay } from './FloatingStudentPipOverlay';
 import { LiveControlBar } from './LiveControlBar';
@@ -122,10 +123,13 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
 
-  // Local media stream
+  // Local media stream & WebRTC signaling
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+  const [mediaError, setMediaError] = useState<MediaStreamErrorDetails | null>(null);
   const mediaServiceRef = useRef<MediaStreamService | null>(null);
   const syncServiceRef = useRef<LiveClassSyncService | null>(null);
+  const webRtcServiceRef = useRef<WebRtcPeerService | null>(null);
 
   // Participants roster (Teacher + Students)
   const [participants, setParticipants] = useState<LiveParticipant[]>([
@@ -260,6 +264,38 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     return () => clearTimeout(timer);
   }, [classroomNotice]);
 
+  // Retry media acquisition if camera permission was denied or hardware was unavailable
+  const handleRetryMedia = useCallback(async () => {
+    if (mediaServiceRef.current) {
+      setClassroomNotice('Checking camera & microphone hardware...');
+      try {
+        const stream = await mediaServiceRef.current.retryLocalMedia({
+          video: !isVideoOff,
+          audio: !isAudioMuted
+        });
+        setLocalStream(stream);
+
+        const err = mediaServiceRef.current.getLastError();
+        setMediaError(err);
+
+        if (!err) {
+          setClassroomNotice('Camera and microphone connected successfully!');
+          setParticipants(prev => prev.map(p => 
+            p.id === localParticipantId ? { ...p, hasCameraError: false, isVideoOff: false } : p
+          ));
+        } else {
+          setClassroomNotice(err.message);
+        }
+
+        if (webRtcServiceRef.current) {
+          webRtcServiceRef.current.setLocalStream(stream);
+        }
+      } catch (e) {
+        console.error('Retry media error:', e);
+      }
+    }
+  }, [isVideoOff, isAudioMuted, localParticipantId]);
+
   // Initialize Media and Real-Time Sync services
   useEffect(() => {
     if (!isOpen) return;
@@ -268,8 +304,26 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     const media = new MediaStreamService();
     mediaServiceRef.current = media;
 
+    media.onError((errDetails) => {
+      console.warn('[LiveClassroom] Media stream error caught:', errDetails);
+      setMediaError(errDetails);
+      setParticipants(prev => prev.map(p => 
+        p.id === localParticipantId 
+          ? { ...p, hasCameraError: true, cameraStatusText: errDetails.message } 
+          : p
+      ));
+      setClassroomNotice(errDetails.message);
+    });
+
     media.initLocalMedia({ video: !isVideoOff, audio: !isAudioMuted }).then(stream => {
       setLocalStream(stream);
+      const err = media.getLastError();
+      if (err) {
+        setMediaError(err);
+      }
+      if (webRtcServiceRef.current) {
+        webRtcServiceRef.current.setLocalStream(stream);
+      }
     });
 
     media.onAudioLevel((level) => {
@@ -284,6 +338,54 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     const sync = new LiveClassSyncService(roomCode, localParticipantId, userName);
     syncServiceRef.current = sync;
 
+    // 3. Setup WebRTC Peer Service for Video/Audio sessions
+    const webRtc = new WebRtcPeerService(
+      localParticipantId,
+      userName,
+      role,
+      sync,
+      {
+        onRemoteStream: (peerId, stream) => {
+          console.log('[LiveClassroom] Active remote video/audio track connected from peer:', peerId);
+          setRemoteStreams(prev => ({ ...prev, [peerId]: stream }));
+          setParticipants(prev => {
+            const existing = prev.find(p => p.id === peerId);
+            if (!existing) {
+              return [...prev, {
+                id: peerId,
+                name: `Participant (${peerId.slice(-4)})`,
+                role: 'STUDENT',
+                avatarBg: '#0891b2',
+                isAudioMuted: false,
+                isVideoOff: false,
+                isHandRaised: false,
+                isSpeaking: false,
+                audioLevel: 0,
+                hasDrawingPermission: false,
+                isSpotlighted: false,
+                isPeerConnected: true,
+                joinedAt: Date.now()
+              }];
+            }
+            return prev.map(p => p.id === peerId ? { ...p, isPeerConnected: true } : p);
+          });
+        },
+        onRemoteStreamRemoved: (peerId) => {
+          setRemoteStreams(prev => {
+            const next = { ...prev };
+            delete next[peerId];
+            return next;
+          });
+          setParticipants(prev => prev.map(p => p.id === peerId ? { ...p, isPeerConnected: false } : p));
+        },
+        onPeerStateChange: (peerId, state) => {
+          console.log(`[LiveClassroom] Peer ${peerId} connection state:`, state);
+        }
+      }
+    );
+    webRtcServiceRef.current = webRtc;
+    webRtc.announceJoin();
+
     const unsubscribe = sync.subscribe((msg) => {
       if (msg.type === 'CHAT_MESSAGE') {
         setMessages(prev => [...prev, msg.payload]);
@@ -294,6 +396,16 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
         setLaserPointer(msg.payload);
       } else if (msg.type === 'PERMISSION_CHANGE') {
         setDrawingPermissionMode(msg.payload.mode);
+      } else if (msg.type === 'MEDIA_STATE_CHANGE') {
+        setParticipants(prev => prev.map(p => 
+          p.id === msg.senderId 
+            ? { 
+                ...p, 
+                isAudioMuted: msg.payload?.isAudioMuted ?? p.isAudioMuted, 
+                isVideoOff: msg.payload?.isVideoOff ?? p.isVideoOff 
+              } 
+            : p
+        ));
       } else if (msg.type === 'CURSOR_MOVE') {
         setRemoteCursors(prev => ({
           ...prev,
@@ -313,11 +425,13 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
     return () => {
       media.cleanup();
       mediaServiceRef.current = null;
+      webRtc.destroy();
+      webRtcServiceRef.current = null;
       unsubscribe();
       sync.destroy();
       syncServiceRef.current = null;
     };
-  }, [isOpen, roomCode, localParticipantId, userName]);
+  }, [isOpen, roomCode, localParticipantId, userName, role]);
 
   // Toggle local microphone
   const handleToggleAudio = () => {
@@ -327,6 +441,12 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
       mediaServiceRef.current.setAudioMute(nextMuted);
     }
     setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isAudioMuted: nextMuted } : p));
+    if (syncServiceRef.current) {
+      syncServiceRef.current.broadcast('MEDIA_STATE_CHANGE', {
+        isAudioMuted: nextMuted,
+        isVideoOff: isVideoOff
+      });
+    }
   };
 
   // Toggle local camera
@@ -337,6 +457,12 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
       mediaServiceRef.current.setVideoOff(nextOff);
     }
     setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isVideoOff: nextOff } : p));
+    if (syncServiceRef.current) {
+      syncServiceRef.current.broadcast('MEDIA_STATE_CHANGE', {
+        isAudioMuted: isAudioMuted,
+        isVideoOff: nextOff
+      });
+    }
   };
 
   // Student Raise Hand
@@ -867,6 +993,9 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
                   participants={participants}
                   localParticipantId={localParticipantId}
                   localStream={localStream}
+                  remoteStreams={remoteStreams}
+                  mediaError={mediaError}
+                  onRetryMedia={handleRetryMedia}
                   layoutMode={layoutMode}
                   onToggleSpotlight={(id) => {
                     setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
@@ -899,6 +1028,9 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
             participants={participants}
             localParticipantId={localParticipantId}
             localStream={localStream}
+            remoteStreams={remoteStreams}
+            mediaError={mediaError}
+            onRetryMedia={handleRetryMedia}
             isTeacher={isTeacher}
             onToggleSpotlight={(id) => {
               setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
