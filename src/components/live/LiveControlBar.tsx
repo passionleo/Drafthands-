@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Mic, 
   MicOff, 
@@ -7,21 +7,22 @@ import {
   Hand, 
   MessageSquare, 
   Users, 
-  Share2, 
   Monitor, 
-  PenTool, 
+  PencilRuler, 
   Lock, 
   Unlock, 
   PhoneOff, 
   Layout, 
   Sparkles, 
   Radio, 
-  SlidersHorizontal,
-  Pointer,
-  Columns,
-  Square,
-  Maximize2,
-  PictureInPicture
+  Pointer, 
+  Columns, 
+  Maximize2, 
+  PictureInPicture,
+  Film,
+  Grid,
+  Layers,
+  ChevronUp
 } from 'lucide-react';
 import { DrawingPermissionMode, VideoLayoutMode } from '../../types/liveClass';
 
@@ -47,6 +48,8 @@ interface LiveControlBarProps {
   onChangeLayoutMode: (mode: VideoLayoutMode) => void;
   onToggleChat: () => void;
   onEndOrLeaveClass: () => void;
+  onToggleWhiteboardOverlay?: () => void;
+  isWhiteboardOverlay?: boolean;
 }
 
 export const LiveControlBar: React.FC<LiveControlBarProps> = ({
@@ -70,221 +73,282 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
   onChangeDrawingPermission,
   onChangeLayoutMode,
   onToggleChat,
-  onEndOrLeaveClass
+  onEndOrLeaveClass,
+  onToggleWhiteboardOverlay,
+  isWhiteboardOverlay = false
 }) => {
+  // Keyboard shortcuts (M for Mic, V for Video, H for Hand, W for Whiteboard)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input or textarea
+      if (
+        e.target instanceof HTMLInputElement || 
+        e.target instanceof HTMLTextAreaElement || 
+        (e.target as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        onToggleAudio();
+      } else if (e.key.toLowerCase() === 'v' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        onToggleVideo();
+      } else if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        onToggleHandRaise();
+      } else if (e.key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (onToggleWhiteboardOverlay) {
+          onToggleWhiteboardOverlay();
+        } else {
+          onChangeLayoutMode(layoutMode === 'WHITEBOARD_OVERLAY' ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onToggleAudio, onToggleVideo, onToggleHandRaise, onToggleWhiteboardOverlay, onChangeLayoutMode, layoutMode]);
+
+  const isWhiteboardActive = isWhiteboardOverlay || layoutMode === 'WHITEBOARD_OVERLAY';
+
   return (
-    <div className="h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 flex items-center justify-between z-30 select-none shadow-2xl">
-      {/* Left: Class Info & Live/Recording Indicators */}
-      <div className="flex items-center gap-3 min-w-[200px]">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono font-bold">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-          <span>LIVE CLASS</span>
+    <div className="h-20 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800/80 px-4 sm:px-6 flex items-center justify-between z-30 select-none shadow-2xl relative">
+      {/* ================= LEFT SECTION: SESSION INFO & RECORDING STATUS ================= */}
+      <div className="flex items-center gap-3 min-w-[180px]">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-bold shadow-inner">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-slate-200">LIVE DRAFTING ROOM</span>
         </div>
 
         {isRecording && (
-          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono border border-slate-700">
-            <Radio className="w-3 h-3 text-red-400 animate-pulse" />
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-500/10 text-red-400 text-xs font-mono border border-red-500/20">
+            <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
             <span>REC 1080p</span>
           </div>
         )}
       </div>
 
-      {/* Center: Core Meeting Action Controls */}
-      <div className="flex items-center gap-2">
-        {/* Audio Mic Button */}
+      {/* ================= CENTER SECTION: GOOGLE MEET-INSPIRED PILL CONTROLS ================= */}
+      <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-900/90 p-1.5 sm:p-2 rounded-2xl border border-slate-800 shadow-2xl backdrop-blur-md">
+        {/* 1. Audio Mute Button (Google Meet style) */}
         <button
           id="btn-toggle-mic"
+          type="button"
           onClick={onToggleAudio}
-          className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all ${
+          className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all ${
             isAudioMuted
-              ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-400'
-              : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-emerald-400'
+              ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30'
+              : 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700'
           }`}
-          title={isAudioMuted ? 'Unmute Microphone (M)' : 'Mute Microphone (M)'}
+          title={isAudioMuted ? 'Turn on microphone (M)' : 'Turn off microphone (M)'}
         >
-          {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-emerald-400" />}
         </button>
 
-        {/* Video Cam Button */}
+        {/* 2. Video Camera Button (Google Meet style) */}
         <button
           id="btn-toggle-camera"
+          type="button"
           onClick={onToggleVideo}
-          className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all ${
+          className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all ${
             isVideoOff
-              ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-400'
-              : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-cyan-400'
+              ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30'
+              : 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700'
           }`}
-          title={isVideoOff ? 'Start Camera Video (V)' : 'Stop Camera Video (V)'}
+          title={isVideoOff ? 'Turn on camera (V)' : 'Turn off camera (V)'}
         >
-          {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+          {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5 text-cyan-400" />}
         </button>
 
-        {/* Laser Pointer (Teacher Only) */}
-        {isTeacher && (
-          <button
-            id="btn-toggle-laser"
-            onClick={onToggleLaserPointer}
-            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
-              isLaserActive
-                ? 'bg-red-600 text-white border-red-400 shadow-lg shadow-red-600/30 font-bold'
-                : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-red-400'
-            }`}
-            title="Toggle Laser Pointer Spotlight on Students' Screens"
-          >
-            <Pointer className="w-4 h-4" />
-            <span className="text-xs font-semibold hidden md:inline">Laser</span>
-          </button>
-        )}
+        {/* 3. WHITEBOARD OVERLAY TOGGLE (Tailored for Technical Drawing Classrooms) */}
+        <button
+          id="btn-toggle-whiteboard-overlay"
+          type="button"
+          onClick={() => {
+            if (onToggleWhiteboardOverlay) {
+              onToggleWhiteboardOverlay();
+            } else {
+              onChangeLayoutMode(isWhiteboardActive ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY');
+            }
+          }}
+          className={`flex items-center gap-1.5 px-3.5 h-11 rounded-xl transition-all font-semibold text-xs border ${
+            isWhiteboardActive
+              ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-500/30 font-bold'
+              : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'
+          }`}
+          title="Toggle Technical Drawing Whiteboard Overlay (W) — Draw with T-Square, Compass & 30/60 Triangles"
+        >
+          <PencilRuler className="w-4 h-4" />
+          <span className="hidden sm:inline">Whiteboard Overlay</span>
+        </button>
 
-        {/* Student Drawing Permission Selector (Teacher Only) */}
-        {isTeacher ? (
-          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => onChangeDrawingPermission('TEACHER_ONLY')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                drawingPermissionMode === 'TEACHER_ONLY'
-                  ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Teacher Only Mode: Students cannot draw or modify board elements"
-            >
-              <Lock className="w-3 h-3" />
-              <span className="hidden lg:inline">Teacher Only</span>
-            </button>
-
-            <button
-              onClick={() => onChangeDrawingPermission('COLLABORATIVE')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                drawingPermissionMode === 'COLLABORATIVE'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Collaborative Mode: All students can draw and interact on whiteboard"
-            >
-              <Unlock className="w-3 h-3" />
-              <span className="hidden lg:inline">All Students Draw</span>
-            </button>
-          </div>
-        ) : (
-          /* Raise Hand Button for Students */
-          <button
-            id="btn-raise-hand"
-            onClick={onToggleHandRaise}
-            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
-              isHandRaised
-                ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold shadow-lg shadow-amber-500/30'
-                : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-amber-300'
-            }`}
-            title={isHandRaised ? 'Lower Hand' : 'Raise Hand to Ask Question'}
-          >
-            <Hand className="w-4 h-4" />
-            <span className="text-xs font-semibold">{isHandRaised ? 'Hand Raised' : 'Raise Hand'}</span>
-          </button>
-        )}
-
-        {/* Screen Share */}
+        {/* 4. Screen Share Button */}
         <button
           id="btn-share-screen"
+          type="button"
           onClick={onToggleScreenShare}
-          className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
+          className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all ${
             isScreenSharing
-              ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/30'
-              : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-purple-300'
+              ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-600/30'
+              : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
           }`}
-          title="Share Desktop Screen / Application Window"
+          title={isScreenSharing ? 'Stop sharing screen' : 'Share screen or window'}
         >
-          <Monitor className="w-4 h-4" />
-          <span className="text-xs font-semibold hidden md:inline">Share Screen</span>
+          <Monitor className="w-5 h-5 text-purple-300" />
+        </button>
+
+        {/* 5. Raise Hand (Student) / Clear Hands or Laser (Teacher) */}
+        {isTeacher ? (
+          /* Laser Pointer for Technical Drawing Teacher */
+          <button
+            id="btn-toggle-laser"
+            type="button"
+            onClick={onToggleLaserPointer}
+            className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all ${
+              isLaserActive
+                ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 font-bold border border-red-400'
+                : 'bg-slate-800 hover:bg-slate-700 text-red-400 border border-slate-700'
+            }`}
+            title="Toggle Laser Pointer on Drafting Canvas"
+          >
+            <Pointer className="w-5 h-5" />
+          </button>
+        ) : (
+          /* Student Raise Hand Button */
+          <button
+            id="btn-raise-hand"
+            type="button"
+            onClick={onToggleHandRaise}
+            className={`flex items-center gap-1.5 px-3 h-11 rounded-xl transition-all text-xs font-semibold ${
+              isHandRaised
+                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-lg shadow-amber-500/30'
+                : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700'
+            }`}
+            title={isHandRaised ? 'Lower hand (H)' : 'Raise hand to ask question (H)'}
+          >
+            <Hand className="w-4 h-4" />
+            <span className="hidden md:inline">{isHandRaised ? 'Hand Up' : 'Raise'}</span>
+          </button>
+        )}
+
+        {/* 6. Teacher Drawing Permission Selector */}
+        {isTeacher && (
+          <div className="hidden lg:flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => onChangeDrawingPermission('TEACHER_ONLY')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 transition-all ${
+                drawingPermissionMode === 'TEACHER_ONLY'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Teacher Only: Students view demonstration only"
+            >
+              <Lock className="w-3 h-3" />
+              <span>Teacher Mode</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeDrawingPermission('COLLABORATIVE')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 transition-all ${
+                drawingPermissionMode === 'COLLABORATIVE'
+                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Collaborative: Students can draw on the whiteboard"
+            >
+              <Unlock className="w-3 h-3" />
+              <span>All Draw</span>
+            </button>
+          </div>
+        )}
+
+        {/* 7. Red End / Leave Call Pill Button (Iconic Google Meet) */}
+        <button
+          id="btn-leave-live-class"
+          type="button"
+          onClick={onEndOrLeaveClass}
+          className="flex items-center justify-center w-14 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-600/40 transition-all ml-1 cursor-pointer"
+          title={isTeacher ? 'End class for all students' : 'Leave meeting'}
+        >
+          <PhoneOff className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Right: Layout Switcher, Chat Drawer, End Call */}
+      {/* ================= RIGHT SECTION: LAYOUT CHOOSER & IN-CALL CHAT ================= */}
       <div className="flex items-center gap-2">
-        {/* Split Layout Mode Selector */}
-        <div className="hidden lg:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 gap-0.5">
+        {/* Layout Mode Selector (Desktop) */}
+        <div className="hidden xl:flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 gap-1 shadow-inner">
           <button
+            type="button"
+            onClick={() => onChangeLayoutMode('ACTIVE_SPEAKER')}
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors ${
+              layoutMode === 'ACTIVE_SPEAKER' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Speaker Stage + Thumbnail Strip"
+          >
+            <Film className="w-3.5 h-3.5" />
+            <span>Speaker</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onChangeLayoutMode('GRID')}
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors ${
+              layoutMode === 'GRID' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Participant Video Grid"
+          >
+            <Grid className="w-3.5 h-3.5" />
+            <span>Grid</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => onChangeLayoutMode('SPLIT_EQUAL')}
-            className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors ${
               layoutMode === 'SPLIT_EQUAL' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="50:50 Balanced Split View (Equal Board & Video)"
+            title="50:50 Side-by-side Whiteboard & Video"
           >
             <Columns className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">50:50 Split</span>
+            <span>Split 50:50</span>
           </button>
+
           <button
-            onClick={() => onChangeLayoutMode('SPLIT_SIDEBAR')}
-            className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1 transition-colors ${
-              layoutMode === 'SPLIT_SIDEBAR' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
+            type="button"
+            onClick={() => onChangeLayoutMode('WHITEBOARD_OVERLAY')}
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors ${
+              layoutMode === 'WHITEBOARD_OVERLAY' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="70:30 Board Focus (Wide Drawing Canvas + Video Sidebar)"
+            title="Whiteboard with Floating Participant Video Overlay"
           >
-            <Layout className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Board Focus</span>
-          </button>
-          <button
-            onClick={() => onChangeLayoutMode('SPLIT_STAGE')}
-            className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1 transition-colors ${
-              layoutMode === 'SPLIT_STAGE' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Video Focus (Large Classroom Video Stage + Drawing Column)"
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Video Focus</span>
-          </button>
-          <button
-            id="btn-toggle-pip"
-            onClick={() => onChangeLayoutMode(layoutMode === 'FLOATING_PIP' ? 'SPLIT_EQUAL' : 'FLOATING_PIP')}
-            className={`px-2 py-1 rounded-lg text-xs flex items-center gap-1.5 transition-all ${
-              layoutMode === 'FLOATING_PIP' 
-                ? 'bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-900/50' 
-                : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
-            }`}
-            title="Toggle Draggable Picture-in-Picture Student Monitoring View"
-          >
-            <PictureInPicture className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">Student PiP</span>
-          </button>
-          <button
-            onClick={() => onChangeLayoutMode('FULL_BOARD')}
-            className={`p-1.5 rounded-lg text-xs transition-colors ${
-              layoutMode === 'FULL_BOARD' ? 'bg-cyan-600 text-white font-bold shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Full Whiteboard (Maximize Canvas)"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5" />
+            <span>Overlay</span>
           </button>
         </div>
 
-        {/* Chat & Participants Drawer Toggle */}
+        {/* Chat / In-Call Messaging Drawer Toggle */}
         <button
           id="btn-toggle-live-chat"
+          type="button"
           onClick={onToggleChat}
-          className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border transition-all ${
+          className={`relative flex items-center justify-center w-11 h-11 rounded-xl border transition-all ${
             isChatOpen
               ? 'bg-cyan-600 text-white border-cyan-400 shadow-md'
-              : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-slate-200'
+              : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-800'
           }`}
-          title="Open In-Class Chat & Participants Panel"
+          title="In-call chat and student messages"
         >
-          <MessageSquare className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-semibold">{participantCount}</span>
+          <MessageSquare className="w-5 h-5 text-cyan-400" />
           {unreadChatCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse shadow-md">
               {unreadChatCount}
             </span>
           )}
-        </button>
-
-        {/* End / Leave Class Button */}
-        <button
-          id="btn-leave-live-class"
-          onClick={onEndOrLeaveClass}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/30 transition-all"
-          title={isTeacher ? 'End Live Class for Everyone' : 'Leave Live Classroom'}
-        >
-          <PhoneOff className="w-4 h-4" />
-          <span className="hidden sm:inline">{isTeacher ? 'End Class' : 'Leave'}</span>
         </button>
       </div>
     </div>

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { LiveParticipant } from '../../types/liveClass';
 import { MediaStreamErrorDetails } from '../../services/mediaStreamService';
+import { LiveMediaErrorBoundary } from '../common/LiveMediaErrorBoundary';
 import africanStudentsImg from '../../assets/images/african_students_technical_drawing_1788361928984.jpg';
 import africanCadLabImg from '../../assets/images/african_higher_inst_cad_lab_1788361956625.jpg';
 
@@ -401,38 +402,44 @@ export const FloatingStudentPipOverlay: React.FC<FloatingStudentPipOverlayProps>
           const photoUrl = studentPhotoMap[student.id] || africanStudentsImg;
 
           return (
-            <div
-              key={student.id}
-              className={`relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 group shadow-md transition-all ${
-                displayMode === 'COMPACT_FILMSTRIP' ? 'w-36 h-28 shrink-0' : 'aspect-video'
-              } ${student.isSpeaking ? 'ring-2 ring-emerald-500 shadow-emerald-950/50' : ''} ${
-                student.isHandRaised ? 'ring-2 ring-amber-500 shadow-amber-950/50' : ''
-              }`}
-            >
-              {/* Student Live Video or Fallback Avatar */}
-              {(() => {
-                const stream = isLocal ? localStream : remoteStreams[student.id];
-                const hasLiveVideoTrack = Boolean(
-                  stream && stream.getVideoTracks().some(track => track.enabled && track.readyState === 'live')
-                );
-                const shouldRenderVideo = !student.isVideoOff && hasLiveVideoTrack;
-
-                if (shouldRenderVideo && stream) {
-                  return (
-                    <video
-                      ref={el => {
-                        if (el && el.srcObject !== stream) {
-                          el.srcObject = stream;
-                          el.play().catch(() => {});
-                        }
-                      }}
-                      autoPlay
-                      playsInline
-                      muted={isLocal}
-                      className={`w-full h-full object-cover ${isLocal ? 'scale-x-[-1]' : ''}`}
-                    />
+            <LiveMediaErrorBoundary key={student.id} mode="tile" participantName={student.name} onRetry={onRetryMedia}>
+              <div
+                className={`relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 group shadow-md transition-all ${
+                  displayMode === 'COMPACT_FILMSTRIP' ? 'w-36 h-28 shrink-0' : 'aspect-video'
+                } ${student.isSpeaking ? 'ring-2 ring-emerald-500 shadow-emerald-950/50' : ''} ${
+                  student.isHandRaised ? 'ring-2 ring-amber-500 shadow-amber-950/50' : ''
+                }`}
+              >
+                {/* Student Live Video or Fallback Avatar */}
+                {(() => {
+                  const stream = isLocal ? localStream : remoteStreams[student.id];
+                  const hasLiveVideoTrack = Boolean(
+                    stream && 
+                    stream.getVideoTracks && 
+                    stream.getVideoTracks().some(track => track && track.enabled && track.readyState === 'live')
                   );
-                }
+                  const shouldRenderVideo = !student.isVideoOff && hasLiveVideoTrack;
+
+                  if (shouldRenderVideo && stream) {
+                    return (
+                      <video
+                        ref={el => {
+                          if (el && el.srcObject !== stream) {
+                            try {
+                              el.srcObject = stream;
+                              el.play().catch(() => {});
+                            } catch {
+                              // Safe fallback
+                            }
+                          }
+                        }}
+                        autoPlay
+                        playsInline
+                        muted={isLocal}
+                        className={`w-full h-full object-cover ${isLocal ? 'scale-x-[-1]' : ''}`}
+                      />
+                    );
+                  }
 
                 if (!student.isVideoOff && photoUrl && !isLocal) {
                   return (
@@ -521,6 +528,7 @@ export const FloatingStudentPipOverlay: React.FC<FloatingStudentPipOverlayProps>
                 </div>
               </div>
             </div>
+            </LiveMediaErrorBoundary>
           );
         })}
       </div>

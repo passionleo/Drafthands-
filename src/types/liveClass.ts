@@ -6,6 +6,9 @@ export type ParticipantRole = 'TEACHER' | 'STUDENT' | 'CO_HOST';
 export type DrawingPermissionMode = 'TEACHER_ONLY' | 'COLLABORATIVE' | 'INDIVIDUAL_PERMIT';
 
 export type VideoLayoutMode = 
+  | 'ACTIVE_SPEAKER'
+  | 'GRID'
+  | 'WHITEBOARD_OVERLAY'
   | 'SPLIT_EQUAL' 
   | 'SPLIT_SIDEBAR' 
   | 'SPLIT_STAGE' 

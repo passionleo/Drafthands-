@@ -57,6 +57,8 @@ import { LiveControlBar } from './LiveControlBar';
 import { LiveChatDrawer } from './LiveChatDrawer';
 import { ClassroomTeachingHub } from './ClassroomTeachingHub';
 import { WhiteboardStudio } from '../whiteboard/WhiteboardStudio';
+import { CadErrorBoundary } from '../common/CadErrorBoundary';
+import { LiveMediaErrorBoundary } from '../common/LiveMediaErrorBoundary';
 import { PastQuestionItem } from '../../data/pastQuestionsArchive';
 import { StudentSubmission } from '../../types/assignments';
 
@@ -795,6 +797,30 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
           {/* Quick Split Presets */}
           <div className="hidden xl:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 gap-0.5 text-xs">
             <button
+              onClick={() => {
+                setLayoutMode('ACTIVE_SPEAKER');
+                setSplitRatio(35);
+              }}
+              className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
+                layoutMode === 'ACTIVE_SPEAKER' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Active Speaker Stage + Thumbnail Strip"
+            >
+              Speaker
+            </button>
+            <button
+              onClick={() => {
+                setLayoutMode('GRID');
+                setSplitRatio(40);
+              }}
+              className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
+                layoutMode === 'GRID' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Equal Participant Video Grid"
+            >
+              Grid
+            </button>
+            <button
               onClick={() => handleSetSplitRatio(50, 'SPLIT_EQUAL')}
               className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
                 layoutMode === 'SPLIT_EQUAL' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
@@ -804,32 +830,14 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
               50:50
             </button>
             <button
-              onClick={() => handleSetSplitRatio(70, 'SPLIT_SIDEBAR')}
-              className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
-                layoutMode === 'SPLIT_SIDEBAR' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-              title="70:30 Board Focus View"
-            >
-              70:30
-            </button>
-            <button
-              onClick={() => handleSetSplitRatio(30, 'SPLIT_STAGE')}
-              className={`px-2 py-0.5 rounded-lg transition-colors font-mono ${
-                layoutMode === 'SPLIT_STAGE' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-              title="30:70 Video Stage Focus View"
-            >
-              30:70
-            </button>
-            <button
-              onClick={() => setLayoutMode(layoutMode === 'FLOATING_PIP' ? 'SPLIT_EQUAL' : 'FLOATING_PIP')}
+              onClick={() => setLayoutMode(layoutMode === 'WHITEBOARD_OVERLAY' ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY')}
               className={`px-2 py-0.5 rounded-lg transition-colors font-mono flex items-center gap-1 ${
-                layoutMode === 'FLOATING_PIP' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+                layoutMode === 'WHITEBOARD_OVERLAY' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
-              title="Draggable Floating Student PiP Overlay on Board"
+              title="Technical Drawing Whiteboard Overlay Mode"
             >
-              <PictureInPicture className="w-3 h-3" />
-              <span>PiP</span>
+              <PencilRuler className="w-3 h-3 text-cyan-400" />
+              <span>Overlay</span>
             </button>
           </div>
 
@@ -881,7 +889,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
         <div
           className="flex flex-col min-w-0 bg-slate-950 relative overflow-hidden transition-all duration-75"
           style={{
-            width: layoutMode === 'FULL_BOARD' || layoutMode === 'FLOATING_PIP'
+            width: layoutMode === 'FULL_BOARD' || layoutMode === 'FLOATING_PIP' || layoutMode === 'WHITEBOARD_OVERLAY'
               ? '100%'
               : `${splitRatio}%`
           }}
@@ -917,13 +925,19 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
             </div>
           )}
 
-          {/* Embedded Full Whiteboard Studio */}
+          {/* Embedded Full Whiteboard Studio wrapped in CadErrorBoundary */}
           <div className="flex-1 flex flex-col min-h-0">
-            <WhiteboardStudio
-              topic={activeTopic}
-              onClose={onClose}
-              initialMode="TRADITIONAL_BOARD"
-            />
+            <CadErrorBoundary
+              title="Technical Whiteboard Engine"
+              buttonLabel="Reset Drafting Board"
+              fallbackMessage="Drafting board safely recovered. Your video session and participant connections remain intact."
+            >
+              <WhiteboardStudio
+                topic={activeTopic}
+                onClose={onClose}
+                initialMode="TRADITIONAL_BOARD"
+              />
+            </CadErrorBoundary>
           </div>
 
           {/* If Full Board mode, provide floating pill to restore video panel or enable Student PiP */}
@@ -949,7 +963,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
         </div>
 
         {/* ================= RESIZE DIVIDER HANDLE ================= */}
-        {layoutMode !== 'FULL_BOARD' && layoutMode !== 'FLOATING_PIP' && (
+        {layoutMode !== 'FULL_BOARD' && layoutMode !== 'FLOATING_PIP' && layoutMode !== 'WHITEBOARD_OVERLAY' && (
           <div
             onMouseDown={handleResizerMouseDown}
             className={`w-1.5 bg-slate-800 hover:bg-cyan-500 transition-colors cursor-col-resize z-20 flex items-center justify-center group relative ${
@@ -964,7 +978,7 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
         )}
 
         {/* ================= B. CLASSROOM VIDEO & TEACHING SECTION (RIGHT / SPLIT) ================= */}
-        {layoutMode !== 'FULL_BOARD' && layoutMode !== 'FLOATING_PIP' && (
+        {layoutMode !== 'FULL_BOARD' && layoutMode !== 'FLOATING_PIP' && layoutMode !== 'WHITEBOARD_OVERLAY' && (
           <div
             className="flex flex-col min-w-0 bg-slate-950 border-l border-slate-800 shrink-0 z-20 transition-all duration-75"
             style={{ width: `${100 - splitRatio}%` }}
@@ -989,71 +1003,78 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
             ) : (
               /* Dedicated Video Stage: Separate Teacher Podium and Student Gallery */
               <div className="flex-1 flex flex-col min-h-0">
-                <VideoGrid
-                  participants={participants}
-                  localParticipantId={localParticipantId}
-                  localStream={localStream}
-                  remoteStreams={remoteStreams}
-                  mediaError={mediaError}
-                  onRetryMedia={handleRetryMedia}
-                  layoutMode={layoutMode}
-                  onToggleSpotlight={(id) => {
-                    setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
-                  }}
-                  onToggleParticipantAudio={(id) => {
-                    setParticipants(prev => prev.map(p => p.id === id ? { ...p, isAudioMuted: !p.isAudioMuted } : p));
-                  }}
-                  onToggleParticipantDrawingPermission={(id) => {
-                    setParticipants(prev => prev.map(p => p.id === id ? { ...p, hasDrawingPermission: !p.hasDrawingPermission } : p));
-                  }}
-                  onMuteAllStudents={() => {
-                    setParticipants(prev => prev.map(p => p.role !== 'TEACHER' ? { ...p, isAudioMuted: true } : p));
-                    setClassroomNotice('All students muted.');
-                  }}
-                  onLowerAllHands={() => {
-                    setParticipants(prev => prev.map(p => ({ ...p, isHandRaised: false })));
-                    setClassroomNotice('All raised hands cleared.');
-                  }}
-                  isTeacher={isTeacher}
-                  activeTopicTitle={activeTopic.title}
-                />
+                <LiveMediaErrorBoundary mode="grid" onRetry={handleRetryMedia}>
+                  <VideoGrid
+                    participants={participants}
+                    localParticipantId={localParticipantId}
+                    localStream={localStream}
+                    remoteStreams={remoteStreams}
+                    mediaError={mediaError}
+                    onRetryMedia={handleRetryMedia}
+                    layoutMode={layoutMode}
+                    onToggleSpotlight={(id) => {
+                      setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
+                    }}
+                    onToggleParticipantAudio={(id) => {
+                      setParticipants(prev => prev.map(p => p.id === id ? { ...p, isAudioMuted: !p.isAudioMuted } : p));
+                    }}
+                    onToggleParticipantDrawingPermission={(id) => {
+                      setParticipants(prev => prev.map(p => p.id === id ? { ...p, hasDrawingPermission: !p.hasDrawingPermission } : p));
+                    }}
+                    onMuteAllStudents={() => {
+                      setParticipants(prev => prev.map(p => p.role !== 'TEACHER' ? { ...p, isAudioMuted: true } : p));
+                      setClassroomNotice('All students muted.');
+                    }}
+                    onLowerAllHands={() => {
+                      setParticipants(prev => prev.map(p => ({ ...p, isHandRaised: false })));
+                      setClassroomNotice('All raised hands cleared.');
+                    }}
+                    isTeacher={isTeacher}
+                    activeTopicTitle={activeTopic.title}
+                    onLayoutModeChange={(newMode) => {
+                      setLayoutMode(newMode);
+                    }}
+                  />
+                </LiveMediaErrorBoundary>
               </div>
             )}
           </div>
         )}
 
-        {/* ================= C. FLOATING PICTURE-IN-PICTURE VIDEO DOCK ================= */}
-        {layoutMode === 'FLOATING_PIP' && (
-          <FloatingStudentPipOverlay
-            participants={participants}
-            localParticipantId={localParticipantId}
-            localStream={localStream}
-            remoteStreams={remoteStreams}
-            mediaError={mediaError}
-            onRetryMedia={handleRetryMedia}
-            isTeacher={isTeacher}
-            onToggleSpotlight={(id) => {
-              setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
-            }}
-            onToggleParticipantAudio={(id) => {
-              setParticipants(prev => prev.map(p => p.id === id ? { ...p, isAudioMuted: !p.isAudioMuted } : p));
-            }}
-            onToggleParticipantDrawingPermission={(id) => {
-              setParticipants(prev => prev.map(p => p.id === id ? { ...p, hasDrawingPermission: !p.hasDrawingPermission } : p));
-            }}
-            onMuteAllStudents={() => {
-              setParticipants(prev => prev.map(p => p.role !== 'TEACHER' ? { ...p, isAudioMuted: true } : p));
-              setClassroomNotice('All students muted.');
-            }}
-            onLowerAllHands={() => {
-              setParticipants(prev => prev.map(p => ({ ...p, isHandRaised: false })));
-              setClassroomNotice('All raised hands cleared.');
-            }}
-            onRestoreSplitView={() => setLayoutMode('SPLIT_EQUAL')}
-            onClose={() => setLayoutMode('FULL_BOARD')}
-            activeTopicTitle={activeTopic.title}
-            initialCorner="TOP_RIGHT"
-          />
+        {/* ================= C. FLOATING PICTURE-IN-PICTURE VIDEO DOCK / WHITEBOARD OVERLAY ================= */}
+        {(layoutMode === 'FLOATING_PIP' || layoutMode === 'WHITEBOARD_OVERLAY') && (
+          <LiveMediaErrorBoundary mode="overlay" onRetry={handleRetryMedia}>
+            <FloatingStudentPipOverlay
+              participants={participants}
+              localParticipantId={localParticipantId}
+              localStream={localStream}
+              remoteStreams={remoteStreams}
+              mediaError={mediaError}
+              onRetryMedia={handleRetryMedia}
+              isTeacher={isTeacher}
+              onToggleSpotlight={(id) => {
+                setParticipants(prev => prev.map(p => ({ ...p, isSpotlighted: p.id === id ? !p.isSpotlighted : p.isSpotlighted })));
+              }}
+              onToggleParticipantAudio={(id) => {
+                setParticipants(prev => prev.map(p => p.id === id ? { ...p, isAudioMuted: !p.isAudioMuted } : p));
+              }}
+              onToggleParticipantDrawingPermission={(id) => {
+                setParticipants(prev => prev.map(p => p.id === id ? { ...p, hasDrawingPermission: !p.hasDrawingPermission } : p));
+              }}
+              onMuteAllStudents={() => {
+                setParticipants(prev => prev.map(p => p.role !== 'TEACHER' ? { ...p, isAudioMuted: true } : p));
+                setClassroomNotice('All students muted.');
+              }}
+              onLowerAllHands={() => {
+                setParticipants(prev => prev.map(p => ({ ...p, isHandRaised: false })));
+                setClassroomNotice('All raised hands cleared.');
+              }}
+              onRestoreSplitView={() => setLayoutMode('SPLIT_EQUAL')}
+              onClose={() => setLayoutMode('FULL_BOARD')}
+              activeTopicTitle={activeTopic.title}
+              initialCorner="TOP_RIGHT"
+            />
+          </LiveMediaErrorBoundary>
         )}
 
         {/* ================= D. IN-CLASS LIVE CHAT & PARTICIPANTS DRAWER ================= */}
@@ -1105,13 +1126,19 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
           setLayoutMode(mode);
           if (mode === 'SPLIT_EQUAL') setSplitRatio(50);
           else if (mode === 'SPLIT_SIDEBAR') setSplitRatio(70);
-          else if (mode === 'SPLIT_STAGE') setSplitRatio(30);
+          else if (mode === 'SPLIT_STAGE' || mode === 'ACTIVE_SPEAKER') setSplitRatio(35);
+          else if (mode === 'GRID') setSplitRatio(40);
+          else if (mode === 'FULL_BOARD' || mode === 'WHITEBOARD_OVERLAY') setSplitRatio(100);
         }}
         onToggleChat={() => {
           setIsChatOpen(prev => !prev);
           setUnreadChatCount(0);
         }}
         onEndOrLeaveClass={onClose}
+        onToggleWhiteboardOverlay={() => {
+          setLayoutMode(prev => prev === 'WHITEBOARD_OVERLAY' ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY');
+        }}
+        isWhiteboardOverlay={layoutMode === 'WHITEBOARD_OVERLAY'}
       />
     </div>
   );
