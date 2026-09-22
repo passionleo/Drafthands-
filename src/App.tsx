@@ -97,9 +97,9 @@ function AppContent() {
   }>({
     roomCode: 'TD-SS2-8821',
     topicId: 'ss1-intro-technical-drawing',
-    userName: 'Engr. D. Adebayo',
-    role: 'TEACHER',
-    gradeOrClass: 'Technical Instructor',
+    userName: 'Technical Scholar',
+    role: 'STUDENT',
+    gradeOrClass: 'SS1 Student',
     initialAudioMuted: false,
     initialVideoOff: false
   });
@@ -118,6 +118,9 @@ function AppContent() {
     verifyEmail,
     isMasterAdmin
   } = useSubscription();
+
+  // Hard-coded strict role check: When active role is student, admin/teacher navigation items are completely omitted from the DOM
+  const isStudentRole = userRole === 'STUDENT';
 
   // Code entry state for verification modal if unverified student is active
   const [verificationCodeInput, setVerificationCodeInput] = useState<string>('');
@@ -524,12 +527,13 @@ function AppContent() {
         onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
         onOpenSectionalAssembly={handleOpenSectionalAssembly}
         onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
-        onOpenTeacherPortal={handleOpenTeacherPortal}
-        onOpenParentPortal={handleOpenParentPortal}
-        onOpenProjectionMode={handleOpenProjectionMode}
-        onOpenTeacherAssignments={handleOpenTeacherAssignments}
+        // Strict Hard-coded Role Check: Completely omitted when role is STUDENT
+        onOpenTeacherPortal={isStudentRole ? undefined : handleOpenTeacherPortal}
+        onOpenParentPortal={isStudentRole ? undefined : handleOpenParentPortal}
+        onOpenProjectionMode={isStudentRole ? undefined : handleOpenProjectionMode}
+        onOpenTeacherAssignments={isStudentRole ? undefined : handleOpenTeacherAssignments}
         onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
-        onOpenAdminConsole={handleOpenAdminConsole}
+        onOpenAdminConsole={isStudentRole ? undefined : handleOpenAdminConsole}
         onOpenLiveClass={() => setIsJoinClassOpen(true)}
         onToggleWhiteboardStudio={() => {
           setActiveAssignmentForStudio(undefined);
@@ -653,22 +657,50 @@ function AppContent() {
         )}
       </div>
 
-      {/* 3. TEACHER LESSON NOTE GENERATOR MODAL */}
-      <TeacherPortalModal
-        topics={allCurriculumTopics}
-        activeTopic={activeTopic}
-        isOpen={isTeacherPortalOpen}
-        onClose={() => setIsTeacherPortalOpen(false)}
-        onSelectTopic={handleSelectTopic}
-        onOpenWhiteboardForTopic={handleOpenWhiteboardForTopic}
-      />
+      {/* STRICT ROLE CHECK: Admin, Teacher & Parent privileged modals completely omitted from the DOM when student */}
+      {!isStudentRole && (
+        <>
+          {/* 3. TEACHER LESSON NOTE GENERATOR MODAL */}
+          <TeacherPortalModal
+            topics={allCurriculumTopics}
+            activeTopic={activeTopic}
+            isOpen={isTeacherPortalOpen}
+            onClose={() => setIsTeacherPortalOpen(false)}
+            onSelectTopic={handleSelectTopic}
+            onOpenWhiteboardForTopic={handleOpenWhiteboardForTopic}
+          />
 
-      {/* 4. TEACHER ASSIGNMENT & EVALUATION CONSOLE */}
-      <AssignmentManagementModal
-        topics={allCurriculumTopics}
-        isOpen={isTeacherAssignmentsOpen}
-        onClose={() => setIsTeacherAssignmentsOpen(false)}
-      />
+          {/* 4. TEACHER ASSIGNMENT & EVALUATION CONSOLE */}
+          <AssignmentManagementModal
+            topics={allCurriculumTopics}
+            isOpen={isTeacherAssignmentsOpen}
+            onClose={() => setIsTeacherAssignmentsOpen(false)}
+          />
+
+          {/* 6. PARENT MONITORING & FEEDBACK PORTAL */}
+          <ParentPortalModal
+            isOpen={isParentPortalOpen}
+            onClose={() => setIsParentPortalOpen(false)}
+            onSelectTopic={handleSelectTopic}
+          />
+
+          {/* 7. TEACHER LIVE-CLASS PROJECTION MODE (SMART BOARD PRO) */}
+          <LiveProjectionMode
+            isOpen={isProjectionModeOpen}
+            onClose={() => setIsProjectionModeOpen(false)}
+            topic={activeTopic}
+            currentStepIndex={currentStep}
+            onStepChange={handleGoToStep}
+            parameters={parameters}
+          />
+
+          {/* 13. INSTITUTIONAL ADMINISTRATOR CONSOLE (ADMIN ONLY) */}
+          <AdminConsoleModal
+            isOpen={isAdminConsoleOpen}
+            onClose={() => setIsAdminConsoleOpen(false)}
+          />
+        </>
+      )}
 
       {/* 5. STUDENT PRACTICAL ASSIGNMENTS & WORKSPACE LAUNCHER */}
       <StudentAssignmentsModal
@@ -676,23 +708,6 @@ function AppContent() {
         onClose={() => setIsStudentAssignmentsOpen(false)}
         topics={allCurriculumTopics}
         onOpenWhiteboardForAssignment={handleOpenWhiteboardForAssignment}
-      />
-
-      {/* 6. PARENT MONITORING & FEEDBACK PORTAL */}
-      <ParentPortalModal
-        isOpen={isParentPortalOpen}
-        onClose={() => setIsParentPortalOpen(false)}
-        onSelectTopic={handleSelectTopic}
-      />
-
-      {/* 7. TEACHER LIVE-CLASS PROJECTION MODE (SMART BOARD PRO) */}
-      <LiveProjectionMode
-        isOpen={isProjectionModeOpen}
-        onClose={() => setIsProjectionModeOpen(false)}
-        topic={activeTopic}
-        currentStepIndex={currentStep}
-        onStepChange={handleGoToStep}
-        parameters={parameters}
       />
 
       {/* 8. THEORY & STANDARDS MODAL */}
@@ -806,11 +821,6 @@ function AppContent() {
           else if (partName === 'PRACTICE_EXAM') setIsPracticeOpen(true);
           else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
         }}
-      />
-      {/* 13. INSTITUTIONAL ADMINISTRATOR CONSOLE (ADMIN ONLY) */}
-      <AdminConsoleModal
-        isOpen={isAdminConsoleOpen}
-        onClose={() => setIsAdminConsoleOpen(false)}
       />
 
       {/* 14. MANDATORY STUDENT EMAIL VERIFICATION ENFORCEMENT */}

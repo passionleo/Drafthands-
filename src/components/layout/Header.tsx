@@ -109,10 +109,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const currentPlan = SUBSCRIPTION_PLANS[subscription.plan];
-  const isStudent = userRole === 'STUDENT' && !isMasterAdmin;
-  const isTeacher = userRole === 'TEACHER' || isMasterAdmin;
-  const isParent = userRole === 'PARENT' || isMasterAdmin;
-  const isAdmin = userRole === 'ADMIN' || isMasterAdmin;
+  // Strict check: active role student
+  const isStudent = userRole === 'STUDENT';
+  const isTeacher = userRole === 'TEACHER' || (isMasterAdmin && userRole !== 'STUDENT');
+  const isParent = userRole === 'PARENT' || (isMasterAdmin && userRole !== 'STUDENT');
+  const isAdmin = userRole === 'ADMIN' || (isMasterAdmin && userRole !== 'STUDENT');
 
   // Role labels and badge styling
   const roleConfig: Record<UserRoleType, { label: string; badgeClass: string; icon: any }> = {
@@ -286,7 +287,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Live-Class Projection Mode (Pro Tier - HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isTeacher || isAdmin) && (
+        {!isStudent && (isTeacher || isAdmin) && onOpenProjectionMode && (
           <button
             id="btn-open-projection-mode"
             onClick={() => {
@@ -306,7 +307,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Parent Monitoring Portal (HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isParent || isAdmin) && (
+        {!isStudent && (isParent || isAdmin) && onOpenParentPortal && (
           <button
             id="btn-open-parent-portal"
             onClick={onOpenParentPortal}
@@ -319,7 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Teacher Lesson Note Generator Portal (HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isTeacher || isAdmin) && (
+        {!isStudent && (isTeacher || isAdmin) && onOpenTeacherPortal && (
           <button
             id="btn-open-teacher-portal"
             onClick={onOpenTeacherPortal}
@@ -331,8 +332,8 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* School Administrator Console (ADMIN ONLY) */}
-        {isAdmin && onOpenAdminConsole && (
+        {/* School Administrator Console (ADMIN ONLY - HIDDEN FOR STUDENTS) */}
+        {!isStudent && isAdmin && onOpenAdminConsole && (
           <button
             id="btn-open-admin-console"
             onClick={onOpenAdminConsole}

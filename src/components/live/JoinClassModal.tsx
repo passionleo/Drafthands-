@@ -18,6 +18,7 @@ import {
 import { CurriculumTier, CurriculumTopic } from '../../types/curriculum';
 import { ParticipantRole } from '../../types/liveClass';
 import { MediaStreamService } from '../../services/mediaStreamService';
+import { useSubscription } from '../../context/SubscriptionContext';
 
 interface JoinClassModalProps {
   isOpen: boolean;
@@ -42,12 +43,21 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
   activeTopic,
   onJoinSession
 }) => {
-  const [activeTab, setActiveTab] = useState<'HOST' | 'JOIN'>('HOST');
+  const { userRole, userProfile } = useSubscription();
+  const isStudent = userRole === 'STUDENT';
+
+  const [activeTab, setActiveTab] = useState<'HOST' | 'JOIN'>(isStudent ? 'JOIN' : 'HOST');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState(activeTopic.id);
-  const [userName, setUserName] = useState('Demo Technical Instructor');
-  const [studentName, setStudentName] = useState('Demo Student 1');
+  const [userName, setUserName] = useState(userProfile?.name || 'Technical Instructor');
+  const [studentName, setStudentName] = useState(userProfile?.name || 'Technical Student');
   const [gradeClass, setGradeClass] = useState('SS2 Technical');
+
+  useEffect(() => {
+    if (isStudent) {
+      setActiveTab('JOIN');
+    }
+  }, [isStudent]);
   
   // Hardware test state
   const [isAudioMuted, setIsAudioMuted] = useState(false);
@@ -173,17 +183,19 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
 
         {/* Mode Selector: Host Class vs Join Class */}
         <div className="p-4 bg-slate-900 border-b border-slate-800 flex gap-2">
-          <button
-            onClick={() => setActiveTab('HOST')}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-              activeTab === 'HOST'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-600/30'
-                : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
-            }`}
-          >
-            <Crown className="w-4 h-4 text-amber-300" />
-            <span>Host Live Class (Teacher)</span>
-          </button>
+          {!isStudent && (
+            <button
+              onClick={() => setActiveTab('HOST')}
+              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
+                activeTab === 'HOST'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-600/30'
+                  : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+              }`}
+            >
+              <Crown className="w-4 h-4 text-amber-300" />
+              <span>Host Live Class (Teacher)</span>
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab('JOIN')}

@@ -48,6 +48,7 @@ export interface SubscriptionContextType {
 
 const STORAGE_KEY = 'drafthands_subscription_v1';
 export const MASTER_BYPASS_STORAGE_KEY = 'drafthands_master_admin_bypass';
+export const TEACHER_TOKEN_STORAGE_KEY = 'drafthands_teacher_token';
 
 export const MASTER_ADMIN_EMAILS = [
   'passion4dami@gmail.com',
@@ -61,19 +62,29 @@ export const isOwnerOrMasterEmail = (email?: string | null): boolean => {
   return MASTER_ADMIN_EMAILS.includes(clean) || clean.includes('passion4dami');
 };
 
+export const hasExplicitTeacherToken = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const token = localStorage.getItem(TEACHER_TOKEN_STORAGE_KEY) || sessionStorage.getItem(TEACHER_TOKEN_STORAGE_KEY);
+    return Boolean(token && token.trim().length > 0);
+  } catch {
+    return false;
+  }
+};
+
 const DEFAULT_STATE: UserSubscriptionState = {
-  plan: 'INSTITUTION_PASS',
-  isSubscribed: true,
-  activeUntil: '2099-12-31T23:59:59.999Z',
-  licenseKey: 'MASTER-OWNER-PASS-PERMANENT',
-  userRole: 'ADMIN',
-  isMasterAdmin: true,
+  plan: 'FREE',
+  isSubscribed: false,
+  activeUntil: undefined,
+  licenseKey: undefined,
+  userRole: 'STUDENT',
+  isMasterAdmin: false,
   userProfile: {
-    name: 'Engr. Dami (Platform Owner)',
-    email: 'passion4dami@gmail.com',
-    institution: 'DraftHands Technical College',
-    role: 'ADMIN',
-    isEmailVerified: true,
+    name: 'DraftHands Student',
+    email: '',
+    institution: 'Technical College',
+    role: 'STUDENT',
+    isEmailVerified: false,
     registeredAt: '2025-01-01T00:00:00.000Z'
   },
   unlockedTopicIds: []
@@ -99,27 +110,76 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [subscription, setSubscription] = useState<UserSubscriptionState>(() => {
     try {
       const storedBypass = typeof window !== 'undefined' ? localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) : null;
-      // Default to permanent bypass active unless explicitly turned off
-      const isMasterSaved = storedBypass !== 'false';
+      // Master admin bypass strictly when set to 'true'
+      const isMasterSaved = storedBypass === 'true';
+      const hasTeacherToken = hasExplicitTeacherToken();
       const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          const isMaster = isMasterSaved || parsed.isMasterAdmin || isOwnerOrMasterEmail(parsed.userProfile?.email);
+          const isMaster = isMasterSaved || (Boolean(parsed.isMasterAdmin) && isOwnerOrMasterEmail(parsed.userProfile?.email));
+
+          // Strict Role enforcement:
+          // When no explicit teacher login token is present (and not master admin),
+          // role MUST strictly default to STUDENT, ignoring stale/cached session flags!
+          const effectiveRole: UserRoleType = isMaster
+            ? 'ADMIN'
+            : hasTeacherToken
+              ? (parsed.userRole === 'TEACHER' || parsed.userRole === 'ADMIN' || parsed.userRole === 'PARENT' ? parsed.userRole : 'TEACHER')
+              : 'STUDENT';
+
           return {
             ...DEFAULT_STATE,
             ...parsed,
-            isMasterAdmin: isMaster ? true : Boolean(parsed.isMasterAdmin),
+            isMasterAdmin: isMaster,
             isSubscribed: isMaster ? true : Boolean(parsed.isSubscribed),
             plan: isMaster ? 'INSTITUTION_PASS' : (parsed.plan || 'FREE'),
-            userRole: parsed.userRole || (isMaster ? 'ADMIN' : 'STUDENT'),
-            userProfile: parsed.userProfile || {
+            userRole: effectiveRole,
+            userProfile: parsed.userProfile ? {
+              ...parsed.userProfile,
+              role: effectiveRole
+            } : {
               ...DEFAULT_STATE.userProfile!,
-              role: parsed.userRole || (isMaster ? 'ADMIN' : 'STUDENT')
+              role: effectiveRole
             }
           };
         }
       }
+
+      if (isMasterSaved) {
+        return {
+          ...DEFAULT_STATE,
+          plan: 'INSTITUTION_PASS',
+          isSubscribed: true,
+          isMasterAdmin: true,
+          userRole: 'ADMIN',
+          userProfile: {
+            name: 'Engr. Dami (Platform Owner)',
+            email: 'passion4dami@gmail.com',
+            institution: 'DraftHands Technical College',
+            role: 'ADMIN',
+            isEmailVerified: true,
+            registeredAt: '2025-01-01T00:00:00.000Z'
+          }
+        };
+      }
+
+      if (hasTeacherToken) {
+        return {
+          ...DEFAULT_STATE,
+          userRole: 'TEACHER',
+          userProfile: {
+            name: 'Technical Instructor',
+            email: 'teacher@drafthands.edu.ng',
+            institution: 'DraftHands Technical College',
+            role: 'TEACHER',
+            isEmailVerified: true,
+            registeredAt: '2025-01-01T00:00:00.000Z'
+          }
+        };
+      }
+
       return DEFAULT_STATE;
     } catch (e) {
       console.warn('Failed to load subscription from localStorage', e);
@@ -139,16 +199,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [subscription]);
 
-  const userRole = subscription?.userRole || 'STUDENT';
   const userProfile = subscription?.userProfile;
   const isEmailVerified = userProfile ? Boolean(userProfile.isEmailVerified) : true;
   const currentPlan = SUBSCRIPTION_PLANS[subscription?.plan || 'FREE'] || SUBSCRIPTION_PLANS.FREE;
 
   const isMasterAdmin = Boolean(
-    subscription?.isMasterAdmin ||
+    (subscription?.isMasterAdmin && isOwnerOrMasterEmail(subscription?.userProfile?.email)) ||
     isOwnerOrMasterEmail(subscription?.userProfile?.email) ||
-    (typeof window !== 'undefined' && localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) !== 'false')
+    (typeof window !== 'undefined' && localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) === 'true')
   );
+
+  const hasTeacherToken = hasExplicitTeacherToken();
+  const rawRole = subscription?.userRole || 'STUDENT';
+  // Strict role check: If role is not STUDENT, but no explicit teacher token and not master admin, force strictly to STUDENT
+  const userRole: UserRoleType = (rawRole === 'STUDENT' || (!hasTeacherToken && !isMasterAdmin))
+    ? 'STUDENT'
+    : rawRole;
 
   const isDemoMode = !isMasterAdmin && Boolean(
     subscription?.isDemo || 
@@ -167,12 +233,30 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const isSubscribed = Boolean(isMasterAdmin || hasActivePaidSubscription);
   const isTeacherOrAdmin = Boolean(
     isMasterAdmin ||
-    userRole === 'TEACHER' || 
-    userRole === 'ADMIN' || 
+    (hasTeacherToken && (userRole === 'TEACHER' || userRole === 'ADMIN')) || 
     (hasActivePaidSubscription && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'))
   );
 
   const setUserRole = (role: UserRoleType) => {
+    if (role === 'TEACHER' || role === 'ADMIN') {
+      try {
+        if (typeof window !== 'undefined') {
+          const teacherToken = `TCH_TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, teacherToken);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    } else if (role === 'STUDENT') {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     setSubscription(prev => ({
       ...prev,
       userRole: role,
@@ -190,6 +274,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (isOwner && typeof window !== 'undefined') {
       try {
         localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+        localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, `MASTER_TOKEN_${Date.now()}`);
       } catch (e) {
         console.warn(e);
       }
@@ -208,6 +293,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+        localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, `MASTER_TOKEN_${Date.now()}`);
       }
     } catch (e) {
       console.warn(e);
@@ -238,6 +324,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'false');
+        localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
       }
     } catch (e) {
       console.warn(e);
@@ -278,6 +365,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const logout = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn(e);
+    }
     setSubscription(DEFAULT_STATE);
   };
 
@@ -347,6 +442,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const subscribeToPlan = (plan: SubscriptionPlanType, reference?: string) => {
     const isTeacher = plan === 'TEACHER_PRO' || plan === 'INSTITUTION_PASS';
+    if (isTeacher) {
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, `TCH_TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
     const expiryDate = new Date();
     if (plan === 'STUDENT_TERMLY' || plan === 'TEACHER_PRO') {
       expiryDate.setMonth(expiryDate.getMonth() + 3);
@@ -430,11 +534,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const resetSubscription = () => {
-    setSubscription(DEFAULT_STATE);
-    localStorage.removeItem(STORAGE_KEY);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(MASTER_BYPASS_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn(e);
     }
+    setSubscription(DEFAULT_STATE);
   };
 
   const openPaywall = (topic?: DrawingTopic) => {
