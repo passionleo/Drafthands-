@@ -19,6 +19,7 @@ import { CurriculumTier, CurriculumTopic } from '../../types/curriculum';
 import { ParticipantRole } from '../../types/liveClass';
 import { MediaStreamService } from '../../services/mediaStreamService';
 import { useSubscription } from '../../context/SubscriptionContext';
+import { LiveMediaErrorBoundary } from '../common/LiveMediaErrorBoundary';
 
 interface JoinClassModalProps {
   isOpen: boolean;
@@ -213,48 +214,60 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
         {/* Modal Body with Hardware Preview & Form */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {/* Camera / Audio Hardware Preview Box */}
-          <div className="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 aspect-video max-h-56 flex items-center justify-center">
-            {!isVideoOff && previewStream ? (
-              <video
-                ref={videoPreviewRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover mirror"
-                style={{ transform: 'scaleX(-1)' }}
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-2 text-slate-500">
-                <VideoOff className="w-8 h-8" />
-                <span className="text-xs">Camera is Off</span>
+          <LiveMediaErrorBoundary mode="tile" participantName="Local Hardware Preview">
+            <div className="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 aspect-video max-h-56 flex items-center justify-center">
+              {!isVideoOff && previewStream ? (
+                <video
+                  ref={el => {
+                    videoPreviewRef.current = el;
+                    if (el && previewStream && el.srcObject !== previewStream) {
+                      try {
+                        el.srcObject = previewStream;
+                        el.play().catch(() => {});
+                      } catch {
+                        // Silent fallback
+                      }
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover mirror"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-slate-500">
+                  <VideoOff className="w-8 h-8" />
+                  <span className="text-xs">Camera is Off</span>
+                </div>
+              )}
+
+              {/* Bottom Hardware Toggles */}
+              <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-3 z-10">
+                <button
+                  type="button"
+                  onClick={handleToggleMic}
+                  className={`p-2.5 rounded-xl backdrop-blur-md border transition-all ${
+                    isAudioMuted ? 'bg-red-500/80 border-red-400 text-white' : 'bg-slate-900/80 border-slate-700 text-emerald-400 hover:bg-slate-800'
+                  }`}
+                  title={isAudioMuted ? 'Unmute Mic' : 'Mute Mic'}
+                >
+                  {isAudioMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleVideo}
+                  className={`p-2.5 rounded-xl backdrop-blur-md border transition-all ${
+                    isVideoOff ? 'bg-red-500/80 border-red-400 text-white' : 'bg-slate-900/80 border-slate-700 text-cyan-400 hover:bg-slate-800'
+                  }`}
+                  title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
+                >
+                  {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                </button>
               </div>
-            )}
-
-            {/* Bottom Hardware Toggles */}
-            <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-3 z-10">
-              <button
-                type="button"
-                onClick={handleToggleMic}
-                className={`p-2.5 rounded-xl backdrop-blur-md border transition-all ${
-                  isAudioMuted ? 'bg-red-500/80 border-red-400 text-white' : 'bg-slate-900/80 border-slate-700 text-emerald-400 hover:bg-slate-800'
-                }`}
-                title={isAudioMuted ? 'Unmute Mic' : 'Mute Mic'}
-              >
-                {isAudioMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleToggleVideo}
-                className={`p-2.5 rounded-xl backdrop-blur-md border transition-all ${
-                  isVideoOff ? 'bg-red-500/80 border-red-400 text-white' : 'bg-slate-900/80 border-slate-700 text-cyan-400 hover:bg-slate-800'
-                }`}
-                title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
-              >
-                {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-              </button>
             </div>
-          </div>
+          </LiveMediaErrorBoundary>
 
           {/* TAB 1: TEACHER HOST FORM */}
           {activeTab === 'HOST' ? (

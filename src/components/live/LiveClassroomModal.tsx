@@ -73,7 +73,7 @@ interface LiveClassroomModalProps {
   onNavigateToAppPart?: (partName: string) => void;
 }
 
-export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
+const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   isOpen,
   onClose,
   topic: initialTopic,
@@ -1141,5 +1141,22 @@ export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = ({
         isWhiteboardOverlay={layoutMode === 'WHITEBOARD_OVERLAY'}
       />
     </div>
+  );
+};
+
+export const LiveClassroomModal: React.FC<LiveClassroomModalProps> = (props) => {
+  if (!props.isOpen) return null;
+
+  return (
+    <CadErrorBoundary
+      title="Live Technical Classroom System"
+      buttonLabel="Restore Live Session"
+      fallbackMessage="An unexpected UI or layout state occurred. Click below to safely restore the live drafting classroom without leaving your session."
+      onReset={() => {
+        // Safe reset hook
+      }}
+    >
+      <LiveClassroomModalInner {...props} />
+    </CadErrorBoundary>
   );
 };
