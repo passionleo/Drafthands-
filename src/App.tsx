@@ -599,36 +599,44 @@ function AppContent() {
         ) : (
           <main className="flex flex-1 flex-col md:flex-row min-w-0 overflow-hidden">
             {/* B1. PROCEDURAL INSTRUCTIONS & PARAMETER TUNER */}
-            <ProcedurePanel
-              topic={activeTopic}
-              step={currentStepData}
-              currentStepIndex={currentStep}
-              totalSteps={totalSteps}
-              parameters={parameters}
-              onParamChange={handleParamChange}
-              onOpenTheory={handleOpenTheory}
-              onOpenPractice={handleOpenPractice}
-              onOpenTraditionalBoard={() => {
-                setActiveAssignmentForStudio(undefined);
-                setStudioInitialMode('TRADITIONAL_BOARD');
-                setIsWhiteboardStudioOpen(true);
+            <CadErrorBoundary
+              title="Drafting Instructions & Parameter Tuner"
+              fallbackMessage="An unexpected issue occurred while rendering topic procedure steps."
+              onReset={() => {
+                handleResetView();
               }}
-              onOpenCadWorkstation={() => {
-                setActiveAssignmentForStudio(undefined);
-                setStudioInitialMode('CAD_WORKSTATION');
-                setIsWhiteboardStudioOpen(true);
-              }}
-              onOpenLiveClass={() => setIsJoinClassOpen(true)}
-              onOpenIsoDiagram={handleOpenIsoDiagram}
-              onOpenOrthographicViewport={handleOpenOrthographicViewport}
-              onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
-              onOpenSectionalAssembly={handleOpenSectionalAssembly}
-              onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
-              onOpenPastQuestions={() => {
-                window.location.hash = '#past-questions';
-                setCurrentView('PAST_QUESTIONS');
-              }}
-            />
+            >
+              <ProcedurePanel
+                topic={activeTopic}
+                step={currentStepData}
+                currentStepIndex={currentStep}
+                totalSteps={totalSteps}
+                parameters={parameters}
+                onParamChange={handleParamChange}
+                onOpenTheory={handleOpenTheory}
+                onOpenPractice={handleOpenPractice}
+                onOpenTraditionalBoard={() => {
+                  setActiveAssignmentForStudio(undefined);
+                  setStudioInitialMode('TRADITIONAL_BOARD');
+                  setIsWhiteboardStudioOpen(true);
+                }}
+                onOpenCadWorkstation={() => {
+                  setActiveAssignmentForStudio(undefined);
+                  setStudioInitialMode('CAD_WORKSTATION');
+                  setIsWhiteboardStudioOpen(true);
+                }}
+                onOpenLiveClass={() => setIsJoinClassOpen(true)}
+                onOpenIsoDiagram={handleOpenIsoDiagram}
+                onOpenOrthographicViewport={handleOpenOrthographicViewport}
+                onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
+                onOpenSectionalAssembly={handleOpenSectionalAssembly}
+                onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
+                onOpenPastQuestions={() => {
+                  window.location.hash = '#past-questions';
+                  setCurrentView('PAST_QUESTIONS');
+                }}
+              />
+            </CadErrorBoundary>
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 md:border-l border-slate-800">

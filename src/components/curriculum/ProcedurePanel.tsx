@@ -93,7 +93,7 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
             {step?.activeInstrument?.toolType && step.activeInstrument.toolType !== 'NONE' && (
               <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/30">
                 <Compass className="w-3 h-3" />
-                {step.activeInstrument.toolType.replace('_', ' ')}
+                {String(step.activeInstrument.toolType).replace(/_/g, ' ')}
               </span>
             )}
           </div>
