@@ -50,6 +50,11 @@ import { CadRibbon } from './CadRibbon';
 import { CadCommandLine } from './CadCommandLine';
 import { CadDynamicInputHud, DynamicDimensionValues } from './CadDynamicInputHud';
 import { CadOnCanvasDynamicInput } from './CadOnCanvasDynamicInput';
+import { AiPromptToCadBar } from '../drafting/AiPromptToCadBar';
+import { CadErrorBoundary } from '../common/CadErrorBoundary';
+import { ParsedCadResult } from '../../utils/aiCadPromptParser';
+import { getTopicById, allCurriculumTopics } from '../../data/curriculumData';
+import { ConstructionElement } from '../../types/curriculum';
 
 interface WhiteboardStudioProps {
   topic?: DrawingTopic;
@@ -84,6 +89,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   const [snapGrid, setSnapGrid] = useState<boolean>(true);
   const [orthoLock, setOrthoLock] = useState<boolean>(false);
   const [showTraceTemplate, setShowTraceTemplate] = useState<boolean>(true);
+  const [isAiPromptBarOpen, setIsAiPromptBarOpen] = useState<boolean>(true);
 
   // AutoCAD Dynamic Input State (DYN / F12)
   const [dynamicInputEnabled, setDynamicInputEnabled] = useState<boolean>(true);
@@ -700,6 +706,338 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       ]);
     }
   }, [dynamicValues, startPoint, cursorCoords, activeTool, activeLayer, elements]);
+
+  // Convert WAEC curriculum construction vector elements to native WhiteboardElement format
+  const convertConstructionElementsToWhiteboard = useCallback((
+    constructionElements: ConstructionElement[], 
+    prefix: string = 'ai-cad'
+  ): WhiteboardElement[] => {
+    const converted: WhiteboardElement[] = [];
+    const now = Date.now();
+
+    constructionElements.forEach((el, idx) => {
+      const baseId = `${prefix}-${idx}-${now}`;
+      const isFinal = Boolean(el.isFinalResult);
+      
+      const layer: WhiteboardLayer = isFinal
+        ? 'OUTLINE_HB'
+        : el.lineWeight === 'CENTER_LINE' || el.lineWeight === 'THIN_CHAIN'
+        ? 'CENTERLINE_CHAIN'
+        : el.lineWeight === 'HIDDEN_DETAIL' || el.lineWeight === 'THIN_DASHED'
+        ? 'HIDDEN_DASHED'
+        : el.type === 'DIMENSION'
+        ? 'DIMENSIONS'
+        : el.type === 'TEXT' || el.type === 'TEXT_LABEL'
+        ? 'ANNOTATIONS'
+        : 'CONSTRUCTION_2H';
+
+      const color = isFinal
+        ? '#f8fafc'
+        : layer === 'CENTERLINE_CHAIN'
+        ? '#f59e0b'
+        : layer === 'HIDDEN_DASHED'
+        ? '#94a3b8'
+        : layer === 'DIMENSIONS'
+        ? '#10b981'
+        : layer === 'ANNOTATIONS'
+        ? '#38bdf8'
+        : '#22d3ee';
+
+      const lineWeight: LineWeightType = el.lineWeight || (isFinal ? 'THICK_CONTINUOUS' : 'THIN_CONTINUOUS');
+
+      if (el.type === 'LINE' || el.type === 'SEGMENT') {
+        if (el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
+          converted.push({
+            id: baseId,
+            type: 'LINE',
+            layer,
+            lineWeight,
+            color,
+            x1: el.x1,
+            y1: el.y1,
+            x2: el.x2,
+            y2: el.y2,
+            locked: false
+          });
+        }
+      } else if (el.type === 'CIRCLE') {
+        if (el.cx !== undefined && el.cy !== undefined && el.r !== undefined) {
+          converted.push({
+            id: baseId,
+            type: 'CIRCLE',
+            layer,
+            lineWeight,
+            color,
+            cx: el.cx,
+            cy: el.cy,
+            r: el.r,
+            locked: false
+          });
+        }
+      } else if (el.type === 'ARC') {
+        if (el.cx !== undefined && el.cy !== undefined && el.r !== undefined) {
+          converted.push({
+            id: baseId,
+            type: 'ARC',
+            layer,
+            lineWeight,
+            color,
+            cx: el.cx,
+            cy: el.cy,
+            r: el.r,
+            startAngle: el.startAngle,
+            endAngle: el.endAngle,
+            locked: false
+          });
+        }
+      } else if (el.type === 'POLYGON' && el.points && el.points.length > 2) {
+        converted.push({
+          id: baseId,
+          type: 'POLYGON',
+          layer,
+          lineWeight,
+          color,
+          polygonPoints: el.points,
+          locked: false
+        });
+      } else if (el.type === 'RECTANGLE') {
+        const rx = el.x !== undefined ? el.x : (el.x1 !== undefined ? el.x1 : 200);
+        const ry = el.y !== undefined ? el.y : (el.y1 !== undefined ? el.y1 : 150);
+        const rw = el.width !== undefined ? el.width : (el.x2 !== undefined ? Math.abs(el.x2 - rx) : 200);
+        const rh = el.height !== undefined ? el.height : (el.y2 !== undefined ? Math.abs(el.y2 - ry) : 120);
+        converted.push({
+          id: baseId,
+          type: 'RECTANGLE',
+          layer,
+          lineWeight,
+          color,
+          x1: rx,
+          y1: ry,
+          width: rw,
+          height: rh,
+          locked: false
+        });
+      } else if (el.type === 'DIMENSION') {
+        if (el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
+          converted.push({
+            id: baseId,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: el.x1,
+            y1: el.y1,
+            x2: el.x2,
+            y2: el.y2,
+            dimensionText: el.dimensionText || `${Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1))} mm`,
+            dimensionType: el.dimensionType || 'linear',
+            locked: false
+          });
+        }
+      } else if (el.type === 'TEXT' || el.type === 'TEXT_LABEL' || el.type === 'POINT') {
+        const tx = el.cx !== undefined ? el.cx : (el.x1 !== undefined ? el.x1 : 400);
+        const ty = el.cy !== undefined ? el.cy : (el.y1 !== undefined ? el.y1 : 300);
+        const labelText = el.label || el.dimensionText || '';
+        if (labelText) {
+          converted.push({
+            id: baseId,
+            type: 'TEXT',
+            layer: 'ANNOTATIONS',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#38bdf8',
+            x1: tx,
+            y1: ty,
+            text: labelText,
+            fontSize: 12,
+            locked: false
+          });
+        }
+      }
+    });
+
+    return converted;
+  }, []);
+
+  // AI Prompt-to-CAD Instruction Handler for CAD Workstation
+  const handleAiCadCommandInStudio = useCallback((
+    result: ParsedCadResult, 
+    mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL'
+  ) => {
+    if (!result || !result.matched) return;
+
+    try {
+      const targetTopic = (result.topicId ? getTopicById(result.topicId) : null) || topic || allCurriculumTopics[0];
+      const safeParams = result.parameters || {};
+
+      let steps: any[] = [];
+      if (targetTopic && typeof targetTopic.generateSteps === 'function') {
+        steps = targetTopic.generateSteps(safeParams) || [];
+      }
+
+      // Convert final step or all elements
+      let newElements: WhiteboardElement[] = [];
+
+      if (steps.length > 0) {
+        const finalStep = steps[steps.length - 1];
+        newElements = convertConstructionElementsToWhiteboard(
+          finalStep.elements || [], 
+          `ai-${result.geometryType?.toLowerCase() || 'cad'}`
+        );
+      }
+
+      // Fallback geometric synthesis if no curriculum elements generated
+      if (newElements.length === 0) {
+        const center = { x: 500, y: 350 };
+        const gType = (result.geometryType || '').toUpperCase();
+        const p = safeParams;
+        const now = Date.now();
+
+        if (gType === 'CIRCLE') {
+          const r = p.radius || (p.diameter ? p.diameter / 2 : undefined) || 60;
+          newElements.push({
+            id: `ai-direct-circle-${now}`,
+            type: 'CIRCLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            cx: center.x,
+            cy: center.y,
+            r
+          });
+          newElements.push({
+            id: `ai-direct-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - r,
+            y1: center.y,
+            x2: center.x + r,
+            y2: center.y,
+            dimensionText: `Ø ${r * 2} mm`
+          });
+        } else if (gType === 'RECTANGLE' || gType === 'SQUARE') {
+          const w = p.width || p.length || p.span || 140;
+          const h = p.height || p.rise || p.width || 90;
+          newElements.push({
+            id: `ai-direct-rect-${now}`,
+            type: 'RECTANGLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x - w / 2,
+            y1: center.y - h / 2,
+            width: w,
+            height: h
+          });
+          newElements.push({
+            id: `ai-direct-dim-w-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - w / 2,
+            y1: center.y + h / 2 + 25,
+            x2: center.x + w / 2,
+            y2: center.y + h / 2 + 25,
+            dimensionText: `${w} mm`
+          });
+        } else if (gType === 'HEXAGON' || gType === 'POLYGON') {
+          const sides = p.sides || 6;
+          const r = p.side || p.radius || 60;
+          const polyPts: [number, number][] = [];
+          for (let i = 0; i < sides; i++) {
+            const ang = (i * 2 * Math.PI) / sides - Math.PI / 2;
+            polyPts.push([center.x + r * Math.cos(ang), center.y + r * Math.sin(ang)]);
+          }
+          newElements.push({
+            id: `ai-direct-poly-${now}`,
+            type: 'POLYGON',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            polygonPoints: polyPts
+          });
+        } else if (gType === 'ELLIPSE') {
+          const rx = (p.major || p.span || 160) / 2;
+          const ry = (p.minor || p.rise || 100) / 2;
+          newElements.push({
+            id: `ai-direct-ellipse-${now}`,
+            type: 'ELLIPSE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            cx: center.x,
+            cy: center.y,
+            rx,
+            ry
+          });
+        } else if (gType === 'LINE') {
+          const len = p.length || p.span || 150;
+          const ang = (p.angle || 0) * (Math.PI / 180);
+          newElements.push({
+            id: `ai-direct-line-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x - (len / 2) * Math.cos(ang),
+            y1: center.y - (len / 2) * Math.sin(ang),
+            x2: center.x + (len / 2) * Math.cos(ang),
+            y2: center.y + (len / 2) * Math.sin(ang)
+          });
+        }
+      }
+
+      if (newElements.length > 0) {
+        // Save current canvas state to undo stack
+        setHistory(prev => [...prev, [...elements]]);
+
+        if (mode === 'SIMULATE_STEPS' && steps.length > 1) {
+          // Animated sequential step generation onto active CAD canvas
+          let currentStepIdx = 0;
+          setElements([]);
+          const stepTimer = setInterval(() => {
+            if (currentStepIdx < steps.length) {
+              const currentStepData = steps[currentStepIdx];
+              const stepElements = convertConstructionElementsToWhiteboard(
+                currentStepData.elements || [], 
+                `step-${currentStepIdx + 1}`
+              );
+              setElements(stepElements);
+              setCadHistory(prev => [
+                ...prev,
+                {
+                  command: `AI CAD STEP ${currentStepIdx + 1}/${steps.length}`,
+                  timestamp: new Date().toLocaleTimeString().substring(0, 5),
+                  status: 'SUCCESS',
+                  message: `${currentStepData.title}: ${currentStepData.instruction}`
+                }
+              ]);
+              currentStepIdx++;
+            } else {
+              clearInterval(stepTimer);
+            }
+          }, 750);
+        } else {
+          // Instant direct synthesis & render on active CAD canvas
+          setElements(prev => [...prev, ...newElements]);
+
+          setCadHistory(prev => [
+            ...prev,
+            {
+              command: `PROMPT: "${result.rawPrompt}"`,
+              timestamp: new Date().toLocaleTimeString().substring(0, 5),
+              status: 'SUCCESS',
+              message: `Generated ${newElements.length} vector entities for ${result.geometryTitle || result.geometryType} (${result.cadCommandEcho})`
+            }
+          ]);
+        }
+      }
+    } catch (err) {
+      console.error('[AI CAD Prompt-to-CAD Execution Error]', err);
+    }
+  }, [topic, elements, convertConstructionElementsToWhiteboard]);
 
   // CAD Command Interpreter
   const handleExecuteCadCommand = (cmdString: string) => {
@@ -1405,6 +1743,26 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               <Tv className="w-3.5 h-3.5" />
               CAD Workstation
             </button>
+
+            <button
+              onClick={() => {
+                if (workspaceMode !== 'CAD_WORKSTATION') {
+                  setWorkspaceMode('CAD_WORKSTATION');
+                  setIsAiPromptBarOpen(true);
+                } else {
+                  setIsAiPromptBarOpen(prev => !prev);
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen
+                  ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="AI Prompt-to-CAD (Generate technical drawings with natural language)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Prompt-to-CAD</span>
+            </button>
           </div>
         </div>
 
@@ -1539,6 +1897,23 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           onToggleDynamicInput={() => setDynamicInputEnabled(prev => !prev)}
           onClearCanvas={handleClear}
         />
+      )}
+
+      {/* AI PROMPT-TO-CAD COMMAND BAR INTEGRATED DIRECTLY IN CAD STATION INTERFACE */}
+      {workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen && (
+        <CadErrorBoundary
+          compact
+          title="Interactive CAD Prompt Engine"
+          fallbackMessage="CAD prompt parsing encountered an issue. Recovering input field."
+        >
+          <div className="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20 shadow-md">
+            <AiPromptToCadBar
+              onExecuteCadCommand={handleAiCadCommandInStudio}
+              activeTopic={topic}
+              currentParameters={{}}
+            />
+          </div>
+        </CadErrorBoundary>
       )}
 
       {/* Main Vector Drawing Canvas Viewport */}
@@ -1724,6 +2099,23 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
+                );
+              }
+
+              if (el.type === 'TEXT' && el.text) {
+                return (
+                  <text
+                    key={el.id}
+                    x={el.x1 || 0}
+                    y={el.y1 || 0}
+                    fill={strokeColor}
+                    fontSize={el.fontSize || 12}
+                    fontFamily="monospace"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {el.text}
+                  </text>
                 );
               }
 

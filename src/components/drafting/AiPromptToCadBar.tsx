@@ -23,8 +23,10 @@ import { DrawingTopic } from '../../types/curriculum';
 
 interface AiPromptToCadBarProps {
   onExecuteCadCommand: (result: ParsedCadResult, mode: 'RENDER_FINAL' | 'SIMULATE_STEPS') => void;
-  activeTopic: DrawingTopic;
-  currentParameters: Record<string, number>;
+  activeTopic?: DrawingTopic;
+  currentParameters?: Record<string, number>;
+  placeholder?: string;
+  compact?: boolean;
 }
 
 const PRESET_CAD_PROMPTS = [
@@ -73,7 +75,9 @@ const PRESET_CAD_PROMPTS = [
 export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
   onExecuteCadCommand,
   activeTopic,
-  currentParameters
+  currentParameters = {},
+  placeholder = "Enter CAD prompt (e.g. 'Construct a parabola with span 120mm and rise 80mm')... [Press / to focus]",
+  compact = false
 }) => {
   const [promptInput, setPromptInput] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -201,7 +205,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
                   inputRef.current?.blur();
                 }
               }}
-              placeholder="Enter CAD prompt (e.g. 'Construct a parabola with span 120mm and rise 80mm')... [Press / to focus]"
+              placeholder={placeholder}
               className="w-full bg-slate-950/90 text-slate-100 placeholder-slate-500 text-xs font-mono pl-3 pr-20 py-2 rounded-lg border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner"
             />
 

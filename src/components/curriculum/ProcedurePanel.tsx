@@ -176,14 +176,18 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  const input = document.getElementById('ai-cad-prompt-input') as HTMLInputElement;
-                  input?.focus();
-                  input?.select();
+                  if (onOpenCadWorkstation) {
+                    onOpenCadWorkstation();
+                  } else {
+                    const input = document.getElementById('ai-cad-prompt-input') as HTMLInputElement;
+                    input?.focus();
+                    input?.select();
+                  }
                 }}
                 className="text-[10px] font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900 px-2 py-0.5 rounded border border-cyan-500/40 transition-all cursor-pointer flex items-center gap-1"
-                title="Focus AI Command Bar (or press /)"
+                title="Launch in CAD Practice Station"
               >
-                <span>Type natural prompt</span>
+                <span>Launch in CAD Station</span>
                 <span className="text-[9px] bg-cyan-800/60 px-1 rounded text-cyan-200">/</span>
               </button>
             </div>

@@ -33,10 +33,9 @@ import { UserRoleType } from './components/landing/AuthModal';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
-import { AiPromptToCadBar } from './components/drafting/AiPromptToCadBar';
 import { ParsedCadResult } from './utils/aiCadPromptParser';
 import { CadErrorBoundary } from './components/common/CadErrorBoundary';
-import { Mail, CheckCircle2 } from 'lucide-react';
+import { Mail, CheckCircle2, Sparkles, Tv } from 'lucide-react';
 
 function AppContent() {
   // Master View: Landing Page (Public / Pre-Auth) vs Studio Workspace vs Past Questions Hub
@@ -640,21 +639,30 @@ function AppContent() {
 
             {/* B2. INTERACTIVE DRAWING CANVAS VIEWPORT & STEP CONTROLS */}
             <div className="flex-1 flex flex-col min-w-0 min-h-0 relative bg-slate-950 md:border-l border-slate-800">
-              {/* Top AI PROMPT-TO-CAD COMMAND BAR */}
-              <CadErrorBoundary
-                compact
-                title="AI Prompt-to-CAD Engine"
-                fallbackMessage="CAD prompt parsing encountered an issue. Recovering input field."
-                onReset={() => {
-                  // Safe reset
-                }}
-              >
-                <AiPromptToCadBar
-                  onExecuteCadCommand={handleAiCadCommand}
-                  activeTopic={activeTopic}
-                  currentParameters={parameters}
-                />
-              </CadErrorBoundary>
+              {/* CAD Practice Station & Prompt-to-CAD Direct Launch Banner */}
+              <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-slate-800 text-xs select-none">
+                <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px] truncate">
+                  <span className="flex items-center gap-1 text-cyan-400 font-bold">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>AutoCAD Practice Studio:</span>
+                  </span>
+                  <span className="text-slate-400 hidden sm:inline">
+                    Natural language Prompt-to-CAD is situated inside the interactive CAD drawing station
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveAssignmentForStudio(undefined);
+                    setStudioInitialMode('CAD_WORKSTATION');
+                    setIsWhiteboardStudioOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition-all shrink-0 cursor-pointer"
+                >
+                  <Tv className="w-3.5 h-3.5" />
+                  <span>Open CAD Station</span>
+                </button>
+              </div>
 
               {/* Interactive Vector Canvas Stage */}
               <div className="flex-1 min-h-0 relative">
