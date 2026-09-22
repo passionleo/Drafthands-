@@ -513,52 +513,52 @@ function AppContent() {
     );
   }
 
-  // If on public landing page view, render high-impact landing page
+  // If on public landing page view, directly render landing page without any conditional guards or missing props
   if (currentView === 'LANDING') {
-    return (
-      <LandingPage onEnterStudio={handleEnterStudioFromLanding} />
-    );
+    return <LandingPage onEnterStudio={handleEnterStudioFromLanding} />;
   }
 
-  return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
-      {/* 1. TOP ACADEMY HEADER */}
-      <Header
-        activeTier={activeTier}
-        onSelectTier={handleSelectTier}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenTheory={handleOpenTheory}
-        onOpenPractice={handleOpenPractice}
-        onOpenIsoDiagram={handleOpenIsoDiagram}
-        onOpenOrthographicViewport={handleOpenOrthographicViewport}
-        onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
-        onOpenSectionalAssembly={handleOpenSectionalAssembly}
-        onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
-        // Strict Hard-coded Role Check: Completely omitted when role is STUDENT
-        onOpenTeacherPortal={isStudentRole ? undefined : handleOpenTeacherPortal}
-        onOpenParentPortal={isStudentRole ? undefined : handleOpenParentPortal}
-        onOpenProjectionMode={isStudentRole ? undefined : handleOpenProjectionMode}
-        onOpenTeacherAssignments={isStudentRole ? undefined : handleOpenTeacherAssignments}
-        onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
-        onOpenAdminConsole={isStudentRole ? undefined : handleOpenAdminConsole}
-        onOpenLiveClass={() => setIsJoinClassOpen(true)}
-        onToggleWhiteboardStudio={() => {
-          setActiveAssignmentForStudio(undefined);
-          setIsWhiteboardStudioOpen(prev => !prev);
-        }}
-        isWhiteboardOpen={isWhiteboardStudioOpen}
-        onResetView={handleResetView}
-        onExportSvg={handleExportSvg}
-        currentTopicTitle={activeTopic.title}
-        isSidebarCollapsed={isSidebarCollapsed}
-        onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
-        onReturnToLanding={() => setCurrentView('LANDING')}
-        onOpenPastQuestions={() => {
-          window.location.hash = '#past-questions';
-          setCurrentView('PAST_QUESTIONS');
-        }}
-      />
+  // If in dedicated STUDIO workspace view
+  if (currentView === 'STUDIO') {
+    return (
+      <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
+        {/* 1. TOP ACADEMY HEADER */}
+        <Header
+          activeTier={activeTier}
+          onSelectTier={handleSelectTier}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenTheory={handleOpenTheory}
+          onOpenPractice={handleOpenPractice}
+          onOpenIsoDiagram={handleOpenIsoDiagram}
+          onOpenOrthographicViewport={handleOpenOrthographicViewport}
+          onOpenSurfaceDevelopment={handleOpenSurfaceDevelopment}
+          onOpenSectionalAssembly={handleOpenSectionalAssembly}
+          onOpenArchitecturalPlan={handleOpenArchitecturalPlan}
+          // Strict Hard-coded Role Check: Completely omitted when role is STUDENT
+          onOpenTeacherPortal={isStudentRole ? undefined : handleOpenTeacherPortal}
+          onOpenParentPortal={isStudentRole ? undefined : handleOpenParentPortal}
+          onOpenProjectionMode={isStudentRole ? undefined : handleOpenProjectionMode}
+          onOpenTeacherAssignments={isStudentRole ? undefined : handleOpenTeacherAssignments}
+          onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
+          onOpenAdminConsole={isStudentRole ? undefined : handleOpenAdminConsole}
+          onOpenLiveClass={() => setIsJoinClassOpen(true)}
+          onToggleWhiteboardStudio={() => {
+            setActiveAssignmentForStudio(undefined);
+            setIsWhiteboardStudioOpen(prev => !prev);
+          }}
+          isWhiteboardOpen={isWhiteboardStudioOpen}
+          onResetView={handleResetView}
+          onExportSvg={handleExportSvg}
+          currentTopicTitle={activeTopic?.title || 'Technical Drawing'}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
+          onReturnToLanding={() => setCurrentView('LANDING')}
+          onOpenPastQuestions={() => {
+            window.location.hash = '#past-questions';
+            setCurrentView('PAST_QUESTIONS');
+          }}
+        />
 
       {/* 2. BODY CONTENT: SIDEBAR + WORKSPACE */}
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
@@ -952,7 +952,11 @@ function AppContent() {
       {/* PWA Network Connectivity & Offline Indicator */}
       <OfflineIndicator />
     </div>
-  );
+    );
+  }
+
+  // Safe fallback: If no valid route matches, default to directly returning LandingPage without a blank fragment
+  return <LandingPage onEnterStudio={handleEnterStudioFromLanding} />;
 }
 
 export default function App() {

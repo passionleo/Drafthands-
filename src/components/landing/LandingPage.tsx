@@ -13,7 +13,7 @@ import { LandingPWAInstallModal } from '../pwa/LandingPWAInstallModal';
 import { CurriculumTier } from '../../types/curriculum';
 
 interface LandingPageProps {
-  onEnterStudio: (options?: { 
+  onEnterStudio?: (options?: { 
     tier?: CurriculumTier; 
     topicId?: string; 
     role?: UserRoleType; 
@@ -24,7 +24,7 @@ interface LandingPageProps {
   }) => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio = () => {} }) => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'SIGN_IN' | 'REGISTER'>('SIGN_IN');
