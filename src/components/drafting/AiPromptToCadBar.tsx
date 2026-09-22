@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Sparkles, 
   Send, 
@@ -111,14 +111,22 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
-  // Live lightweight parser preview as user types
-  const liveParseResult: ParsedCadResult | null = (promptInput && typeof promptInput === 'string' && promptInput.trim())
-    ? parseNaturalLanguageCadPrompt(promptInput)
-    : null;
+  // Live lightweight parser preview as user types (wrapped in useMemo with safe try-catch)
+  const liveParseResult: ParsedCadResult | null = useMemo(() => {
+    try {
+      if (!promptInput || typeof promptInput !== 'string') return null;
+      const clean = promptInput.trim();
+      if (clean.length < 3) return null;
+      return parseNaturalLanguageCadPrompt(clean);
+    } catch (parseErr) {
+      console.warn('[AI CAD Live Parse Handled Safely]', parseErr);
+      return null;
+    }
+  }, [promptInput]);
 
   const handleExecute = (mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
     try {
-      const query = (promptInput || '').trim();
+      const query = (typeof promptInput === 'string' ? promptInput : '').trim();
       if (!query) return;
 
       const startTime = performance.now();
@@ -134,7 +142,11 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
         // Add to recent history (avoid duplicates)
         setRecentHistory(prev => [query, ...(Array.isArray(prev) ? prev : []).filter(p => p && p.toLowerCase() !== query.toLowerCase())].slice(0, 8));
         if (typeof onExecuteCadCommand === 'function') {
-          onExecuteCadCommand(result, mode);
+          try {
+            onExecuteCadCommand(result, mode);
+          } catch (cmdErr) {
+            console.error('[AI CAD Execution Callback Failed]', cmdErr);
+          }
         }
       } else if (result) {
         setLastExecution({
@@ -150,6 +162,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
 
   const handleSelectPreset = (presetText: string) => {
     try {
+      if (!presetText || typeof presetText !== 'string') return;
       setPromptInput(presetText);
       const startTime = performance.now();
       const result = parseNaturalLanguageCadPrompt(presetText);
@@ -163,7 +176,11 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
         });
         setRecentHistory(prev => [presetText, ...(Array.isArray(prev) ? prev : []).filter(p => p && p.toLowerCase() !== presetText.toLowerCase())].slice(0, 8));
         if (typeof onExecuteCadCommand === 'function') {
-          onExecuteCadCommand(result, 'RENDER_FINAL');
+          try {
+            onExecuteCadCommand(result, 'RENDER_FINAL');
+          } catch (cmdErr) {
+            console.error('[AI CAD Preset Callback Failed]', cmdErr);
+          }
         }
       }
       inputRef.current?.focus();
@@ -293,7 +310,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
         )}
 
         {/* Last Execution Notification Banner */}
-        {lastExecution && (
+        {lastExecution && lastExecution.result && (
           <div 
             className={`flex items-center justify-between text-xs font-mono py-1.5 px-3 rounded border transition-all ${
               lastExecution.result.matched 
@@ -310,20 +327,20 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
               <span>
                 {lastExecution.result.matched ? (
                   <>
-                    <strong className="text-emerald-200">{lastExecution.result.geometryTitle}</strong> synthesized instantly.
+                    <strong className="text-emerald-200">{lastExecution.result.geometryTitle || 'Geometry'}</strong> synthesized instantly.
                     <span className="text-emerald-400/80 ml-1.5 hidden md:inline">
-                      ({(Array.isArray(lastExecution.result.extractedParams) ? lastExecution.result.extractedParams : []).map(p => `${p.label || ''}: ${p.value ?? ''}${p.unit || ''}`).join(', ')})
+                      ({(Array.isArray(lastExecution.result.extractedParams) ? lastExecution.result.extractedParams : []).filter(Boolean).map(p => `${p.label || 'Param'}: ${p.value ?? ''}${p.unit || ''}`).join(', ')})
                     </span>
                   </>
                 ) : (
-                  <span>{lastExecution.result.description}</span>
+                  <span>{lastExecution.result.description || 'Instruction processed.'}</span>
                 )}
               </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 text-[10px] text-slate-400">
               <span className="bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">
-                ⚡ {lastExecution.durationMs}ms
+                ⚡ {lastExecution.durationMs || 1}ms
               </span>
               <button
                 type="button"
@@ -342,7 +359,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
             <Sparkles className="w-3 h-3 text-cyan-400" />
             Quick CAD Prompts:
           </span>
-          {PRESET_CAD_PROMPTS.map((item) => (
+          {Array.isArray(PRESET_CAD_PROMPTS) && PRESET_CAD_PROMPTS.map((item) => (
             <button
               key={item.label}
               type="button"
@@ -368,7 +385,7 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
                 <span className="text-[10px] text-slate-500 font-mono">Click to reload</span>
               </div>
               <div className="space-y-1">
-                {recentHistory.map((cmd, idx) => (
+                {Array.isArray(recentHistory) && recentHistory.map((cmd, idx) => (
                   <button
                     key={idx}
                     type="button"

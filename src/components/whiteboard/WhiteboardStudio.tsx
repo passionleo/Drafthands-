@@ -156,6 +156,17 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const activeAiStepTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up any running AI step timer on unmount
+  useEffect(() => {
+    return () => {
+      if (activeAiStepTimerRef.current) {
+        clearInterval(activeAiStepTimerRef.current);
+        activeAiStepTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Initialize initial template elements if provided
   useEffect(() => {
@@ -181,21 +192,32 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
     }
   }, [initialTemplateElements]);
 
-  // Convert screen coordinates to canvas coordinate space
+  // Convert screen coordinates to canvas coordinate space with robust null and NaN safety
   const screenToCanvasCoords = useCallback((screenX: number, screenY: number) => {
     if (!svgRef.current) return { x: 0, y: 0 };
-    const rect = svgRef.current.getBoundingClientRect();
-    const rawX = (screenX - rect.left - pan.x) / zoom;
-    const rawY = (screenY - rect.top - pan.y) / zoom;
+    try {
+      const rect = svgRef.current.getBoundingClientRect();
+      const safeZoom = Number.isFinite(zoom) && zoom > 0.05 ? zoom : 1;
+      const safePanX = Number.isFinite(pan?.x) ? pan.x : 0;
+      const safePanY = Number.isFinite(pan?.y) ? pan.y : 0;
+      const rawX = (screenX - (rect?.left ?? 0) - safePanX) / safeZoom;
+      const rawY = (screenY - (rect?.top ?? 0) - safePanY) / safeZoom;
 
-    if (!snapGrid) return { x: rawX, y: rawY };
+      if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) {
+        return { x: 0, y: 0 };
+      }
 
-    // Snap to 10mm grid
-    const snapSize = 10;
-    return {
-      x: Math.round(rawX / snapSize) * snapSize,
-      y: Math.round(rawY / snapSize) * snapSize
-    };
+      if (!snapGrid) return { x: rawX, y: rawY };
+
+      // Snap to 10mm grid
+      const snapSize = 10;
+      return {
+        x: Math.round(rawX / snapSize) * snapSize,
+        y: Math.round(rawY / snapSize) * snapSize
+      };
+    } catch {
+      return { x: 0, y: 0 };
+    }
   }, [pan, zoom, snapGrid]);
 
   // Color & Stroke mapping per layer
@@ -712,10 +734,12 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
     constructionElements: ConstructionElement[], 
     prefix: string = 'ai-cad'
   ): WhiteboardElement[] => {
+    if (!Array.isArray(constructionElements)) return [];
     const converted: WhiteboardElement[] = [];
     const now = Date.now();
 
     constructionElements.forEach((el, idx) => {
+      if (!el || typeof el !== 'object' || !el.type) return;
       const baseId = `${prefix}-${idx}-${now}`;
       const isFinal = Boolean(el.isFinalResult);
       
@@ -746,97 +770,114 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       const lineWeight: LineWeightType = el.lineWeight || (isFinal ? 'THICK_CONTINUOUS' : 'THIN_CONTINUOUS');
 
       if (el.type === 'LINE' || el.type === 'SEGMENT') {
-        if (el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
+        if (
+          el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined &&
+          Number.isFinite(el.x1) && Number.isFinite(el.y1) && Number.isFinite(el.x2) && Number.isFinite(el.y2)
+        ) {
           converted.push({
             id: baseId,
             type: 'LINE',
             layer,
             lineWeight,
             color,
-            x1: el.x1,
-            y1: el.y1,
-            x2: el.x2,
-            y2: el.y2,
+            x1: Math.round(el.x1),
+            y1: Math.round(el.y1),
+            x2: Math.round(el.x2),
+            y2: Math.round(el.y2),
             locked: false
           });
         }
       } else if (el.type === 'CIRCLE') {
-        if (el.cx !== undefined && el.cy !== undefined && el.r !== undefined) {
+        if (
+          el.cx !== undefined && el.cy !== undefined && el.r !== undefined &&
+          Number.isFinite(el.cx) && Number.isFinite(el.cy) && Number.isFinite(el.r) && el.r > 0
+        ) {
           converted.push({
             id: baseId,
             type: 'CIRCLE',
             layer,
             lineWeight,
             color,
-            cx: el.cx,
-            cy: el.cy,
-            r: el.r,
+            cx: Math.round(el.cx),
+            cy: Math.round(el.cy),
+            r: Math.round(el.r),
             locked: false
           });
         }
       } else if (el.type === 'ARC') {
-        if (el.cx !== undefined && el.cy !== undefined && el.r !== undefined) {
+        if (
+          el.cx !== undefined && el.cy !== undefined && el.r !== undefined &&
+          Number.isFinite(el.cx) && Number.isFinite(el.cy) && Number.isFinite(el.r) && el.r > 0
+        ) {
           converted.push({
             id: baseId,
             type: 'ARC',
             layer,
             lineWeight,
             color,
-            cx: el.cx,
-            cy: el.cy,
-            r: el.r,
-            startAngle: el.startAngle,
-            endAngle: el.endAngle,
+            cx: Math.round(el.cx),
+            cy: Math.round(el.cy),
+            r: Math.round(el.r),
+            startAngle: Number.isFinite(el.startAngle) ? el.startAngle : 0,
+            endAngle: Number.isFinite(el.endAngle) ? el.endAngle : 180,
             locked: false
           });
         }
-      } else if (el.type === 'POLYGON' && el.points && el.points.length > 2) {
-        converted.push({
-          id: baseId,
-          type: 'POLYGON',
-          layer,
-          lineWeight,
-          color,
-          polygonPoints: el.points,
-          locked: false
-        });
+      } else if (el.type === 'POLYGON' && Array.isArray(el.points) && el.points.length > 2) {
+        const validPts = el.points.filter(pt => Array.isArray(pt) && pt.length >= 2 && Number.isFinite(pt[0]) && Number.isFinite(pt[1]));
+        if (validPts.length > 2) {
+          converted.push({
+            id: baseId,
+            type: 'POLYGON',
+            layer,
+            lineWeight,
+            color,
+            polygonPoints: validPts as [number, number][],
+            locked: false
+          });
+        }
       } else if (el.type === 'RECTANGLE') {
-        const rx = el.x !== undefined ? el.x : (el.x1 !== undefined ? el.x1 : 200);
-        const ry = el.y !== undefined ? el.y : (el.y1 !== undefined ? el.y1 : 150);
-        const rw = el.width !== undefined ? el.width : (el.x2 !== undefined ? Math.abs(el.x2 - rx) : 200);
-        const rh = el.height !== undefined ? el.height : (el.y2 !== undefined ? Math.abs(el.y2 - ry) : 120);
-        converted.push({
-          id: baseId,
-          type: 'RECTANGLE',
-          layer,
-          lineWeight,
-          color,
-          x1: rx,
-          y1: ry,
-          width: rw,
-          height: rh,
-          locked: false
-        });
+        const rx = Number.isFinite(el.x) ? el.x! : (Number.isFinite(el.x1) ? el.x1! : 200);
+        const ry = Number.isFinite(el.y) ? el.y! : (Number.isFinite(el.y1) ? el.y1! : 150);
+        const rw = Number.isFinite(el.width) ? el.width! : (Number.isFinite(el.x2) ? Math.abs(el.x2! - rx) : 200);
+        const rh = Number.isFinite(el.height) ? el.height! : (Number.isFinite(el.y2) ? Math.abs(el.y2! - ry) : 120);
+        if (Number.isFinite(rx) && Number.isFinite(ry) && rw > 0 && rh > 0) {
+          converted.push({
+            id: baseId,
+            type: 'RECTANGLE',
+            layer,
+            lineWeight,
+            color,
+            x1: Math.round(rx),
+            y1: Math.round(ry),
+            width: Math.round(rw),
+            height: Math.round(rh),
+            locked: false
+          });
+        }
       } else if (el.type === 'DIMENSION') {
-        if (el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
+        if (
+          el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined &&
+          Number.isFinite(el.x1) && Number.isFinite(el.y1) && Number.isFinite(el.x2) && Number.isFinite(el.y2)
+        ) {
           converted.push({
             id: baseId,
             type: 'DIMENSION',
             layer: 'DIMENSIONS',
             lineWeight: 'DIMENSION_LINE',
             color: '#10b981',
-            x1: el.x1,
-            y1: el.y1,
-            x2: el.x2,
-            y2: el.y2,
+            x1: Math.round(el.x1),
+            y1: Math.round(el.y1),
+            x2: Math.round(el.x2),
+            y2: Math.round(el.y2),
             dimensionText: el.dimensionText || `${Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1))} mm`,
             dimensionType: el.dimensionType || 'linear',
             locked: false
           });
         }
       } else if (el.type === 'TEXT' || el.type === 'TEXT_LABEL' || el.type === 'POINT') {
-        const tx = el.cx !== undefined ? el.cx : (el.x1 !== undefined ? el.x1 : 400);
-        const ty = el.cy !== undefined ? el.cy : (el.y1 !== undefined ? el.y1 : 300);
+        const tx = Number.isFinite(el.cx) ? el.cx! : (Number.isFinite(el.x1) ? el.x1! : 400);
+        const ty = Number.isFinite(el.cy) ? el.cy! : (Number.isFinite(el.y1) ? el.y1! : 300);
         const labelText = el.label || el.dimensionText || '';
         if (labelText) {
           converted.push({
@@ -845,8 +886,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             layer: 'ANNOTATIONS',
             lineWeight: 'THIN_CONTINUOUS',
             color: '#38bdf8',
-            x1: tx,
-            y1: ty,
+            x1: Math.round(tx),
+            y1: Math.round(ty),
             text: labelText,
             fontSize: 12,
             locked: false
@@ -858,20 +899,40 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
     return converted;
   }, []);
 
-  // AI Prompt-to-CAD Instruction Handler for CAD Workstation
+  // AI Prompt-to-CAD Instruction Handler for CAD Workstation with complete null safety
   const handleAiCadCommandInStudio = useCallback((
     result: ParsedCadResult, 
     mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL'
   ) => {
-    if (!result || !result.matched) return;
+    if (!result || typeof result !== 'object' || !result.matched) return;
 
     try {
+      // Clear any active simulated step interval from prior command
+      if (activeAiStepTimerRef.current) {
+        clearInterval(activeAiStepTimerRef.current);
+        activeAiStepTimerRef.current = null;
+      }
+
       const targetTopic = (result.topicId ? getTopicById(result.topicId) : null) || topic || allCurriculumTopics[0];
-      const safeParams = result.parameters || {};
+      const safeParams: Record<string, number> = {};
+      if (result.parameters && typeof result.parameters === 'object') {
+        Object.entries(result.parameters).forEach(([k, v]) => {
+          if (typeof v === 'number' && Number.isFinite(v)) {
+            safeParams[k] = v;
+          }
+        });
+      }
 
       let steps: any[] = [];
       if (targetTopic && typeof targetTopic.generateSteps === 'function') {
-        steps = targetTopic.generateSteps(safeParams) || [];
+        try {
+          const generated = targetTopic.generateSteps(safeParams);
+          if (Array.isArray(generated)) {
+            steps = generated.filter(Boolean);
+          }
+        } catch (stepGenErr) {
+          console.warn('[AI CAD Steps Generator Safe Recover]', stepGenErr);
+        }
       }
 
       // Convert final step or all elements
@@ -879,10 +940,12 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
       if (steps.length > 0) {
         const finalStep = steps[steps.length - 1];
-        newElements = convertConstructionElementsToWhiteboard(
-          finalStep.elements || [], 
-          `ai-${result.geometryType?.toLowerCase() || 'cad'}`
-        );
+        if (finalStep && Array.isArray(finalStep.elements)) {
+          newElements = convertConstructionElementsToWhiteboard(
+            finalStep.elements, 
+            `ai-${result.geometryType?.toLowerCase() || 'cad'}`
+          );
+        }
       }
 
       // Fallback geometric synthesis if no curriculum elements generated
@@ -893,7 +956,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const now = Date.now();
 
         if (gType === 'CIRCLE') {
-          const r = p.radius || (p.diameter ? p.diameter / 2 : undefined) || 60;
+          const r = Math.max(10, p.radius || (p.diameter ? p.diameter / 2 : undefined) || 60);
           newElements.push({
             id: `ai-direct-circle-${now}`,
             type: 'CIRCLE',
@@ -917,8 +980,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             dimensionText: `Ø ${r * 2} mm`
           });
         } else if (gType === 'RECTANGLE' || gType === 'SQUARE') {
-          const w = p.width || p.length || p.span || 140;
-          const h = p.height || p.rise || p.width || 90;
+          const w = Math.max(10, p.width || p.length || p.span || 140);
+          const h = Math.max(10, p.height || p.rise || p.width || 90);
           newElements.push({
             id: `ai-direct-rect-${now}`,
             type: 'RECTANGLE',
@@ -943,12 +1006,15 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             dimensionText: `${w} mm`
           });
         } else if (gType === 'HEXAGON' || gType === 'POLYGON') {
-          const sides = p.sides || 6;
-          const r = p.side || p.radius || 60;
+          const sides = Math.max(3, Math.min(24, p.sides || 6));
+          const r = Math.max(10, p.side || p.radius || 60);
           const polyPts: [number, number][] = [];
           for (let i = 0; i < sides; i++) {
             const ang = (i * 2 * Math.PI) / sides - Math.PI / 2;
-            polyPts.push([center.x + r * Math.cos(ang), center.y + r * Math.sin(ang)]);
+            polyPts.push([
+              Math.round(center.x + r * Math.cos(ang)), 
+              Math.round(center.y + r * Math.sin(ang))
+            ]);
           }
           newElements.push({
             id: `ai-direct-poly-${now}`,
@@ -959,8 +1025,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             polygonPoints: polyPts
           });
         } else if (gType === 'ELLIPSE') {
-          const rx = (p.major || p.span || 160) / 2;
-          const ry = (p.minor || p.rise || 100) / 2;
+          const rx = Math.max(10, (p.major || p.span || 160) / 2);
+          const ry = Math.max(10, (p.minor || p.rise || 100) / 2);
           newElements.push({
             id: `ai-direct-ellipse-${now}`,
             type: 'ELLIPSE',
@@ -973,63 +1039,71 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             ry
           });
         } else if (gType === 'LINE') {
-          const len = p.length || p.span || 150;
-          const ang = (p.angle || 0) * (Math.PI / 180);
+          const len = Math.max(10, p.length || p.span || 150);
+          const ang = ((p.angle || 0) * Math.PI) / 180;
           newElements.push({
             id: `ai-direct-line-${now}`,
             type: 'LINE',
             layer: 'OUTLINE_HB',
             lineWeight: 'THICK_CONTINUOUS',
             color: '#f8fafc',
-            x1: center.x - (len / 2) * Math.cos(ang),
-            y1: center.y - (len / 2) * Math.sin(ang),
-            x2: center.x + (len / 2) * Math.cos(ang),
-            y2: center.y + (len / 2) * Math.sin(ang)
+            x1: Math.round(center.x - (len / 2) * Math.cos(ang)),
+            y1: Math.round(center.y - (len / 2) * Math.sin(ang)),
+            x2: Math.round(center.x + (len / 2) * Math.cos(ang)),
+            y2: Math.round(center.y + (len / 2) * Math.sin(ang))
           });
         }
       }
 
+      // Filter out any invalid elements
+      newElements = newElements.filter(el => el && typeof el === 'object' && el.type);
+
       if (newElements.length > 0) {
         // Save current canvas state to undo stack
-        setHistory(prev => [...prev, [...elements]]);
+        setHistory(prev => [...(Array.isArray(prev) ? prev : []), [...elements]]);
 
         if (mode === 'SIMULATE_STEPS' && steps.length > 1) {
           // Animated sequential step generation onto active CAD canvas
           let currentStepIdx = 0;
           setElements([]);
-          const stepTimer = setInterval(() => {
+          activeAiStepTimerRef.current = setInterval(() => {
             if (currentStepIdx < steps.length) {
               const currentStepData = steps[currentStepIdx];
-              const stepElements = convertConstructionElementsToWhiteboard(
-                currentStepData.elements || [], 
-                `step-${currentStepIdx + 1}`
-              );
-              setElements(stepElements);
-              setCadHistory(prev => [
-                ...prev,
-                {
-                  command: `AI CAD STEP ${currentStepIdx + 1}/${steps.length}`,
-                  timestamp: new Date().toLocaleTimeString().substring(0, 5),
-                  status: 'SUCCESS',
-                  message: `${currentStepData.title}: ${currentStepData.instruction}`
-                }
-              ]);
+              if (currentStepData && Array.isArray(currentStepData.elements)) {
+                const stepElements = convertConstructionElementsToWhiteboard(
+                  currentStepData.elements, 
+                  `step-${currentStepIdx + 1}`
+                );
+                setElements(stepElements);
+                setCadHistory(prev => [
+                  ...(Array.isArray(prev) ? prev : []),
+                  {
+                    command: `AI CAD STEP ${currentStepIdx + 1}/${steps.length}`,
+                    timestamp: new Date().toLocaleTimeString().substring(0, 5),
+                    status: 'SUCCESS',
+                    message: `${currentStepData.title || 'Step'}: ${currentStepData.instruction || ''}`
+                  }
+                ]);
+              }
               currentStepIdx++;
             } else {
-              clearInterval(stepTimer);
+              if (activeAiStepTimerRef.current) {
+                clearInterval(activeAiStepTimerRef.current);
+                activeAiStepTimerRef.current = null;
+              }
             }
           }, 750);
         } else {
           // Instant direct synthesis & render on active CAD canvas
-          setElements(prev => [...prev, ...newElements]);
+          setElements(prev => [...(Array.isArray(prev) ? prev : []), ...newElements]);
 
           setCadHistory(prev => [
-            ...prev,
+            ...(Array.isArray(prev) ? prev : []),
             {
-              command: `PROMPT: "${result.rawPrompt}"`,
+              command: `PROMPT: "${result.rawPrompt || 'Natural CAD'}"`,
               timestamp: new Date().toLocaleTimeString().substring(0, 5),
               status: 'SUCCESS',
-              message: `Generated ${newElements.length} vector entities for ${result.geometryTitle || result.geometryType} (${result.cadCommandEcho})`
+              message: `Generated ${newElements.length} vector entities for ${result.geometryTitle || result.geometryType || 'CAD Entity'} (${result.cadCommandEcho || 'DONE'})`
             }
           ]);
         }
@@ -1380,281 +1454,324 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
     }
   };
 
-  // Pointer Handlers for Canvas Drawing
+  // Pointer Handlers for Canvas Drawing with Null Safety & Boundary Checks
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    // Check if user clicked on a drafting instrument or its controls - prevent canvas drawing
-    const target = e.target as Element | null;
-    if (target && (target.closest('.drafting-instruments-overlay') || target.closest('[data-instrument-layer]'))) {
-      return;
-    }
-
-    if (e.button === 1 || e.buttons === 4 || activeTool === 'PAN' || activeTool === 'SELECT') {
-      setIsPanning(true);
-      setStartPan({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-      return;
-    }
-
-    let coords = screenToCanvasCoords(e.clientX, e.clientY);
-    const pressure = e.pressure > 0 ? e.pressure : 1;
-    setActivePressure(pressure);
-
-    // Magnetic snap to visible physical instrument edges when drawing lines or pen
-    if (activeTool === 'LINE' || activeTool === 'PEN') {
-      const edgeSnap = snapPointToInstrumentEdges(coords.x, coords.y, instruments);
-      if (edgeSnap.snapped) {
-        coords = { x: edgeSnap.x, y: edgeSnap.y };
+    try {
+      // Check if user clicked on a drafting instrument or its controls - prevent canvas drawing
+      const target = e.target as Element | null;
+      if (target && typeof target.closest === 'function' && (target.closest('.drafting-instruments-overlay') || target.closest('[data-instrument-layer]'))) {
+        return;
       }
-    }
 
-    // Eraser / Trim mode
-    if (activeTool === 'ERASER' || activeTool === 'CAD_TRIM') {
-      setElements(prev => {
-        const threshold = 15;
-        return prev.filter(el => {
-          if (el.locked) return true;
-          if (el.type === 'LINE' && el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
-            const midX = (el.x1 + el.x2) / 2;
-            const midY = (el.y1 + el.y2) / 2;
-            const dist = Math.hypot(coords.x - midX, coords.y - midY);
-            return dist > threshold;
+      if (e.button === 1 || e.buttons === 4 || activeTool === 'PAN' || activeTool === 'SELECT') {
+        setIsPanning(true);
+        setStartPan({ x: e.clientX - (pan?.x ?? 0), y: e.clientY - (pan?.y ?? 0) });
+        return;
+      }
+
+      let coords = screenToCanvasCoords(e.clientX, e.clientY);
+      if (!coords || !Number.isFinite(coords.x) || !Number.isFinite(coords.y)) {
+        return;
+      }
+
+      const rawPressure = typeof e.pressure === 'number' && Number.isFinite(e.pressure) && e.pressure > 0 ? e.pressure : 1;
+      setActivePressure(rawPressure);
+
+      // Magnetic snap to visible physical instrument edges when drawing lines or pen
+      if (activeTool === 'LINE' || activeTool === 'PEN') {
+        try {
+          const edgeSnap = snapPointToInstrumentEdges(coords.x, coords.y, instruments || []);
+          if (edgeSnap && edgeSnap.snapped && Number.isFinite(edgeSnap.x) && Number.isFinite(edgeSnap.y)) {
+            coords = { x: edgeSnap.x, y: edgeSnap.y };
           }
-          if (el.type === 'CIRCLE' && el.cx !== undefined && el.cy !== undefined) {
-            const dist = Math.hypot(coords.x - el.cx, coords.y - el.cy);
-            return Math.abs(dist - (el.r || 0)) > threshold && dist > threshold;
-          }
-          return true;
+        } catch (snapErr) {
+          console.warn('[Instrument Snap Safe Recover]', snapErr);
+        }
+      }
+
+      // Eraser / Trim mode
+      if (activeTool === 'ERASER' || activeTool === 'CAD_TRIM') {
+        setElements(prev => {
+          if (!Array.isArray(prev)) return [];
+          const threshold = 15;
+          return prev.filter(el => {
+            if (!el || el.locked) return true;
+            if (el.type === 'LINE' && Number.isFinite(el.x1) && Number.isFinite(el.y1) && Number.isFinite(el.x2) && Number.isFinite(el.y2)) {
+              const midX = (el.x1! + el.x2!) / 2;
+              const midY = (el.y1! + el.y2!) / 2;
+              const dist = Math.hypot(coords.x - midX, coords.y - midY);
+              return dist > threshold;
+            }
+            if (el.type === 'CIRCLE' && Number.isFinite(el.cx) && Number.isFinite(el.cy)) {
+              const dist = Math.hypot(coords.x - el.cx!, coords.y - el.cy!);
+              return Math.abs(dist - (el.r || 0)) > threshold && dist > threshold;
+            }
+            return true;
+          });
         });
-      });
-      return;
-    }
+        return;
+      }
 
-    // Save history
-    setHistory(prev => [...prev, [...elements]]);
-    setRedoStack([]);
+      // Save history
+      setHistory(prev => [...(Array.isArray(prev) ? prev : []), [...elements]]);
+      setRedoStack([]);
 
-    setIsDrawing(true);
-    setStartPoint(coords);
-    setCurrentPoint(coords);
+      setIsDrawing(true);
+      setStartPoint(coords);
+      setCurrentPoint(coords);
 
-    if (activeTool === 'PEN' || activeTool === 'SPLINE') {
-      setFreehandPoints([{ x: coords.x, y: coords.y, pressure, time: Date.now() }]);
+      if (activeTool === 'PEN' || activeTool === 'SPLINE') {
+        setFreehandPoints([{ x: coords.x, y: coords.y, pressure: rawPressure, time: Date.now() }]);
+      }
+    } catch (err) {
+      console.error('[Canvas PointerDown Safe Recover]', err);
     }
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    const rawCoords = screenToCanvasCoords(e.clientX, e.clientY);
-    setCursorCoords(rawCoords);
-
-    if (isPanning) {
-      setPan({
-        x: e.clientX - startPan.x,
-        y: e.clientY - startPan.y
-      });
-      return;
-    }
-
-    if (!isDrawing || !startPoint) return;
-
-    const pressure = e.pressure > 0 ? e.pressure : 1;
-    setActivePressure(pressure);
-
-    let endX = rawCoords.x;
-    let endY = rawCoords.y;
-
-    // Magnetic snap to visible physical instrument edges when drawing lines or pen
-    if (activeTool === 'LINE' || activeTool === 'PEN') {
-      const edgeSnap = snapPointToInstrumentEdges(endX, endY, instruments);
-      if (edgeSnap.snapped) {
-        endX = edgeSnap.x;
-        endY = edgeSnap.y;
+    try {
+      const rawCoords = screenToCanvasCoords(e.clientX, e.clientY);
+      if (!rawCoords || !Number.isFinite(rawCoords.x) || !Number.isFinite(rawCoords.y)) {
+        return;
       }
-    }
+      setCursorCoords(rawCoords);
 
-    // Ortho Lock or 15° Angle Snap for Lines
-    if (orthoLock || e.shiftKey) {
-      const dx = Math.abs(endX - startPoint.x);
-      const dy = Math.abs(endY - startPoint.y);
-      if (dx > dy) endY = startPoint.y;
-      else endX = startPoint.x;
-    }
+      if (isPanning) {
+        setPan({
+          x: e.clientX - (startPan?.x ?? 0),
+          y: e.clientY - (startPan?.y ?? 0)
+        });
+        return;
+      }
 
-    setCurrentPoint({ x: endX, y: endY });
+      if (!isDrawing || !startPoint || !Number.isFinite(startPoint.x) || !Number.isFinite(startPoint.y)) return;
 
-    // Synchronize dynamic input values in real-time with cursor displacement
-    if (activeTool === 'LINE') {
-      const len = Math.hypot(endX - startPoint.x, endY - startPoint.y);
-      const ang = Math.round((Math.atan2(endY - startPoint.y, endX - startPoint.x) * 180) / Math.PI);
-      setDynamicValues(prev => ({ ...prev, length: Math.round(len), angle: ang }));
-    } else if (activeTool === 'CIRCLE') {
-      const r = Math.round(Math.hypot(endX - startPoint.x, endY - startPoint.y));
-      setDynamicValues(prev => ({ ...prev, radius: r, diameter: r * 2 }));
-    } else if (activeTool === 'RECTANGLE') {
-      const w = Math.round(Math.abs(endX - startPoint.x));
-      const h = Math.round(Math.abs(endY - startPoint.y));
-      setDynamicValues(prev => ({ ...prev, width: w, height: h }));
-    } else if (activeTool === 'POLYGON') {
-      const r = Math.round(Math.hypot(endX - startPoint.x, endY - startPoint.y));
-      setDynamicValues(prev => ({ ...prev, polygonRadius: r }));
-    } else if (activeTool === 'ELLIPSE') {
-      const rx = Math.round(Math.abs(endX - startPoint.x));
-      const ry = Math.round(Math.abs(endY - startPoint.y));
-      setDynamicValues(prev => ({ ...prev, ellipseRx: rx, ellipseRy: ry }));
-    }
+      const rawPressure = typeof e.pressure === 'number' && Number.isFinite(e.pressure) && e.pressure > 0 ? e.pressure : 1;
+      setActivePressure(rawPressure);
 
-    if (activeTool === 'PEN' || activeTool === 'SPLINE') {
-      setFreehandPoints(prev => [...prev, { x: endX, y: endY, pressure, time: Date.now() }]);
+      let endX = rawCoords.x;
+      let endY = rawCoords.y;
+
+      // Magnetic snap to visible physical instrument edges when drawing lines or pen
+      if (activeTool === 'LINE' || activeTool === 'PEN') {
+        try {
+          const edgeSnap = snapPointToInstrumentEdges(endX, endY, instruments || []);
+          if (edgeSnap && edgeSnap.snapped && Number.isFinite(edgeSnap.x) && Number.isFinite(edgeSnap.y)) {
+            endX = edgeSnap.x;
+            endY = edgeSnap.y;
+          }
+        } catch (snapErr) {
+          console.warn('[Instrument Snap Safe Recover]', snapErr);
+        }
+      }
+
+      // Ortho Lock or 15° Angle Snap for Lines
+      if (orthoLock || e.shiftKey) {
+        const dx = Math.abs(endX - startPoint.x);
+        const dy = Math.abs(endY - startPoint.y);
+        if (dx > dy) endY = startPoint.y;
+        else endX = startPoint.x;
+      }
+
+      setCurrentPoint({ x: endX, y: endY });
+
+      // Synchronize dynamic input values in real-time with cursor displacement
+      if (activeTool === 'LINE') {
+        const len = Math.hypot(endX - startPoint.x, endY - startPoint.y);
+        const ang = Math.round((Math.atan2(endY - startPoint.y, endX - startPoint.x) * 180) / Math.PI);
+        if (Number.isFinite(len) && Number.isFinite(ang)) {
+          setDynamicValues(prev => ({ ...prev, length: Math.round(len), angle: ang }));
+        }
+      } else if (activeTool === 'CIRCLE') {
+        const r = Math.round(Math.hypot(endX - startPoint.x, endY - startPoint.y));
+        if (Number.isFinite(r)) {
+          setDynamicValues(prev => ({ ...prev, radius: r, diameter: r * 2 }));
+        }
+      } else if (activeTool === 'RECTANGLE') {
+        const w = Math.round(Math.abs(endX - startPoint.x));
+        const h = Math.round(Math.abs(endY - startPoint.y));
+        if (Number.isFinite(w) && Number.isFinite(h)) {
+          setDynamicValues(prev => ({ ...prev, width: w, height: h }));
+        }
+      } else if (activeTool === 'POLYGON') {
+        const r = Math.round(Math.hypot(endX - startPoint.x, endY - startPoint.y));
+        if (Number.isFinite(r)) {
+          setDynamicValues(prev => ({ ...prev, polygonRadius: r }));
+        }
+      } else if (activeTool === 'ELLIPSE') {
+        const rx = Math.round(Math.abs(endX - startPoint.x));
+        const ry = Math.round(Math.abs(endY - startPoint.y));
+        if (Number.isFinite(rx) && Number.isFinite(ry)) {
+          setDynamicValues(prev => ({ ...prev, ellipseRx: rx, ellipseRy: ry }));
+        }
+      }
+
+      if (activeTool === 'PEN' || activeTool === 'SPLINE') {
+        setFreehandPoints(prev => [...(Array.isArray(prev) ? prev : []), { x: endX, y: endY, pressure: rawPressure, time: Date.now() }]);
+      }
+    } catch (err) {
+      console.error('[Canvas PointerMove Safe Recover]', err);
     }
   };
 
   const handlePointerUp = () => {
-    if (isPanning) {
-      setIsPanning(false);
-      return;
-    }
+    try {
+      if (isPanning) {
+        setIsPanning(false);
+        return;
+      }
 
-    if (!isDrawing || !startPoint || !currentPoint) {
+      if (!isDrawing || !startPoint || !currentPoint || !Number.isFinite(startPoint.x) || !Number.isFinite(startPoint.y) || !Number.isFinite(currentPoint.x) || !Number.isFinite(currentPoint.y)) {
+        setIsDrawing(false);
+        setStartPoint(null);
+        setCurrentPoint(null);
+        return;
+      }
+
+      const newElementId = `elem-${Date.now()}`;
+      const color = getLayerColor(activeLayer);
+      const lineWeight: LineWeightType = activeLayer === 'OUTLINE_HB' ? 'THICK_CONTINUOUS' : activeLayer === 'HIDDEN_DASHED' ? 'THIN_DASHED' : activeLayer === 'CENTERLINE_CHAIN' ? 'THIN_CHAIN' : 'THIN_CONTINUOUS';
+
+      let newElement: WhiteboardElement | null = null;
+
+      if (activeTool === 'LINE') {
+        const length = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(length) && length > 2) {
+          newElement = {
+            id: newElementId,
+            type: 'LINE',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            x1: Math.round(startPoint.x),
+            y1: Math.round(startPoint.y),
+            x2: Math.round(currentPoint.x),
+            y2: Math.round(currentPoint.y)
+          };
+        }
+      } else if (activeTool === 'RECTANGLE') {
+        const w = currentPoint.x - startPoint.x;
+        const h = currentPoint.y - startPoint.y;
+        if (Number.isFinite(w) && Number.isFinite(h) && Math.abs(w) > 3 && Math.abs(h) > 3) {
+          newElement = {
+            id: newElementId,
+            type: 'RECTANGLE',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            x1: Math.round(Math.min(startPoint.x, currentPoint.x)),
+            y1: Math.round(Math.min(startPoint.y, currentPoint.y)),
+            width: Math.round(Math.abs(w)),
+            height: Math.round(Math.abs(h))
+          };
+        }
+      } else if (activeTool === 'CIRCLE') {
+        const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(r) && r > 3) {
+          newElement = {
+            id: newElementId,
+            type: 'CIRCLE',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            cx: Math.round(startPoint.x),
+            cy: Math.round(startPoint.y),
+            r: Math.round(r)
+          };
+        }
+      } else if (activeTool === 'ARC') {
+        const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(r) && r > 3) {
+          newElement = {
+            id: newElementId,
+            type: 'ARC',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            cx: Math.round(startPoint.x),
+            cy: Math.round(startPoint.y),
+            r: Math.round(r),
+            startAngle: 0,
+            endAngle: 180
+          };
+        }
+      } else if (activeTool === 'POLYGON') {
+        const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(r) && r > 5) {
+          const sides = Math.max(3, Math.min(32, dynamicValues?.sides || 6));
+          const pts: [number, number][] = Array.from({ length: sides }, (_, i) => {
+            const a = -Math.PI / 2 + (i * 2 * Math.PI) / sides;
+            return [
+              Math.round(startPoint.x + r * Math.cos(a)), 
+              Math.round(startPoint.y + r * Math.sin(a))
+            ];
+          });
+          newElement = {
+            id: newElementId,
+            type: 'POLYGON',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            polygonPoints: pts,
+            cx: Math.round(startPoint.x),
+            cy: Math.round(startPoint.y),
+            r: Math.round(r)
+          };
+        }
+      } else if (activeTool === 'ELLIPSE') {
+        const rx = Math.abs(currentPoint.x - startPoint.x);
+        const ry = Math.abs(currentPoint.y - startPoint.y);
+        if (Number.isFinite(rx) && Number.isFinite(ry) && rx > 3 && ry > 3) {
+          newElement = {
+            id: newElementId,
+            type: 'ELLIPSE',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            cx: Math.round(startPoint.x),
+            cy: Math.round(startPoint.y),
+            rx: Math.round(rx),
+            ry: Math.round(ry)
+          };
+        }
+      } else if (activeTool === 'DIMENSION_LINEAR') {
+        const length = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(length) && length > 5) {
+          newElement = {
+            id: newElementId,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: Math.round(startPoint.x),
+            y1: Math.round(startPoint.y),
+            x2: Math.round(currentPoint.x),
+            y2: Math.round(currentPoint.y),
+            dimensionText: `${Math.round(length)} mm`
+          };
+        }
+      } else if ((activeTool === 'PEN' || activeTool === 'SPLINE') && Array.isArray(freehandPoints) && freehandPoints.length > 1) {
+        newElement = {
+          id: newElementId,
+          type: activeTool === 'SPLINE' ? 'SPLINE' : 'PEN_STROKE',
+          layer: activeLayer,
+          lineWeight,
+          color,
+          points: [...freehandPoints]
+        };
+      }
+
+      if (newElement) {
+        setElements(prev => [...(Array.isArray(prev) ? prev : []), newElement!]);
+      }
+    } catch (err) {
+      console.error('[Canvas PointerUp Safe Recover]', err);
+    } finally {
       setIsDrawing(false);
-      return;
+      setStartPoint(null);
+      setCurrentPoint(null);
+      setFreehandPoints([]);
     }
-
-    const newElementId = `elem-${Date.now()}`;
-    const color = getLayerColor(activeLayer);
-    const lineWeight: LineWeightType = activeLayer === 'OUTLINE_HB' ? 'THICK_CONTINUOUS' : activeLayer === 'HIDDEN_DASHED' ? 'THIN_DASHED' : activeLayer === 'CENTERLINE_CHAIN' ? 'THIN_CHAIN' : 'THIN_CONTINUOUS';
-
-    let newElement: WhiteboardElement | null = null;
-
-    if (activeTool === 'LINE') {
-      const length = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-      if (length > 2) {
-        newElement = {
-          id: newElementId,
-          type: 'LINE',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          x1: startPoint.x,
-          y1: startPoint.y,
-          x2: currentPoint.x,
-          y2: currentPoint.y
-        };
-      }
-    } else if (activeTool === 'RECTANGLE') {
-      const w = currentPoint.x - startPoint.x;
-      const h = currentPoint.y - startPoint.y;
-      if (Math.abs(w) > 3 && Math.abs(h) > 3) {
-        newElement = {
-          id: newElementId,
-          type: 'RECTANGLE',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          x1: Math.min(startPoint.x, currentPoint.x),
-          y1: Math.min(startPoint.y, currentPoint.y),
-          width: Math.abs(w),
-          height: Math.abs(h)
-        };
-      }
-    } else if (activeTool === 'CIRCLE') {
-      const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-      if (r > 3) {
-        newElement = {
-          id: newElementId,
-          type: 'CIRCLE',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          cx: startPoint.x,
-          cy: startPoint.y,
-          r
-        };
-      }
-    } else if (activeTool === 'ARC') {
-      const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-      if (r > 3) {
-        newElement = {
-          id: newElementId,
-          type: 'ARC',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          cx: startPoint.x,
-          cy: startPoint.y,
-          r,
-          startAngle: 0,
-          endAngle: 180
-        };
-      }
-    } else if (activeTool === 'POLYGON') {
-      const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-      if (r > 5) {
-        const sides = dynamicValues.sides || 6;
-        const pts: [number, number][] = Array.from({ length: sides }, (_, i) => {
-          const a = -Math.PI / 2 + (i * 2 * Math.PI) / sides;
-          return [startPoint.x + r * Math.cos(a), startPoint.y + r * Math.sin(a)];
-        });
-        newElement = {
-          id: newElementId,
-          type: 'POLYGON',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          polygonPoints: pts,
-          cx: startPoint.x,
-          cy: startPoint.y,
-          r
-        };
-      }
-    } else if (activeTool === 'ELLIPSE') {
-      const rx = Math.abs(currentPoint.x - startPoint.x);
-      const ry = Math.abs(currentPoint.y - startPoint.y);
-      if (rx > 3 && ry > 3) {
-        newElement = {
-          id: newElementId,
-          type: 'ELLIPSE',
-          layer: activeLayer,
-          lineWeight,
-          color,
-          cx: startPoint.x,
-          cy: startPoint.y,
-          rx,
-          ry
-        };
-      }
-    } else if (activeTool === 'DIMENSION_LINEAR') {
-      const length = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-      if (length > 5) {
-        newElement = {
-          id: newElementId,
-          type: 'DIMENSION',
-          layer: 'DIMENSIONS',
-          lineWeight: 'DIMENSION_LINE',
-          color: '#10b981',
-          x1: startPoint.x,
-          y1: startPoint.y,
-          x2: currentPoint.x,
-          y2: currentPoint.y,
-          dimensionText: `${length.toFixed(0)} mm`
-        };
-      }
-    } else if ((activeTool === 'PEN' || activeTool === 'SPLINE') && freehandPoints.length > 1) {
-      newElement = {
-        id: newElementId,
-        type: activeTool === 'SPLINE' ? 'SPLINE' : 'PEN_STROKE',
-        layer: activeLayer,
-        lineWeight,
-        color,
-        points: [...freehandPoints]
-      };
-    }
-
-    if (newElement) {
-      setElements(prev => [...prev, newElement!]);
-    }
-
-    setIsDrawing(false);
-    setStartPoint(null);
-    setCurrentPoint(null);
-    setFreehandPoints([]);
   };
 
   const handleUndo = () => {
@@ -1958,14 +2075,15 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           {gridMode === 'ISOMETRIC' && <rect width="100%" height="100%" fill="url(#wb-grid-iso)" />}
 
           {/* Drawing Content Root with Pan and Zoom */}
-          <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            {/* Render Elements Stack */}
-            {elements.map((el) => {
+          <g transform={`translate(${Number.isFinite(pan?.x) ? pan.x : 0}, ${Number.isFinite(pan?.y) ? pan.y : 0}) scale(${Number.isFinite(zoom) && zoom > 0.05 ? zoom : 1})`}>
+            {/* Render Elements Stack with Complete Coordinate Safety */}
+            {Array.isArray(elements) && elements.filter((el): el is WhiteboardElement => Boolean(el && typeof el === 'object' && el.type)).map((el) => {
               const strokeColor = el.color || getLayerColor(el.layer);
               const strokeW = getLayerStrokeWidth(el.layer);
               const isDashed = el.layer === 'HIDDEN_DASHED' ? '6 4' : el.layer === 'CENTERLINE_CHAIN' ? '12 4 3 4' : undefined;
 
               if (el.type === 'LINE') {
+                if (!Number.isFinite(el.x1) || !Number.isFinite(el.y1) || !Number.isFinite(el.x2) || !Number.isFinite(el.y2)) return null;
                 return (
                   <line
                     key={el.id}
@@ -1981,13 +2099,14 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               }
 
               if (el.type === 'RECTANGLE') {
+                if (!Number.isFinite(el.x1) || !Number.isFinite(el.y1) || !Number.isFinite(el.width) || !Number.isFinite(el.height)) return null;
                 return (
                   <rect
                     key={el.id}
                     x={el.x1}
                     y={el.y1}
-                    width={el.width}
-                    height={el.height}
+                    width={Math.max(1, el.width!)}
+                    height={Math.max(1, el.height!)}
                     fill="none"
                     stroke={strokeColor}
                     strokeWidth={strokeW}
@@ -1997,6 +2116,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               }
 
               if (el.type === 'CIRCLE') {
+                if (!Number.isFinite(el.cx) || !Number.isFinite(el.cy) || !Number.isFinite(el.r) || el.r! <= 0) return null;
                 return (
                   <circle
                     key={el.id}
@@ -2012,6 +2132,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               }
 
               if (el.type === 'ARC') {
+                if (!Number.isFinite(el.cx) || !Number.isFinite(el.cy) || !Number.isFinite(el.r) || el.r! <= 0) return null;
                 return (
                   <circle
                     key={el.id}
@@ -2027,6 +2148,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               }
 
               if (el.type === 'DIMENSION') {
+                if (!Number.isFinite(el.x1) || !Number.isFinite(el.y1) || !Number.isFinite(el.x2) || !Number.isFinite(el.y2)) return null;
                 return (
                   <g key={el.id}>
                     <line
@@ -2047,14 +2169,16 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                       fontFamily="monospace"
                       textAnchor="middle"
                     >
-                      {el.dimensionText}
+                      {el.dimensionText || ''}
                     </text>
                   </g>
                 );
               }
 
-              if (el.type === 'POLYGON' && el.polygonPoints && el.polygonPoints.length > 2) {
-                const pts = el.polygonPoints.map(p => `${p[0]},${p[1]}`).join(' ');
+              if (el.type === 'POLYGON' && Array.isArray(el.polygonPoints) && el.polygonPoints.length > 2) {
+                const validPts = el.polygonPoints.filter(p => Array.isArray(p) && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]));
+                if (validPts.length < 3) return null;
+                const pts = validPts.map(p => `${p[0]},${p[1]}`).join(' ');
                 return (
                   <polygon
                     key={el.id}
@@ -2067,7 +2191,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                 );
               }
 
-              if (el.type === 'ELLIPSE' && el.cx !== undefined && el.cy !== undefined && el.rx !== undefined && el.ry !== undefined) {
+              if (el.type === 'ELLIPSE' && Number.isFinite(el.cx) && Number.isFinite(el.cy) && Number.isFinite(el.rx) && Number.isFinite(el.ry) && el.rx! > 0 && el.ry! > 0) {
                 return (
                   <ellipse
                     key={el.id}
@@ -2084,7 +2208,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               }
 
               if ((el.type === 'PEN_STROKE' || el.type === 'SPLINE')) {
-                const pathD = el.svgPath || (el.points && el.points.length > 1 ? el.points.reduce((acc, pt, i) => {
+                const pathD = el.svgPath || (Array.isArray(el.points) && el.points.length > 1 ? el.points.reduce((acc, pt, i) => {
+                  if (!pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.y)) return acc;
                   return i === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
                 }, '') : '');
                 if (!pathD) return null;
@@ -2106,8 +2231,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                 return (
                   <text
                     key={el.id}
-                    x={el.x1 || 0}
-                    y={el.y1 || 0}
+                    x={Number.isFinite(el.x1) ? el.x1 : 0}
+                    y={Number.isFinite(el.y1) ? el.y1 : 0}
                     fill={strokeColor}
                     fontSize={el.fontSize || 12}
                     fontFamily="monospace"
@@ -2123,7 +2248,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             })}
 
             {/* In-Progress Drawing Preview */}
-            {isDrawing && startPoint && currentPoint && (
+            {isDrawing && startPoint && currentPoint && Number.isFinite(startPoint.x) && Number.isFinite(startPoint.y) && Number.isFinite(currentPoint.x) && Number.isFinite(currentPoint.y) && (
               <g opacity="0.9">
                 {activeTool === 'LINE' && (
                   <line
@@ -2141,8 +2266,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                   <rect
                     x={Math.min(startPoint.x, currentPoint.x)}
                     y={Math.min(startPoint.y, currentPoint.y)}
-                    width={Math.abs(currentPoint.x - startPoint.x)}
-                    height={Math.abs(currentPoint.y - startPoint.y)}
+                    width={Math.max(1, Math.abs(currentPoint.x - startPoint.x))}
+                    height={Math.max(1, Math.abs(currentPoint.y - startPoint.y))}
                     fill="none"
                     stroke={getLayerColor(activeLayer)}
                     strokeWidth={getLayerStrokeWidth(activeLayer)}
@@ -2153,7 +2278,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                   <circle
                     cx={startPoint.x}
                     cy={startPoint.y}
-                    r={Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y)}
+                    r={Math.max(1, Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y))}
                     fill="none"
                     stroke={getLayerColor(activeLayer)}
                     strokeWidth={getLayerStrokeWidth(activeLayer)}
@@ -2163,10 +2288,11 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
                 {activeTool === 'POLYGON' && (
                   <polygon
-                    points={Array.from({ length: dynamicValues.sides || 6 }, (_, i) => {
+                    points={Array.from({ length: Math.max(3, dynamicValues?.sides || 6) }, (_, i) => {
+                      const sides = Math.max(3, dynamicValues?.sides || 6);
                       const r = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
-                      const a = -Math.PI / 2 + (i * 2 * Math.PI) / (dynamicValues.sides || 6);
-                      return `${startPoint.x + r * Math.cos(a)},${startPoint.y + r * Math.sin(a)}`;
+                      const a = -Math.PI / 2 + (i * 2 * Math.PI) / sides;
+                      return `${Math.round(startPoint.x + r * Math.cos(a))},${Math.round(startPoint.y + r * Math.sin(a))}`;
                     }).join(' ')}
                     fill="none"
                     stroke={getLayerColor(activeLayer)}
@@ -2178,8 +2304,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                   <ellipse
                     cx={startPoint.x}
                     cy={startPoint.y}
-                    rx={Math.abs(currentPoint.x - startPoint.x)}
-                    ry={Math.abs(currentPoint.y - startPoint.y)}
+                    rx={Math.max(1, Math.abs(currentPoint.x - startPoint.x))}
+                    ry={Math.max(1, Math.abs(currentPoint.y - startPoint.y))}
                     fill="none"
                     stroke={getLayerColor(activeLayer)}
                     strokeWidth={getLayerStrokeWidth(activeLayer)}
@@ -2206,7 +2332,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
                       fontFamily="monospace"
                       textAnchor="middle"
                     >
-                      {Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y).toFixed(0)} mm
+                      {Math.round(Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y))} mm
                     </text>
                   </g>
                 )}

@@ -5,6 +5,7 @@ interface CadErrorBoundaryProps {
   children: ReactNode;
   title?: string;
   fallbackMessage?: string;
+  buttonLabel?: string;
   onReset?: () => void;
   compact?: boolean;
   className?: string;
@@ -89,7 +90,7 @@ export class CadErrorBoundary extends Component<CadErrorBoundaryProps, CadErrorB
                 className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-bold flex items-center gap-1.5 shadow-md shadow-cyan-950 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Recover Interface</span>
+                <span>{this.props.buttonLabel || 'Recover Interface'}</span>
               </button>
             </div>
 
