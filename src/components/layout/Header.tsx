@@ -617,6 +617,20 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Download className="w-4 h-4" />
         </button>
+
+        {/* Dedicated Global Log Out Button */}
+        <button
+          id="btn-global-logout"
+          onClick={() => {
+            logout();
+            if (onReturnToLanding) onReturnToLanding();
+          }}
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-red-300 hover:text-white bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 hover:border-red-500/80 transition-all shadow-sm group cursor-pointer"
+          title="Log Out of DraftHands Academy"
+        >
+          <LogOut className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+          <span className="hidden sm:inline">Log Out</span>
+        </button>
       </div>
     </header>
   );

@@ -22,13 +22,19 @@ interface LandingHeaderProps {
   onOpenVideoTour: () => void;
   onLaunchStudio: (tier?: CurriculumTier) => void;
   onNavigateSection: (sectionId: string) => void;
+  onOpenTeacherPortal?: () => void;
+  onOpenParentPortal?: () => void;
+  onOpenStudentPortal?: () => void;
 }
 
 export const LandingHeader: React.FC<LandingHeaderProps> = ({
   onOpenAuth,
   onOpenVideoTour,
   onLaunchStudio,
-  onNavigateSection
+  onNavigateSection,
+  onOpenTeacherPortal,
+  onOpenParentPortal,
+  onOpenStudentPortal
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isCurriculumDropdownOpen, setIsCurriculumDropdownOpen] = useState<boolean>(false);
@@ -109,11 +115,27 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           </div>
 
           <button
-            onClick={() => handleNavClick('value-props')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors"
+            onClick={() => onOpenStudentPortal ? onOpenStudentPortal() : onLaunchStudio()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-cyan-300 hover:text-white hover:bg-slate-900 transition-colors"
           >
-            <PenTool className="w-3.5 h-3.5 text-blue-400" />
-            <span>Digital Whiteboard CAD</span>
+            <Compass className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Student Portal</span>
+          </button>
+
+          <button
+            onClick={() => onOpenTeacherPortal ? onOpenTeacherPortal() : onLaunchStudio()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-purple-300 hover:text-white hover:bg-slate-900 transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+            <span>Teacher Portal</span>
+          </button>
+
+          <button
+            onClick={() => onOpenParentPortal ? onOpenParentPortal() : onLaunchStudio()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-blue-300 hover:text-white hover:bg-slate-900 transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Parent Portal</span>
           </button>
 
           <button
@@ -122,14 +144,6 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           >
             <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>10-Yr WAEC Archive</span>
-          </button>
-
-          <button
-            onClick={() => handleNavClick('live-class')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors"
-          >
-            <Video className="w-3.5 h-3.5 text-purple-400" />
-            <span>Virtual Classroom</span>
           </button>
         </nav>
 
@@ -183,19 +197,39 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
         <div className="lg:hidden bg-slate-950 border-b border-slate-800 px-4 pt-2 pb-6 space-y-3 animate-in slide-in-from-top-4">
           <div className="grid grid-cols-1 gap-1">
             <button
-              onClick={() => handleNavClick('curriculum-preview')}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 flex items-center gap-2.5"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenStudentPortal) onOpenStudentPortal();
+                else onLaunchStudio();
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-cyan-300 hover:bg-slate-900 flex items-center gap-2.5"
             >
-              <BookOpen className="w-4 h-4 text-cyan-400" />
-              <span>NERDC Curriculum Syllabus (SS1 to Uni)</span>
+              <Compass className="w-4 h-4 text-cyan-400" />
+              <span>Student Portal (Syllabus & CAD)</span>
             </button>
 
             <button
-              onClick={() => handleNavClick('value-props')}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 flex items-center gap-2.5"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenTeacherPortal) onOpenTeacherPortal();
+                else onLaunchStudio();
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-purple-300 hover:bg-slate-900 flex items-center gap-2.5"
             >
-              <PenTool className="w-4 h-4 text-blue-400" />
-              <span>Digital Whiteboard & CAD Instruments</span>
+              <BookOpen className="w-4 h-4 text-purple-400" />
+              <span>Teacher Portal (Lesson Notes & Grading)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenParentPortal) onOpenParentPortal();
+                else onLaunchStudio();
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-blue-300 hover:bg-slate-900 flex items-center gap-2.5"
+            >
+              <ShieldCheck className="w-4 h-4 text-blue-400" />
+              <span>Parent Portal (Ward Progress & CA)</span>
             </button>
 
             <button
@@ -204,14 +238,6 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             >
               <FileCheck2 className="w-4 h-4 text-emerald-400" />
               <span>WAEC, NECO & NABTEB 10-Yr Past Questions</span>
-            </button>
-
-            <button
-              onClick={() => handleNavClick('live-class')}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 flex items-center gap-2.5"
-            >
-              <Video className="w-4 h-4 text-purple-400" />
-              <span>Live Virtual Classroom & Projection</span>
             </button>
           </div>
 

@@ -21,10 +21,19 @@ interface LandingPageProps {
     openParent?: boolean; 
     openLive?: boolean;
     openPastQuestions?: boolean;
+    portal?: 'STUDENT' | 'TEACHER' | 'PARENT';
   }) => void;
+  onOpenTeacherPortal?: () => void;
+  onOpenParentPortal?: () => void;
+  onOpenStudentPortal?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio = () => {} }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ 
+  onEnterStudio = () => {},
+  onOpenTeacherPortal,
+  onOpenParentPortal,
+  onOpenStudentPortal
+}) => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'SIGN_IN' | 'REGISTER'>('SIGN_IN');
@@ -39,20 +48,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio = () => 
   };
 
   const handleLaunchStudio = (tier?: CurriculumTier) => {
-    onEnterStudio({ tier: tier || 'SS1' });
+    if (onOpenStudentPortal) {
+      onOpenStudentPortal();
+    } else {
+      onEnterStudio({ tier: tier || 'SS1', portal: 'STUDENT' });
+    }
   };
 
   const handleLaunchTopic = (topicId: string) => {
-    onEnterStudio({ topicId });
+    onEnterStudio({ topicId, portal: 'STUDENT' });
   };
 
   const handleAuthSuccess = (role: UserRoleType, userDetails: { name: string; email: string; institution?: string }) => {
     if (role === 'TEACHER') {
-      onEnterStudio({ tier: 'SS1', role, openTeacher: true });
+      if (onOpenTeacherPortal) onOpenTeacherPortal();
+      else onEnterStudio({ tier: 'SS1', role, openTeacher: true, portal: 'TEACHER' });
     } else if (role === 'PARENT') {
-      onEnterStudio({ tier: 'SS1', role, openParent: true });
+      if (onOpenParentPortal) onOpenParentPortal();
+      else onEnterStudio({ tier: 'SS1', role, openParent: true, portal: 'PARENT' });
     } else {
-      onEnterStudio({ tier: 'SS1', role });
+      if (onOpenStudentPortal) onOpenStudentPortal();
+      else onEnterStudio({ tier: 'SS1', role, portal: 'STUDENT' });
     }
   };
 
@@ -73,6 +89,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio = () => 
         onOpenVideoTour={handleOpenVideoTour}
         onLaunchStudio={handleLaunchStudio}
         onNavigateSection={handleNavigateSection}
+        onOpenTeacherPortal={onOpenTeacherPortal}
+        onOpenParentPortal={onOpenParentPortal}
+        onOpenStudentPortal={onOpenStudentPortal}
       />
 
       {/* 2. Hero Section */}

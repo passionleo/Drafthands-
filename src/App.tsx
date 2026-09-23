@@ -15,6 +15,8 @@ import { SurfaceDevelopmentViewer, SolidShapeType } from './components/tools/Sur
 import { SectionalAssemblyViewer } from './components/tools/SectionalAssemblyViewer';
 import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanViewer';
 import { TeacherPortalModal } from './components/teacher/TeacherPortalModal';
+import { TeacherPortalView } from './components/teacher/TeacherPortalView';
+import { ParentPortalView } from './components/parent/ParentPortalView';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { PaywallModal } from './components/subscription/PaywallModal';
@@ -39,16 +41,20 @@ import { LiveMediaErrorBoundary } from './components/common/LiveMediaErrorBounda
 import { Mail, CheckCircle2, Sparkles, Tv } from 'lucide-react';
 
 function AppContent() {
-  // Master View: Landing Page (Public / Pre-Auth) vs Studio Workspace vs Past Questions Hub
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS'>('LANDING');
+  // Master View: Separate dedicated entities for Student Workspace, Teacher Portal, Parent Portal, Past Questions Hub, and Public Landing
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER_PORTAL' | 'PARENT_PORTAL'>('LANDING');
 
-  // URL Hash Listener for dedicated routing (#past-questions, #studio, #landing)
+  // URL Hash Listener for dedicated routing (#past-questions, #teacher-portal, #parent-portal, #studio, #landing)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
       if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
         setCurrentView('PAST_QUESTIONS');
-      } else if (hash === '#studio') {
+      } else if (hash === '#teacher' || hash === '#teacher-portal' || hash === '#faculty') {
+        setCurrentView('TEACHER_PORTAL');
+      } else if (hash === '#parent' || hash === '#parent-portal' || hash === '#guardian') {
+        setCurrentView('PARENT_PORTAL');
+      } else if (hash === '#student' || hash === '#student-portal' || hash === '#studio') {
         setCurrentView('STUDIO');
       } else if (hash === '#landing') {
         setCurrentView('LANDING');
@@ -431,9 +437,9 @@ function AppContent() {
   }, [userRole, isSubscribed, openPaywall, isMasterAdmin]);
 
   const handleOpenTeacherPortal = useCallback(() => {
-    if (userRole === 'STUDENT' && !isMasterAdmin) return;
-    setIsTeacherPortalOpen(true);
-  }, [userRole, isMasterAdmin]);
+    window.location.hash = '#teacher-portal';
+    setCurrentView('TEACHER_PORTAL');
+  }, []);
 
   const handleOpenTeacherAssignments = useCallback(() => {
     if (userRole === 'STUDENT' && !isMasterAdmin) return;
@@ -441,9 +447,9 @@ function AppContent() {
   }, [userRole, isMasterAdmin]);
 
   const handleOpenParentPortal = useCallback(() => {
-    if (userRole === 'STUDENT' && !isMasterAdmin) return;
-    setIsParentPortalOpen(true);
-  }, [userRole, isMasterAdmin]);
+    window.location.hash = '#parent-portal';
+    setCurrentView('PARENT_PORTAL');
+  }, []);
 
   const handleOpenAdminConsole = useCallback(() => {
     if (userRole !== 'ADMIN' && !isMasterAdmin) return;
@@ -459,6 +465,7 @@ function AppContent() {
     openParent?: boolean;
     openLive?: boolean;
     openPastQuestions?: boolean;
+    portal?: 'STUDENT' | 'TEACHER' | 'PARENT';
   }) => {
     if (options?.role) {
       setUserRole(options.role);
@@ -470,18 +477,21 @@ function AppContent() {
       setCurrentView('PAST_QUESTIONS');
       return;
     }
+    if (options?.portal === 'TEACHER' || (options?.openTeacher && activeRole !== 'STUDENT')) {
+      window.location.hash = '#teacher-portal';
+      setCurrentView('TEACHER_PORTAL');
+      return;
+    }
+    if (options?.portal === 'PARENT' || (options?.openParent && activeRole !== 'STUDENT')) {
+      window.location.hash = '#parent-portal';
+      setCurrentView('PARENT_PORTAL');
+      return;
+    }
     if (options?.tier) {
       handleSelectTier(options.tier);
     }
     if (options?.topicId) {
       handleSelectTopic(options.topicId);
-    }
-    // Only open educator tools if role is educator/admin
-    if (options?.openTeacher && activeRole !== 'STUDENT') {
-      setIsTeacherPortalOpen(true);
-    }
-    if (options?.openParent && activeRole !== 'STUDENT') {
-      setIsParentPortalOpen(true);
     }
     if (options?.openLive) {
       setIsJoinClassOpen(true);
@@ -513,9 +523,118 @@ function AppContent() {
     );
   }
 
-  // If on public landing page view, directly render landing page without any conditional guards or missing props
+  // Dedicated Teacher Portal Route View (Separate Entity)
+  if (currentView === 'TEACHER_PORTAL') {
+    return (
+      <CadErrorBoundary>
+        <TeacherPortalView
+          topics={allCurriculumTopics}
+          activeTopic={activeTopic}
+          onSelectTopic={(topicId) => {
+            handleSelectTopic(topicId);
+          }}
+          onOpenWhiteboardForTopic={(topicId) => {
+            handleSelectTopic(topicId);
+            setIsWhiteboardStudioOpen(true);
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+          onOpenLiveClass={() => {
+            setLiveClassConfig(prev => ({
+              ...prev,
+              role: 'TEACHER',
+              userName: userProfile?.name || 'Technical Instructor',
+              topicId: activeTopic.id
+            }));
+            setIsLiveClassroomOpen(true);
+          }}
+          onOpenProjectionMode={() => {
+            setIsProjectionModeOpen(true);
+          }}
+          onReturnToHome={() => {
+            window.location.hash = '';
+            setCurrentView('LANDING');
+          }}
+          onSwitchToStudentView={() => {
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+        />
+        {/* Modals needed in teacher context if launched */}
+        {isLiveClassroomOpen && (
+          <LiveMediaErrorBoundary>
+            <LiveClassroomModal
+              isOpen={isLiveClassroomOpen}
+              onClose={() => setIsLiveClassroomOpen(false)}
+              topic={activeTopic}
+              initialRole={liveClassConfig.role}
+              initialRoomCode={liveClassConfig.roomCode}
+              initialUserName={liveClassConfig.userName}
+              initialGradeClass={liveClassConfig.gradeOrClass}
+            />
+          </LiveMediaErrorBoundary>
+        )}
+        {isProjectionModeOpen && (
+          <LiveProjectionMode
+            topic={activeTopic}
+            isOpen={isProjectionModeOpen}
+            onClose={() => setIsProjectionModeOpen(false)}
+            currentStepIndex={currentStep}
+            onStepChange={setCurrentStep}
+            parameters={parameters}
+          />
+        )}
+      </CadErrorBoundary>
+    );
+  }
+
+  // Dedicated Parent Portal Route View (Separate Entity)
+  if (currentView === 'PARENT_PORTAL') {
+    return (
+      <CadErrorBoundary>
+        <ParentPortalView
+          onReturnToHome={() => {
+            window.location.hash = '';
+            setCurrentView('LANDING');
+          }}
+          onSwitchToStudentView={() => {
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+          onSelectTopic={(topicId) => {
+            handleSelectTopic(topicId);
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+        />
+      </CadErrorBoundary>
+    );
+  }
+
+  // If on public landing page view, directly render landing page with distinct portal navigation
   if (currentView === 'LANDING') {
-    return <LandingPage onEnterStudio={handleEnterStudioFromLanding} />;
+    return (
+      <CadErrorBoundary>
+        <LandingPage
+          onEnterStudio={handleEnterStudioFromLanding}
+          onOpenTeacherPortal={() => {
+            setUserRole('TEACHER');
+            window.location.hash = '#teacher-portal';
+            setCurrentView('TEACHER_PORTAL');
+          }}
+          onOpenParentPortal={() => {
+            setUserRole('PARENT');
+            window.location.hash = '#parent-portal';
+            setCurrentView('PARENT_PORTAL');
+          }}
+          onOpenStudentPortal={() => {
+            setUserRole('STUDENT');
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+        />
+      </CadErrorBoundary>
+    );
   }
 
   // If in dedicated STUDIO workspace view

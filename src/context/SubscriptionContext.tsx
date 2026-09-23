@@ -49,6 +49,7 @@ export interface SubscriptionContextType {
 const STORAGE_KEY = 'drafthands_subscription_v1';
 export const MASTER_BYPASS_STORAGE_KEY = 'drafthands_master_admin_bypass';
 export const TEACHER_TOKEN_STORAGE_KEY = 'drafthands_teacher_token';
+export const PARENT_TOKEN_STORAGE_KEY = 'drafthands_parent_token';
 
 export const MASTER_ADMIN_EMAILS = [
   'passion4dami@gmail.com',
@@ -66,6 +67,16 @@ export const hasExplicitTeacherToken = (): boolean => {
   if (typeof window === 'undefined') return false;
   try {
     const token = localStorage.getItem(TEACHER_TOKEN_STORAGE_KEY) || sessionStorage.getItem(TEACHER_TOKEN_STORAGE_KEY);
+    return Boolean(token && token.trim().length > 0);
+  } catch {
+    return false;
+  }
+};
+
+export const hasExplicitParentToken = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const token = localStorage.getItem(PARENT_TOKEN_STORAGE_KEY) || sessionStorage.getItem(PARENT_TOKEN_STORAGE_KEY);
     return Boolean(token && token.trim().length > 0);
   } catch {
     return false;
@@ -113,6 +124,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Master admin bypass strictly when set to 'true'
       const isMasterSaved = storedBypass === 'true';
       const hasTeacherToken = hasExplicitTeacherToken();
+      const hasParentToken = hasExplicitParentToken();
       const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
 
       if (saved) {
@@ -120,13 +132,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (parsed && typeof parsed === 'object') {
           const isMaster = isMasterSaved || (Boolean(parsed.isMasterAdmin) && isOwnerOrMasterEmail(parsed.userProfile?.email));
 
-          // Strict Role enforcement:
-          // When no explicit teacher login token is present (and not master admin),
-          // role MUST strictly default to STUDENT, ignoring stale/cached session flags!
+          // Role separation:
           const effectiveRole: UserRoleType = isMaster
             ? 'ADMIN'
-            : hasTeacherToken
-              ? (parsed.userRole === 'TEACHER' || parsed.userRole === 'ADMIN' || parsed.userRole === 'PARENT' ? parsed.userRole : 'TEACHER')
+            : (parsed.userRole === 'TEACHER' || parsed.userRole === 'PARENT' || parsed.userRole === 'ADMIN' || parsed.userRole === 'STUDENT')
+              ? parsed.userRole
               : 'STUDENT';
 
           return {
@@ -180,6 +190,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       }
 
+      if (hasParentToken) {
+        return {
+          ...DEFAULT_STATE,
+          userRole: 'PARENT',
+          userProfile: {
+            name: 'Demo Parent Guardian',
+            email: 'parent@drafthands.edu.ng',
+            institution: 'Guardian of Demo Student 1',
+            role: 'PARENT',
+            isEmailVerified: true,
+            registeredAt: '2025-01-01T00:00:00.000Z'
+          }
+        };
+      }
+
       return DEFAULT_STATE;
     } catch (e) {
       console.warn('Failed to load subscription from localStorage', e);
@@ -211,10 +236,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const hasTeacherToken = hasExplicitTeacherToken();
   const rawRole = subscription?.userRole || 'STUDENT';
-  // Strict role check: If role is not STUDENT, but no explicit teacher token and not master admin, force strictly to STUDENT
-  const userRole: UserRoleType = (rawRole === 'STUDENT' || (!hasTeacherToken && !isMasterAdmin))
-    ? 'STUDENT'
-    : rawRole;
+  const userRole: UserRoleType = isMasterAdmin ? 'ADMIN' : rawRole;
 
   const isDemoMode = !isMasterAdmin && Boolean(
     subscription?.isDemo || 
@@ -238,23 +260,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 
   const setUserRole = (role: UserRoleType) => {
-    if (role === 'TEACHER' || role === 'ADMIN') {
-      try {
-        if (typeof window !== 'undefined') {
+    try {
+      if (typeof window !== 'undefined') {
+        if (role === 'TEACHER' || role === 'ADMIN') {
           const teacherToken = `TCH_TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, teacherToken);
-        }
-      } catch (e) {
-        console.warn(e);
-      }
-    } else if (role === 'STUDENT') {
-      try {
-        if (typeof window !== 'undefined') {
+          localStorage.removeItem(PARENT_TOKEN_STORAGE_KEY);
+        } else if (role === 'PARENT') {
+          const parentToken = `PRNT_TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          localStorage.setItem(PARENT_TOKEN_STORAGE_KEY, parentToken);
           localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+        } else {
+          localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+          localStorage.removeItem(PARENT_TOKEN_STORAGE_KEY);
         }
-      } catch (e) {
-        console.warn(e);
       }
+    } catch (e) {
+      console.warn(e);
     }
 
     setSubscription(prev => ({
@@ -368,7 +390,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(TEACHER_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(PARENT_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(MASTER_BYPASS_STORAGE_KEY);
         localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.clear();
       }
     } catch (e) {
       console.warn(e);
