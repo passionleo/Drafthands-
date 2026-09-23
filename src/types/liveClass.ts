@@ -43,6 +43,11 @@ export interface LiveParticipant {
   hasCameraError?: boolean;
   cameraStatusText?: string;
   isPeerConnected?: boolean;
+  activeReaction?: {
+    emoji: string;
+    type: LiveReactionType;
+    timestamp: number;
+  };
 }
 
 export interface LiveChatMessage {
@@ -90,6 +95,25 @@ export interface LiveClassSession {
   participants: LiveParticipant[];
 }
 
+export type LiveReactionType = 
+  | 'CLAP' 
+  | 'THUMBS_UP' 
+  | 'HEART' 
+  | 'CELEBRATE' 
+  | 'AHA_BULB' 
+  | 'QUESTION' 
+  | 'FIRE'
+  | 'HAND_WAVE';
+
+export interface LiveReactionEvent {
+  id: string;
+  senderId: string;
+  senderName: string;
+  emoji: string;
+  type: LiveReactionType;
+  timestamp: number;
+}
+
 export type LiveSyncEventType =
   | 'CANVAS_STROKE_START'
   | 'CANVAS_STROKE_MOVE'
@@ -108,6 +132,8 @@ export type LiveSyncEventType =
   | 'MEDIA_STATE_CHANGE'
   | 'PARTICIPANT_JOIN'
   | 'PARTICIPANT_LEAVE'
+  | 'PARTICIPANT_ROSTER_SYNC'
+  | 'LIVE_REACTION'
   | 'REQUEST_FULL_SYNC'
   | 'WEBRTC_SIGNAL_JOIN'
   | 'WEBRTC_SIGNAL_OFFER'

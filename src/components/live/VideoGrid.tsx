@@ -305,6 +305,13 @@ export const ParticipantVideoTile: React.FC<{
           </div>
 
           <div className="flex items-center gap-1 pointer-events-auto">
+            {/* Active Live Reaction Bubble */}
+            {participant?.activeReaction && (
+              <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900/95 border border-pink-500/50 shadow-xl text-base animate-bounce backdrop-blur-md">
+                <span>{participant.activeReaction.emoji}</span>
+              </div>
+            )}
+
             {/* Hand Raised badge */}
             {participant?.isHandRaised && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] animate-bounce shadow-md shadow-amber-500/40">

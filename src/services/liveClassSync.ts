@@ -18,6 +18,9 @@ export class LiveClassSyncService {
   private processedMessageIds: Set<string> = new Set();
   private maxHistorySize: number = 300;
   private storageListener: ((e: StorageEvent) => void) | null = null;
+  private isDestroyed: boolean = false;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private messageQueue: string[] = [];
 
   constructor(roomCode: string, userId: string, userName: string) {
     this.roomCode = roomCode;
@@ -64,9 +67,10 @@ export class LiveClassSyncService {
   }
 
   /**
-   * Initializes WebSocket connection if a backend WS host is available
+   * Initializes WebSocket connection with automatic reconnection and queueing
    */
   private initWebSocket(): void {
+    if (this.isDestroyed) return;
     try {
       if (typeof window === 'undefined' || !window.location) return;
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -74,8 +78,26 @@ export class LiveClassSyncService {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
+        if (this.isDestroyed) {
+          ws.close();
+          return;
+        }
         console.log(`[LiveSync] Connected to real-time live classroom: ${this.roomCode}`);
+        this.ws = ws;
+
+        // Flush any buffered messages
+        while (this.messageQueue.length > 0 && ws.readyState === WebSocket.OPEN) {
+          const item = this.messageQueue.shift();
+          if (item) {
+            try {
+              ws.send(item);
+            } catch {}
+          }
+        }
+
+        // Announce presence and request latest board state
         this.broadcast('PARTICIPANT_JOIN', { userId: this.userId, userName: this.userName });
+        this.broadcast('REQUEST_FULL_SYNC', { userId: this.userId });
       };
 
       ws.onmessage = (evt) => {
@@ -88,16 +110,22 @@ export class LiveClassSyncService {
       };
 
       ws.onerror = () => {
-        // Silently fallback to BroadcastChannel and storage mesh
+        // Silently fallback to reconnect
       };
 
       ws.onclose = () => {
         this.ws = null;
+        if (!this.isDestroyed) {
+          if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = setTimeout(() => {
+            this.initWebSocket();
+          }, 2500);
+        }
       };
 
       this.ws = ws;
     } catch (e) {
-      // WS not available in static mode
+      // WS fallback
     }
   }
 
@@ -160,12 +188,17 @@ export class LiveClassSyncService {
       }
     }
 
-    // 3. Send over WebSocket if connected
+    // 3. Send over WebSocket if connected, otherwise buffer in queue
+    const serialized = JSON.stringify(msg);
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
-        this.ws.send(JSON.stringify(msg));
+        this.ws.send(serialized);
       } catch (err) {
         console.warn('WebSocket send error:', err);
+      }
+    } else {
+      if (this.messageQueue.length < 100) {
+        this.messageQueue.push(serialized);
       }
     }
   }
@@ -184,6 +217,11 @@ export class LiveClassSyncService {
    * Cleans up all connections and channels
    */
   public destroy(): void {
+    this.isDestroyed = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.broadcastChannel) {
       this.broadcastChannel.close();
       this.broadcastChannel = null;
@@ -196,6 +234,7 @@ export class LiveClassSyncService {
       this.ws.close();
       this.ws = null;
     }
+    this.messageQueue = [];
     this.listeners.clear();
     this.processedMessageIds.clear();
   }

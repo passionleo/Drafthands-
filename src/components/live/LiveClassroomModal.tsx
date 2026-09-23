@@ -45,7 +45,9 @@ import {
   RemoteCursor, 
   LaserPointerPosition,
   ParticipantRole,
-  ClassroomResourceTab
+  ClassroomResourceTab,
+  LiveReactionEvent,
+  LiveReactionType
 } from '../../types/liveClass';
 import { WhiteboardElement, OnScreenInstrument, WorkspaceMode } from '../../types/whiteboard';
 import { MediaStreamService, MediaStreamErrorDetails } from '../../services/mediaStreamService';
@@ -61,6 +63,9 @@ import { CadErrorBoundary } from '../common/CadErrorBoundary';
 import { LiveMediaErrorBoundary } from '../common/LiveMediaErrorBoundary';
 import { PastQuestionItem } from '../../data/pastQuestionsArchive';
 import { StudentSubmission } from '../../types/assignments';
+import { LiveReactionsOverlay } from './LiveReactionsOverlay';
+import { playReactionChime, playJoinChime, playHandRaiseChime } from '../../utils/audioFeedback';
+import { allCurriculumTopics } from '../../data/curriculumData';
 
 interface LiveClassroomModalProps {
   isOpen: boolean;
@@ -133,11 +138,39 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   const syncServiceRef = useRef<LiveClassSyncService | null>(null);
   const webRtcServiceRef = useRef<WebRtcPeerService | null>(null);
 
+  // Unique Local Participant ID (distinguishes multiple devices/tabs in real-time rooms)
+  const [localParticipantId] = useState<string>(() => {
+    const prefix = initialRole === 'TEACHER' ? 'teacher' : 'student';
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem(`drafthands_pid_${initialRoomCode}`);
+        if (stored) return stored;
+      } catch {}
+    }
+    const newId = `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    if (typeof window !== 'undefined') {
+      try { sessionStorage.setItem(`drafthands_pid_${initialRoomCode}`, newId); } catch {}
+    }
+    return newId;
+  });
+
+  const isTeacher = role === 'TEACHER';
+
+  // Real-time collaborative whiteboard elements stack
+  const [boardElements, setBoardElements] = useState<WhiteboardElement[]>([]);
+  const boardElementsRef = useRef<WhiteboardElement[]>(boardElements);
+  boardElementsRef.current = boardElements;
+  const activeTopicRef = useRef<CurriculumTopic>(activeTopic);
+  activeTopicRef.current = activeTopic;
+
+  // Floating animated reactions
+  const [activeReactions, setActiveReactions] = useState<LiveReactionEvent[]>([]);
+
   // Participants roster (Teacher + Students)
   const [participants, setParticipants] = useState<LiveParticipant[]>([
     {
-      id: 'teacher-1',
-      name: initialRole === 'TEACHER' ? initialUserName : 'Demo Technical Instructor',
+      id: initialRole === 'TEACHER' ? localParticipantId : 'teacher-instructor-1',
+      name: initialRole === 'TEACHER' ? initialUserName : 'Engr. D. Adebayo (Teacher)',
       role: 'TEACHER',
       avatarBg: '#7c3aed',
       isAudioMuted: false,
@@ -151,8 +184,8 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
       gradeOrClass: 'Technical Instructor'
     },
     {
-      id: 'student-1',
-      name: initialRole === 'STUDENT' ? initialUserName : 'Demo Student 1',
+      id: initialRole === 'STUDENT' ? localParticipantId : 'student-demo-1',
+      name: initialRole === 'STUDENT' ? initialUserName : 'Sarah Adeyemi',
       role: 'STUDENT',
       avatarBg: '#0891b2',
       isAudioMuted: true,
@@ -166,8 +199,8 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
       gradeOrClass: 'SS2 Technical'
     },
     {
-      id: 'student-2',
-      name: 'Demo Student 2',
+      id: 'student-demo-2',
+      name: 'Emmanuel Eze',
       role: 'STUDENT',
       avatarBg: '#ea580c',
       isAudioMuted: true,
@@ -181,8 +214,8 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
       gradeOrClass: 'SS2 Technical'
     },
     {
-      id: 'student-3',
-      name: 'Demo Student 3',
+      id: 'student-demo-3',
+      name: 'Fatima Bello',
       role: 'STUDENT',
       avatarBg: '#16a34a',
       isAudioMuted: false,
@@ -194,21 +227,6 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
       isSpotlighted: false,
       joinedAt: Date.now() - 150000,
       gradeOrClass: 'SS2 Technical'
-    },
-    {
-      id: 'student-4',
-      name: 'Demo Student 4',
-      role: 'STUDENT',
-      avatarBg: '#2563eb',
-      isAudioMuted: true,
-      isVideoOff: false,
-      isHandRaised: false,
-      isSpeaking: false,
-      audioLevel: 0,
-      hasDrawingPermission: false,
-      isSpotlighted: false,
-      joinedAt: Date.now() - 100000,
-      gradeOrClass: 'SS2 Technical'
     }
   ]);
 
@@ -216,16 +234,16 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   const [messages, setMessages] = useState<LiveChatMessage[]>([
     {
       id: 'msg-1',
-      senderId: 'teacher-1',
-      senderName: 'Demo Technical Instructor',
+      senderId: 'teacher-instructor-1',
+      senderName: 'Engr. D. Adebayo (Teacher)',
       senderRole: 'TEACHER',
       text: `Good day class! Today we are practicing ${activeTopic.title}. Pay close attention to the construction line weights (2H pencil vs HB outline).`,
       timestamp: '10:00 AM'
     },
     {
       id: 'msg-2',
-      senderId: 'student-2',
-      senderName: 'Demo Student 2',
+      senderId: 'student-demo-2',
+      senderName: 'Emmanuel Eze',
       senderRole: 'STUDENT',
       text: 'Sir, what scale ratio should we use on the triangular scale rule for this exercise?',
       timestamp: '10:02 AM',
@@ -243,9 +261,6 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
     teacherName: 'Engr. D. Adebayo',
     color: '#ef4444'
   });
-
-  const localParticipantId = role === 'TEACHER' ? 'teacher-1' : 'student-1';
-  const isTeacher = role === 'TEACHER';
 
   // Timer updater
   useEffect(() => {
@@ -424,6 +439,104 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
             if (!isChatOpen) {
               setUnreadChatCount(prev => prev + 1);
             }
+          } else if (msg.type === 'CANVAS_FULL_SYNC' && msg.payload) {
+            if (Array.isArray(msg.payload.elements)) {
+              setBoardElements(msg.payload.elements);
+            }
+            if (msg.payload.topicId && msg.payload.topicId !== activeTopicRef.current?.id) {
+              const matched = allCurriculumTopics.find(t => t.id === msg.payload.topicId);
+              if (matched) setActiveTopic(matched);
+            }
+          } else if (msg.type === 'REQUEST_FULL_SYNC') {
+            if (role === 'TEACHER' || boardElementsRef.current.length > 0) {
+              sync?.broadcast('CANVAS_FULL_SYNC', {
+                elements: boardElementsRef.current,
+                topicId: activeTopicRef.current.id,
+                senderRole: role
+              });
+            }
+          } else if (msg.type === 'LIVE_REACTION' && msg.payload) {
+            const rx = msg.payload as LiveReactionEvent;
+            playReactionChime(rx.type);
+            setActiveReactions(prev => [...prev.slice(-15), rx]);
+            setTimeout(() => {
+              setActiveReactions(prev => prev.filter(r => r.id !== rx.id));
+            }, 3600);
+            setParticipants(prev => prev.map(p => 
+              p.id === rx.senderId 
+                ? { ...p, activeReaction: { emoji: rx.emoji, type: rx.type, timestamp: rx.timestamp } } 
+                : p
+            ));
+            setTimeout(() => {
+              setParticipants(prev => prev.map(p => p.id === rx.senderId ? { ...p, activeReaction: undefined } : p));
+            }, 4000);
+          } else if (msg.type === 'HAND_RAISE' && msg.payload) {
+            playHandRaiseChime();
+            setParticipants(prev => prev.map(p => p.id === msg.senderId ? { ...p, isHandRaised: !!msg.payload.isHandRaised } : p));
+            setClassroomNotice(`${msg.senderName} ${msg.payload.isHandRaised ? 'raised hand ✋' : 'lowered hand'}`);
+          } else if (msg.type === 'PARTICIPANT_JOIN' && msg.payload) {
+            playJoinChime();
+            const joiningId = msg.payload.userId || msg.senderId;
+            const joiningName = msg.payload.userName || msg.senderName;
+            const joiningRole: ParticipantRole = msg.payload.role || (joiningId.startsWith('teacher') ? 'TEACHER' : 'STUDENT');
+
+            setParticipants(prev => {
+              const exists = prev.some(p => p.id === joiningId);
+              if (exists) return prev;
+              return [...prev, {
+                id: joiningId,
+                name: joiningName,
+                role: joiningRole,
+                avatarBg: joiningRole === 'TEACHER' ? '#7c3aed' : '#0891b2',
+                isAudioMuted: false,
+                isVideoOff: false,
+                isHandRaised: false,
+                isSpeaking: false,
+                audioLevel: 0,
+                hasDrawingPermission: false,
+                isSpotlighted: joiningRole === 'TEACHER',
+                joinedAt: Date.now()
+              }];
+            });
+
+            setClassroomNotice(`${joiningName} joined the live classroom`);
+
+            if (role === 'TEACHER' && boardElementsRef.current.length > 0) {
+              sync?.broadcast('CANVAS_FULL_SYNC', {
+                elements: boardElementsRef.current,
+                topicId: activeTopicRef.current.id,
+                senderRole: role
+              });
+            }
+          } else if (msg.type === 'PARTICIPANT_LEAVE' && msg.payload) {
+            const leavingId = msg.payload.userId || msg.senderId;
+            const leavingName = msg.payload.userName || msg.senderName;
+            setParticipants(prev => prev.filter(p => p.id !== leavingId || p.id === 'teacher-instructor-1'));
+            setClassroomNotice(`${leavingName} left the classroom`);
+          } else if (msg.type === 'PARTICIPANT_ROSTER_SYNC' && msg.payload?.participants) {
+            const roster: any[] = msg.payload.participants;
+            setParticipants(prev => {
+              const merged = [...prev];
+              roster.forEach(r => {
+                if (r.id !== localParticipantId && !merged.some(p => p.id === r.id)) {
+                  merged.push({
+                    id: r.id,
+                    name: r.name,
+                    role: r.role,
+                    avatarBg: r.role === 'TEACHER' ? '#7c3aed' : '#0891b2',
+                    isAudioMuted: r.isAudioMuted,
+                    isVideoOff: r.isVideoOff,
+                    isHandRaised: false,
+                    isSpeaking: false,
+                    audioLevel: 0,
+                    hasDrawingPermission: false,
+                    isSpotlighted: r.role === 'TEACHER',
+                    joinedAt: Date.now()
+                  });
+                }
+              });
+              return merged;
+            });
           } else if (msg.type === 'LASER_POINTER_MOVE') {
             setLaserPointer(msg.payload);
           } else if (msg.type === 'PERMISSION_CHANGE') {
@@ -453,6 +566,13 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
             }));
           }
         });
+
+        // If joining as student, request full whiteboard elements from active teacher
+        if (role === 'STUDENT') {
+          setTimeout(() => {
+            sync?.broadcast('REQUEST_FULL_SYNC', { requestedBy: localParticipantId });
+          }, 600);
+        }
       } catch (subErr) {
         console.warn('[LiveClassroom] sync.subscribe error:', subErr);
       }
@@ -514,11 +634,57 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   const handleToggleHandRaise = () => {
     const nextState = !isHandRaised;
     setIsHandRaised(nextState);
+    if (nextState) {
+      playHandRaiseChime();
+    }
     setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isHandRaised: nextState } : p));
     if (syncServiceRef.current) {
       syncServiceRef.current.broadcast('HAND_RAISE', { isHandRaised: nextState, studentName: userName });
     }
   };
+
+  // Synchronize Whiteboard Drawing Elements across teacher & students
+  const handleWhiteboardElementsChange = useCallback((newElements: WhiteboardElement[]) => {
+    setBoardElements(newElements);
+    if (syncServiceRef.current) {
+      syncServiceRef.current.broadcast('CANVAS_FULL_SYNC', {
+        elements: newElements,
+        topicId: activeTopic.id,
+        senderRole: role
+      });
+    }
+  }, [activeTopic.id, role]);
+
+  // Send live virtual classroom reaction (Audio Chime + Visual Bubble)
+  const handleSendReaction = useCallback((emoji: string, type: LiveReactionType) => {
+    const rxEvent: LiveReactionEvent = {
+      id: `rx-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      senderId: localParticipantId,
+      senderName: userName,
+      emoji,
+      type,
+      timestamp: Date.now()
+    };
+
+    playReactionChime(type);
+    setActiveReactions(prev => [...prev.slice(-15), rxEvent]);
+    setTimeout(() => {
+      setActiveReactions(prev => prev.filter(r => r.id !== rxEvent.id));
+    }, 3600);
+
+    setParticipants(prev => prev.map(p => 
+      p.id === localParticipantId 
+        ? { ...p, activeReaction: { emoji, type, timestamp: Date.now() } } 
+        : p
+    ));
+    setTimeout(() => {
+      setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, activeReaction: undefined } : p));
+    }, 4000);
+
+    if (syncServiceRef.current) {
+      syncServiceRef.current.broadcast('LIVE_REACTION', rxEvent);
+    }
+  }, [localParticipantId, userName]);
 
   // Toggle Screen Share
   const handleToggleScreenShare = async () => {
@@ -979,6 +1145,10 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
                 topic={activeTopic}
                 onClose={onClose}
                 initialMode="TRADITIONAL_BOARD"
+                isEmbedded={true}
+                syncElements={boardElements}
+                onElementsChange={handleWhiteboardElementsChange}
+                readOnly={!canDraw}
               />
             </CadErrorBoundary>
           </div>
@@ -1182,7 +1352,11 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
           setLayoutMode(prev => prev === 'WHITEBOARD_OVERLAY' ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY');
         }}
         isWhiteboardOverlay={layoutMode === 'WHITEBOARD_OVERLAY'}
+        onSendReaction={handleSendReaction}
       />
+
+      {/* 4. REAL-TIME CLASSROOM REACTIONS ANIMATED OVERLAY */}
+      <LiveReactionsOverlay reactions={activeReactions} />
     </div>
   );
 };

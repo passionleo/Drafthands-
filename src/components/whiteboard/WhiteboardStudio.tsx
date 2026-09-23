@@ -63,6 +63,10 @@ interface WhiteboardStudioProps {
   assignment?: TeacherAssignment;
   initialMode?: WorkspaceMode;
   onSubmitAssignment?: (elements: WhiteboardElement[], notes: string) => void;
+  isEmbedded?: boolean;
+  syncElements?: WhiteboardElement[];
+  onElementsChange?: (elements: WhiteboardElement[]) => void;
+  readOnly?: boolean;
 }
 
 export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
@@ -71,7 +75,11 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   initialTemplateElements,
   assignment,
   initialMode = 'TRADITIONAL_BOARD',
-  onSubmitAssignment
+  onSubmitAssignment,
+  isEmbedded = false,
+  syncElements,
+  onElementsChange,
+  readOnly = false
 }) => {
   // Dual Workspace Mode State
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(initialMode);
@@ -113,9 +121,38 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   });
 
   // Drawing Elements Stack
-  const [elements, setElements] = useState<WhiteboardElement[]>([]);
+  const [elements, setElements] = useState<WhiteboardElement[]>(() => (syncElements && Array.isArray(syncElements) ? syncElements : []));
   const [history, setHistory] = useState<WhiteboardElement[][]>([]);
   const [redoStack, setRedoStack] = useState<WhiteboardElement[][]>([]);
+  const isRemoteSyncRef = useRef<boolean>(false);
+  const lastEmittedJsonRef = useRef<string>('');
+
+  // Synchronize when remote elements arrive from teacher or live session
+  useEffect(() => {
+    if (syncElements && Array.isArray(syncElements)) {
+      const serialized = JSON.stringify(syncElements);
+      if (serialized !== lastEmittedJsonRef.current) {
+        isRemoteSyncRef.current = true;
+        lastEmittedJsonRef.current = serialized;
+        setElements(syncElements);
+      }
+    }
+  }, [syncElements]);
+
+  // When elements change locally, notify live classroom parent to broadcast
+  useEffect(() => {
+    if (isRemoteSyncRef.current) {
+      isRemoteSyncRef.current = false;
+      return;
+    }
+    const serialized = JSON.stringify(elements);
+    if (serialized !== lastEmittedJsonRef.current) {
+      lastEmittedJsonRef.current = serialized;
+      if (onElementsChange) {
+        onElementsChange(elements);
+      }
+    }
+  }, [elements, onElementsChange]);
 
   // Active in-progress drawing state
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
@@ -1456,6 +1493,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
   // Pointer Handlers for Canvas Drawing with Null Safety & Boundary Checks
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (readOnly) return;
     try {
       // Check if user clicked on a drafting instrument or its controls - prevent canvas drawing
       const target = e.target as Element | null;
@@ -1807,36 +1845,46 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 select-none animate-fadeIn">
+    <div className={isEmbedded ? "relative w-full h-full flex flex-col bg-slate-950 text-slate-100 select-none overflow-hidden" : "fixed inset-0 z-50 flex flex-col bg-slate-950 text-slate-100 select-none animate-fadeIn"}>
       {/* Top Universal Header Bar */}
-      <div className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-md">
+      <div className={`${isEmbedded ? 'h-11 px-3 bg-slate-900/95' : 'h-14 px-4 bg-slate-900'} border-b border-slate-800 flex items-center justify-between shrink-0 shadow-md`}>
         {/* Left: Branding, Topic Badge, & Dual Mode Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
-              <PenTool className="w-4 h-4" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          {!isEmbedded && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                <PenTool className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  Drafthands Studio
+                  {assignment ? (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                      ASSIGNMENT MODE
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                      PRACTICE STUDIO
+                    </span>
+                  )}
+                </h2>
+                <p className="text-[11px] text-slate-400 max-w-[280px] sm:max-w-md truncate">
+                  {assignment?.title || topic?.title || 'Interactive Geometric Drafting Canvas'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                Drafthands Studio
-                {assignment ? (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                    ASSIGNMENT MODE
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                    PRACTICE STUDIO
-                  </span>
-                )}
-              </h2>
-              <p className="text-[11px] text-slate-400 max-w-[280px] sm:max-w-md truncate">
-                {assignment?.title || topic?.title || 'Interactive Geometric Drafting Canvas'}
-              </p>
+          )}
+
+          {isEmbedded && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400">
+              <PenTool className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-slate-300">Class Whiteboard:</span>
+              <span className="text-cyan-300 font-medium truncate max-w-[160px] sm:max-w-xs">{topic?.title || 'Interactive Canvas'}</span>
             </div>
-          </div>
+          )}
 
           {/* DUAL WORKSPACE MODE TOGGLE SWITCH */}
-          <div className="hidden sm:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 ml-2">
+          <div className="flex items-center bg-slate-950 p-0.5 sm:p-1 rounded-xl border border-slate-800 ml-1">
             <button
               onClick={() => setWorkspaceMode('TRADITIONAL_BOARD')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
@@ -1983,7 +2031,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           )}
 
           {/* Close Studio */}
-          {onClose && (
+          {onClose && !isEmbedded && (
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"

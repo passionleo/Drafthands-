@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   Mic, 
   MicOff, 
@@ -22,9 +22,11 @@ import {
   Film,
   Grid,
   Layers,
-  ChevronUp
+  ChevronUp,
+  Smile,
+  Heart
 } from 'lucide-react';
-import { DrawingPermissionMode, VideoLayoutMode } from '../../types/liveClass';
+import { DrawingPermissionMode, VideoLayoutMode, LiveReactionType } from '../../types/liveClass';
 
 interface LiveControlBarProps {
   isAudioMuted: boolean;
@@ -50,7 +52,19 @@ interface LiveControlBarProps {
   onEndOrLeaveClass: () => void;
   onToggleWhiteboardOverlay?: () => void;
   isWhiteboardOverlay?: boolean;
+  onSendReaction?: (emoji: string, type: LiveReactionType) => void;
 }
+
+const REACTION_OPTIONS: { emoji: string; type: LiveReactionType; label: string }[] = [
+  { emoji: '👏', type: 'CLAP', label: 'Applause' },
+  { emoji: '👍', type: 'THUMBS_UP', label: 'Thumbs Up' },
+  { emoji: '❤️', type: 'HEART', label: 'Heart' },
+  { emoji: '💡', type: 'AHA_BULB', label: 'Aha!' },
+  { emoji: '🎉', type: 'CELEBRATE', label: 'Celebrate' },
+  { emoji: '❓', type: 'QUESTION', label: 'Question' },
+  { emoji: '🔥', type: 'FIRE', label: 'Brilliant' },
+  { emoji: '👋', type: 'HAND_WAVE', label: 'Wave' }
+];
 
 export const LiveControlBar: React.FC<LiveControlBarProps> = ({
   isAudioMuted,
@@ -75,8 +89,24 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
   onToggleChat,
   onEndOrLeaveClass,
   onToggleWhiteboardOverlay,
-  isWhiteboardOverlay = false
+  isWhiteboardOverlay = false,
+  onSendReaction
 }) => {
+  const [showReactionsPicker, setShowReactionsPicker] = useState<boolean>(false);
+  const reactionsRef = useRef<HTMLDivElement>(null);
+
+  // Close reaction picker on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (reactionsRef.current && !reactionsRef.current.contains(e.target as Node)) {
+        setShowReactionsPicker(false);
+      }
+    };
+    if (showReactionsPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showReactionsPicker]);
   // Keyboard shortcuts (M for Mic, V for Video, H for Hand, W for Whiteboard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -234,7 +264,45 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
           </button>
         )}
 
-        {/* 6. Teacher Drawing Permission Selector */}
+        {/* 6. LIVE VIRTUAL CLASSROOM REACTIONS TRAY */}
+        <div className="relative" ref={reactionsRef}>
+          <button
+            id="btn-reactions-tray"
+            type="button"
+            onClick={() => setShowReactionsPicker(prev => !prev)}
+            className={`flex items-center gap-1.5 px-3 h-11 rounded-xl transition-all text-xs font-semibold ${
+              showReactionsPicker
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-500/30'
+                : 'bg-slate-800 hover:bg-slate-700 text-pink-300 border border-slate-700'
+            }`}
+            title="Send live classroom reaction (Applause, Heart, Thumbs Up, Sparkles)"
+          >
+            <Smile className="w-4 h-4 text-pink-400" />
+            <span className="hidden sm:inline">React</span>
+          </button>
+
+          {/* Floating Reaction Drawer Popover */}
+          {showReactionsPicker && (
+            <div className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+              {REACTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.type}
+                  type="button"
+                  onClick={() => {
+                    if (onSendReaction) onSendReaction(opt.emoji, opt.type);
+                    setShowReactionsPicker(false);
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl hover:bg-slate-800 flex items-center justify-center text-lg sm:text-xl transition-transform hover:scale-125 active:scale-95"
+                  title={`${opt.label} (${opt.emoji})`}
+                >
+                  {opt.emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 7. Teacher Drawing Permission Selector */}
         {isTeacher && (
           <div className="hidden lg:flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-800">
             <button
@@ -266,7 +334,7 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
           </div>
         )}
 
-        {/* 7. Red End / Leave Call Pill Button (Iconic Google Meet) */}
+        {/* 8. Red End / Leave Call Pill Button (Iconic Google Meet) */}
         <button
           id="btn-leave-live-class"
           type="button"
@@ -280,6 +348,40 @@ export const LiveControlBar: React.FC<LiveControlBarProps> = ({
 
       {/* ================= RIGHT SECTION: LAYOUT CHOOSER & IN-CALL CHAT ================= */}
       <div className="flex items-center gap-2">
+        {/* Mobile & Tablet Quick View Switcher */}
+        <div className="flex xl:hidden items-center bg-slate-900/90 p-0.5 rounded-xl border border-slate-800 gap-0.5">
+          <button
+            type="button"
+            onClick={() => onChangeLayoutMode('FULL_BOARD')}
+            className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+              layoutMode === 'FULL_BOARD' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Show full Whiteboard only"
+          >
+            Board
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeLayoutMode('SPLIT_EQUAL')}
+            className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+              layoutMode === 'SPLIT_EQUAL' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Show Whiteboard and Video split 50:50"
+          >
+            Split
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeLayoutMode('GRID')}
+            className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+              layoutMode === 'GRID' || layoutMode === 'ACTIVE_SPEAKER' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Show Students Video Gallery"
+          >
+            Video
+          </button>
+        </div>
+
         {/* Layout Mode Selector (Desktop) */}
         <div className="hidden xl:flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 gap-1 shadow-inner">
           <button
