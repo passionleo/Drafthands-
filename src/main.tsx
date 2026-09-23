@@ -108,13 +108,17 @@ if (typeof window !== 'undefined') {
 const rootElement = document.getElementById('root');
 if (rootElement) {
   try {
-    createRoot(rootElement).render(
+    const root = createRoot(rootElement);
+    root.render(
       <StrictMode>
         <RootErrorBoundary>
           <App />
         </RootErrorBoundary>
       </StrictMode>,
     );
+    if (typeof window !== 'undefined') {
+      (window as any).__drafthandsMounted = true;
+    }
   } catch (err: any) {
     console.error('[Drafthands Root Mount Error]', err);
     rootElement.innerHTML = `

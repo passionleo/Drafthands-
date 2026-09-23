@@ -1,15 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background-color: #020617; color: #f8fafc;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Drafthands - Technical & Engineering Drawing Academy</title>
-    <meta name="theme-color" content="#090d16" />
+    <meta name="theme-color" content="#020617" />
+    <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="DraftHands" />
     <meta name="application-name" content="DraftHands" />
+
+    <!-- Anti-flash dark base styles -->
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      html, body {
+        background-color: #020617 !important;
+        color: #f8fafc !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        width: 100%;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #root {
+        background-color: #020617;
+        min-height: 100vh;
+        width: 100%;
+      }
+      @keyframes dh-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes dh-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+      .dh-spinner {
+        animation: dh-spin 0.9s linear infinite;
+      }
+      .dh-pulsing {
+        animation: dh-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+    </style>
 
     <!-- Web App Manifest & App Icons -->
     <link rel="manifest" href="/manifest.json" />
@@ -25,10 +61,11 @@
     <meta property="og:description" content="Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+
     <!-- Paystack Official Inline Checkout SDK (Loaded asynchronously so it never blocks page startup) -->
     <script async src="https://js.paystack.co/v1/inline.js"></script>
 
-    <!-- Progressive Web App (PWA) Global Capture & Service Worker Registration -->
+    <!-- Early Error Catch & Progressive Web App (PWA) Global Capture -->
     <script>
       // Capture beforeinstallprompt immediately at the window level
       window.__drafthandsInstallPrompt = null;
@@ -36,31 +73,43 @@
         e.preventDefault();
         window.__drafthandsInstallPrompt = e;
         window.dispatchEvent(new CustomEvent('drafthands:pwa-prompt-captured'));
-        console.log('[DraftHands PWA] Global beforeinstallprompt captured successfully');
       });
 
       window.addEventListener('appinstalled', function() {
         window.__drafthandsInstallPrompt = null;
         window.dispatchEvent(new CustomEvent('drafthands:pwa-app-installed'));
-        console.log('[DraftHands PWA] Application installed to device');
       });
 
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(function(reg) {
-              console.log('[DraftHands PWA] Service Worker registered with scope:', reg.scope);
-            })
-            .catch(function(err) {
-              console.warn('[DraftHands PWA] Service Worker registration failed:', err);
-            });
-        });
-      }
+      // Global safety net for script parse or network errors
+      window.__drafthandsMounted = false;
+      window.addEventListener('error', function(e) {
+        if (!window.__drafthandsMounted) {
+          var rootEl = document.getElementById('root');
+          var loaderEl = document.getElementById('dh-pre-loader');
+          if (rootEl && loaderEl) {
+            var errMsg = e && (e.message || (e.error && e.error.message)) ? String(e.message || e.error.message) : 'Resource loading issue';
+            loaderEl.innerHTML = '<div style="max-width:440px;margin:0 auto;background:#0f172a;border:1px solid rgba(14,165,233,0.3);border-radius:16px;padding:24px;text-align:center;">' +
+              '<div style="width:44px;height:44px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px auto;font-weight:bold;font-size:20px;">!</div>' +
+              '<h2 style="font-size:16px;font-weight:bold;margin:0 0 8px 0;color:#fff;">DraftHands Academy</h2>' +
+              '<p style="font-size:12px;color:#94a3b8;margin:0 0 14px 0;line-height:1.5;">Notice during startup: ' + errMsg + '</p>' +
+              '<button onclick="window.location.reload()" style="background:#0284c7;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Reload Session</button>' +
+            '</div>';
+          }
+        }
+      });
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 min-h-screen m-0 p-0 antialiased selection:bg-cyan-500 selection:text-slate-950">
-    <div id="root" class="min-h-screen w-full bg-slate-950"></div>
+    <div id="root" class="min-h-screen w-full bg-slate-950">
+      <!-- Fast branded pre-hydration state: replaced immediately once React renders -->
+      <div id="dh-pre-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background-color: #020617; color: #f8fafc;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <div class="dh-spinner" style="width: 26px; height: 26px; border: 2.5px solid #0284c7; border-top-color: transparent; border-radius: 50%;"></div>
+          <span style="font-weight: 800; font-size: 18px; letter-spacing: -0.02em; color: #ffffff;">DraftHands Academy</span>
+        </div>
+        <p class="dh-pulsing" style="font-size: 12px; color: #64748b; margin: 0; font-family: monospace;">Loading technical drawing workspace...</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

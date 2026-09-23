@@ -1,10 +1,9 @@
 // DraftHands PWA Service Worker
-const CACHE_NAME = 'drafthands-pwa-v2';
+const CACHE_NAME = 'drafthands-pwa-v3';
 
 // Core static assets to precache on installation (production/offline shell)
 const PRECACHE_ASSETS = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/manifest.webmanifest',
   '/favicon.ico',
@@ -20,11 +19,9 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[DraftHands SW] Precache partial error (non-blocking):', err);
+        console.warn('[DraftHands SW] Precache non-blocking notice:', err);
       });
-    }).then(() => {
-      return self.skipWaiting();
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -40,13 +37,11 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    }).then(() => {
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Fetch event - handle network with intelligent offline fallback
+// Fetch event - safe network-first with graceful cache fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -57,15 +52,19 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // NEVER cache Vite dev server internal assets, HMR, or dynamic src modules in development
+  // NEVER intercept Vite dev server internal assets, HMR, source files, or backend API routes
   if (
     url.pathname.startsWith('/@') ||
     url.pathname.startsWith('/src/') ||
     url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/api/') ||
     url.searchParams.has('v') ||
-    url.pathname.includes('hot-update')
+    url.searchParams.has('t') ||
+    url.pathname.includes('hot-update') ||
+    url.pathname.endsWith('.ts') ||
+    url.pathname.endsWith('.tsx')
   ) {
-    return; // Pass straight to network, do not intercept
+    return; // Pass straight to network without intercepting
   }
 
   // 1. Navigation requests (HTML pages) -> Network-first with cache fallback
@@ -80,51 +79,37 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Offline navigation fallback: serve cached index.html
           const cachedResponse = await caches.match(request);
           if (cachedResponse) return cachedResponse;
-          return caches.match('/index.html') || caches.match('/');
+          const rootCached = await caches.match('/');
+          if (rootCached) return rootCached;
+          // Return a minimal offline response rather than throwing
+          return new Response(
+            '<!doctype html><html><body style="background:#020617;color:#f8fafc;font-family:sans-serif;text-align:center;padding:40px;"><h2>DraftHands Offline</h2><p>Please check your connection and reload.</p><button onclick="window.location.reload()" style="background:#0284c7;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Reload</button></body></html>',
+            { headers: { 'Content-Type': 'text/html' } }
+          );
         })
     );
     return;
   }
 
-  // 2. Static local assets (images, fonts, bundles, icons) -> Stale-While-Revalidate / Cache-First
+  // 2. Static public assets (images, icons, manifest) -> Cache-first with network fallback
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const clone = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-            return networkResponse;
-          })
-          .catch((err) => {
-            // Network failure: cachedResponse will be returned if available
-            return null;
-          });
-
-        return cachedResponse || fetchPromise;
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Return empty fallback instead of null to prevent TypeError: Failed to convert value to 'Response'
+          return new Response('', { status: 408, statusText: 'Request Timeout' });
+        });
       })
     );
     return;
   }
-
-  // 3. Third-party cached resources (Google Fonts, CDNs) -> Cache-first with network fallback
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return networkResponse;
-      }).catch(() => {
-        return null;
-      });
-    })
-  );
 });
