@@ -843,37 +843,41 @@ function AppContent() {
       />
 
       {/* 11. LIVE CLASSROOM HARDWARE CHECK & JOIN/HOST MODAL */}
-      <JoinClassModal
-        isOpen={isJoinClassOpen}
-        onClose={() => setIsJoinClassOpen(false)}
-        topics={allCurriculumTopics}
-        activeTopic={activeTopic}
-        onJoinSession={(config) => {
-          setLiveClassConfig(config);
-          setIsJoinClassOpen(false);
-          setIsLiveClassroomOpen(true);
-        }}
-      />
-
-      {/* 12. DRAFTHANDS LIVE VIRTUAL CLASSROOM (2-WAY VIDEO + REAL-TIME WHITEBOARD) */}
-      <LiveMediaErrorBoundary mode="grid" onRetry={() => setIsLiveClassroomOpen(false)}>
-        <LiveClassroomModal
-          isOpen={isLiveClassroomOpen}
-          onClose={() => setIsLiveClassroomOpen(false)}
-          topic={allCurriculumTopics.find(t => t.id === liveClassConfig.topicId) || activeTopic}
-          initialRole={liveClassConfig.role}
-          initialRoomCode={liveClassConfig.roomCode}
-          initialUserName={liveClassConfig.userName}
-          initialGradeClass={liveClassConfig.gradeOrClass}
-          onNavigateToAppPart={(partName) => {
-            if (partName === 'TEACHER_ASSIGNMENTS') setIsTeacherAssignmentsOpen(true);
-            else if (partName === 'STUDENT_ASSIGNMENTS') setIsStudentAssignmentsOpen(true);
-            else if (partName === 'PARENT_PORTAL') setIsParentPortalOpen(true);
-            else if (partName === 'PRACTICE_EXAM') setIsPracticeOpen(true);
-            else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
+      {isJoinClassOpen && (
+        <JoinClassModal
+          isOpen={isJoinClassOpen}
+          onClose={() => setIsJoinClassOpen(false)}
+          topics={allCurriculumTopics}
+          activeTopic={activeTopic}
+          onJoinSession={(config) => {
+            setLiveClassConfig(config);
+            setIsJoinClassOpen(false);
+            setIsLiveClassroomOpen(true);
           }}
         />
-      </LiveMediaErrorBoundary>
+      )}
+
+      {/* 12. DRAFTHANDS LIVE VIRTUAL CLASSROOM (2-WAY VIDEO + REAL-TIME WHITEBOARD) */}
+      {isLiveClassroomOpen && (
+        <LiveMediaErrorBoundary mode="grid" onRetry={() => setIsLiveClassroomOpen(false)}>
+          <LiveClassroomModal
+            isOpen={isLiveClassroomOpen}
+            onClose={() => setIsLiveClassroomOpen(false)}
+            topic={allCurriculumTopics.find(t => t.id === liveClassConfig.topicId) || activeTopic}
+            initialRole={liveClassConfig.role}
+            initialRoomCode={liveClassConfig.roomCode}
+            initialUserName={liveClassConfig.userName}
+            initialGradeClass={liveClassConfig.gradeOrClass}
+            onNavigateToAppPart={(partName) => {
+              if (partName === 'TEACHER_ASSIGNMENTS') setIsTeacherAssignmentsOpen(true);
+              else if (partName === 'STUDENT_ASSIGNMENTS') setIsStudentAssignmentsOpen(true);
+              else if (partName === 'PARENT_PORTAL') setIsParentPortalOpen(true);
+              else if (partName === 'PRACTICE_EXAM') setIsPracticeOpen(true);
+              else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
+            }}
+          />
+        </LiveMediaErrorBoundary>
+      )}
 
       {/* 14. MANDATORY STUDENT EMAIL VERIFICATION ENFORCEMENT */}
       {userRole === 'STUDENT' && !isEmailVerified && (

@@ -46,9 +46,9 @@ interface HeaderProps {
   onOpenSurfaceDevelopment?: () => void;
   onOpenSectionalAssembly?: () => void;
   onOpenArchitecturalPlan?: () => void;
-  onOpenTeacherPortal: () => void;
-  onOpenParentPortal: () => void;
-  onOpenProjectionMode: () => void;
+  onOpenTeacherPortal?: () => void;
+  onOpenParentPortal?: () => void;
+  onOpenProjectionMode?: () => void;
   onOpenTeacherAssignments?: () => void;
   onOpenStudentAssignments?: () => void;
   onOpenAdminConsole?: () => void;
