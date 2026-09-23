@@ -214,7 +214,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     });
 
     // 2. Enforce payment for full package requirement (Excluding Owner portal)
-    if (isOwner || targetPortal === 'OWNER') {
+    if (isOwner) {
       actionToRun();
       setPendingPortalAction(null);
     } else if (!hasActivePaidSubscription) {
