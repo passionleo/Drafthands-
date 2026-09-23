@@ -343,14 +343,16 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
             </button>
 
             <button
+              id="btn-owner-logout"
               onClick={() => {
                 logout();
                 onReturnToHome();
               }}
-              className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer group"
               title="Log Out of Owner Console"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+              <span>Log Out</span>
             </button>
           </div>
         </div>

@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Download,
   Building2,
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 import { useSubscription } from '../../context/SubscriptionContext';
 
@@ -24,7 +25,7 @@ interface AdminConsoleModalProps {
 }
 
 export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, onClose }) => {
-  const { subscription, currentPlan, openPaywall, userProfile } = useSubscription();
+  const { subscription, currentPlan, openPaywall, userProfile, logout } = useSubscription();
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'LICENSES' | 'ROSTER' | 'BILLING'>('OVERVIEW');
 
   if (!isOpen) return null;
@@ -46,18 +47,35 @@ export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, on
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   School Admin
                 </span>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950 text-emerald-400 border border-emerald-500/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  LIVE ADMIN
+                </span>
               </div>
               <p className="text-xs text-slate-400">
-                {userProfile?.institution || 'Test Technical Academy'} • Session 2025/2026
+                {userProfile?.institution || 'Federal Science & Technical College, Yaba'} • Session 2025/2026
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                logout();
+                onClose();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              title="Log Out of Admin Console"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-400" />
+              <span>Log Out</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}

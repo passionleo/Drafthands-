@@ -349,8 +349,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ...prev,
       userRole: role,
       userProfile: prev.userProfile ? { ...prev.userProfile, role } : {
-        name: role === 'STUDENT' ? 'Demo Student 1' : role === 'TEACHER' ? 'Demo Technical Instructor' : role === 'PARENT' ? 'Demo Parent Guardian' : 'Demo Academic Dean',
-        email: `${role.toLowerCase()}@test-academy.edu.ng`,
+        name: role === 'STUDENT' ? 'Technical Student' : role === 'TEACHER' ? 'Technical Instructor' : role === 'PARENT' ? 'Parent Guardian' : 'Academic Administrator',
+        email: `${role.toLowerCase()}@drafthands.edu.ng`,
         role,
         isEmailVerified: true
       }
@@ -424,9 +424,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isSubscribed: false,
       userRole: 'STUDENT',
       userProfile: {
-        name: 'Demo Student 1',
-        email: 'demo.student1@test-academy.edu.ng',
-        institution: 'Test Technical Academy',
+        name: 'Technical Student',
+        email: 'student@drafthands.edu.ng',
+        institution: 'Federal Science & Technical College',
         role: 'STUDENT',
         isEmailVerified: true
       },

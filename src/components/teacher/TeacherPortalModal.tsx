@@ -21,7 +21,8 @@ import {
   Calendar,
   CreditCard,
   ShieldCheck,
-  Building
+  Building,
+  LogOut
 } from 'lucide-react';
 import { DrawingTopic, CurriculumTier, CurriculumTerm } from '../../types/curriculum';
 import { generateLessonPlanForTopic } from '../../data/lessonNotesGenerator';
@@ -48,7 +49,7 @@ export const TeacherPortalModal: React.FC<TeacherPortalModalProps> = ({
   onSelectTopic,
   onOpenWhiteboardForTopic
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
+  const { isSubscribed, subscription, subscribeToPlan, logout } = useSubscription();
 
   if (!isOpen) return null;
 
@@ -62,9 +63,9 @@ export const TeacherPortalModal: React.FC<TeacherPortalModalProps> = ({
   const [teacherPaymentSuccessRef, setTeacherPaymentSuccessRef] = useState<string | null>(null);
 
   // Editable Teacher Metadata
-  const [schoolName, setSchoolName] = useState<string>('Test Technical Academy');
-  const [teacherName, setTeacherName] = useState<string>('Demo Technical Instructor');
-  const [teacherEmail, setTeacherEmail] = useState<string>('demo.teacher@test-academy.edu.ng');
+  const [schoolName, setSchoolName] = useState<string>('Federal Science & Technical College, Yaba');
+  const [teacherName, setTeacherName] = useState<string>('Engr. J. O. Okonjo (Faculty Lead)');
+  const [teacherEmail, setTeacherEmail] = useState<string>('faculty@drafthands.edu.ng');
 
   const handleTeacherProPaystack = () => {
     setIsProcessingPaystack(true);
@@ -326,6 +327,18 @@ ${lessonPlan.evaluationAndExamScheme.criteria.map(c => `- **${c.component} (${c.
                 </button>
               </div>
             )}
+
+            <button
+              onClick={() => {
+                logout();
+                onClose();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              title="Log Out of Teacher Session"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-400" />
+              <span>Log Out</span>
+            </button>
 
             <button
               onClick={onClose}

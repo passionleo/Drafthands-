@@ -18,7 +18,8 @@ import {
   CheckCircle2, 
   Clock, 
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  LogOut
 } from 'lucide-react';
 import { ExamBody, PaperType, PastPaperItem } from '../../types/pastQuestions';
 import { ALL_YEARS, PAST_PAPERS_DATABASE } from '../../data/pastQuestionsData';
@@ -37,7 +38,7 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
   onBackToStudio,
   onReturnToLanding
 }) => {
-  const { hasActivePaidSubscription, subscription, openPaywall, subscribeToPlan } = useSubscription();
+  const { hasActivePaidSubscription, subscription, openPaywall, subscribeToPlan, logout } = useSubscription();
   // 10-year past questions archive strictly requires an active Paystack subscription
   const isFullAccess = Boolean(hasActivePaidSubscription);
 
@@ -117,6 +118,10 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
                 <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
                   2016–2026 Archive
                 </span>
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  LIVE ARCHIVE
+                </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
                 Authentic WAEC, NECO & NABTEB Marking Schemes with Interactive Vector Blueprints
@@ -152,6 +157,19 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
               <Home className="w-4 h-4" />
             </button>
           )}
+
+          <button
+            id="btn-past-questions-logout"
+            onClick={() => {
+              logout();
+              if (onReturnToLanding) onReturnToLanding();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            title="Log Out of Past Questions Archive"
+          >
+            <LogOut className="w-3.5 h-3.5 text-red-400" />
+            <span className="hidden sm:inline">Log Out</span>
+          </button>
         </div>
       </header>
 

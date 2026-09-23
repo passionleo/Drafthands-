@@ -79,9 +79,9 @@ export const INITIAL_STUDENT_SUBMISSIONS: StudentSubmission[] = [
   {
     id: 'sub-001',
     assignmentId: 'asg-ss1-tangency-01',
-    studentId: 'DEMO-STU-01',
-    studentName: 'Demo Student 1',
-    studentEmail: 'student1.demo@test-academy.edu.ng',
+    studentId: 'STU-FSTC-084',
+    studentName: 'Chukwuma Adebayo',
+    studentEmail: 'c.adebayo@fstc.edu.ng',
     studentClass: 'SS2 Technical A',
     submittedAt: '2025-09-19 14:32',
     status: 'SUBMITTED',
@@ -229,16 +229,16 @@ export const INITIAL_STUDENT_SUBMISSIONS: StudentSubmission[] = [
       dimensioningScore: 18,
       neatnessScore: 13,
       teacherFeedback: 'Outstanding precision and smooth curve blending with the French curve. Ensure arrowhead proportions on the major axis dimensions follow the 3:1 length-to-width ratio strictly.',
-      gradedBy: 'Demo Faculty Instructor',
+      gradedBy: 'Engr. J. O. Okonjo',
       gradedAt: '2025-09-20 09:15'
     }
   },
   {
     id: 'sub-003',
     assignmentId: 'asg-ss1-bisection-01',
-    studentId: 'DEMO-STU-03',
-    studentName: 'Demo Student 3',
-    studentEmail: 'student3.demo@test-academy.edu.ng',
+    studentId: 'STU-KCL-142',
+    studentName: 'Amina Bello',
+    studentEmail: 'a.bello@kingscollege.edu.ng',
     studentClass: 'SS1 Technical Foundation',
     submittedAt: '2025-09-21 11:20',
     status: 'SUBMITTED',

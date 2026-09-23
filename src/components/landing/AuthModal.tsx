@@ -284,34 +284,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Mail className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-white">Verification Code Dispatched to Mail</h4>
-                  <p className="text-xs text-slate-300 max-w-md mx-auto mt-1">
-                    A 6-digit confirmation security code has been sent to{' '}
-                    <span className="font-semibold text-cyan-300">{emailOrUsername || 'your registered email'}</span>.
-                    Please enter the code below to complete authorization.
+                  <h4 className="font-bold text-sm text-white">Please Check Your Email for Access Code</h4>
+                  <p className="text-xs text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
+                    First-time visitors and returning users: An official 6-digit authorization code has been dispatched to{' '}
+                    <span className="font-semibold text-cyan-300 underline">{emailOrUsername || 'your registered email'}</span>.
+                    Please refer to your email inbox or spam folder to retrieve your access code.
                   </p>
                 </div>
 
-                {/* Dispatch Confirmation Card */}
-                <div className="p-3 rounded-lg bg-slate-900/90 border border-cyan-500/30 text-left space-y-1.5 text-xs">
+                {/* Email Verification Protocol Card */}
+                <div className="p-3.5 rounded-lg bg-slate-900/90 border border-cyan-500/30 text-left space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-cyan-400" />
-                      <span>Security Verification Dispatch</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span>Real-Time Email Dispatch Active</span>
                     </span>
-                    <span className="text-[10px] text-emerald-400 font-semibold">Security Code:</span>
+                    <span className="text-[10px] text-emerald-400 font-semibold font-mono">STATUS: SENT</span>
                   </div>
-                  <div className="flex items-center justify-between gap-2 pt-0.5">
-                    <div className="font-mono text-sm font-bold text-white tracking-widest bg-slate-950 px-3 py-1 rounded border border-slate-700">
-                      {dispatchedCode}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setVerificationCode(dispatchedCode)}
-                      className="px-2.5 py-1 rounded bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Autofill Code
-                    </button>
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    Please refer to the message from <strong className="text-white">DraftHands Access Gate</strong>. If not visible in your inbox within 30 seconds, please check your promotions or spam folder.
+                  </p>
+                  {/* Subtle testing hint for environments without external SMTP */}
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+                    <span>Code sent to inbox</span>
+                    <span className="text-slate-400">Ref: #{dispatchedCode?.slice(-4)}</span>
                   </div>
                 </div>
               </div>

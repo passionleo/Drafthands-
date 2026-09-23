@@ -67,8 +67,8 @@ export const TeacherPortalView: React.FC<TeacherPortalViewProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
 
   // Teacher metadata
-  const [schoolName, setSchoolName] = useState<string>(userProfile?.institution || 'Test Technical Academy');
-  const [teacherName, setTeacherName] = useState<string>(userProfile?.name || 'Demo Technical Instructor');
+  const [schoolName, setSchoolName] = useState<string>(userProfile?.institution || 'Federal Science & Technical College, Yaba');
+  const [teacherName, setTeacherName] = useState<string>(userProfile?.name || 'Engr. J. O. Okonjo (Faculty Lead)');
   const [term, setTerm] = useState<string>(() => 
     activeTopic.termLabel || (activeTopic.term === 'TERM_2' ? 'Second Term' : activeTopic.term === 'TERM_3' ? 'Third Term' : 'First Term')
   );
@@ -211,6 +211,10 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
                   </span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-500/40 uppercase">
                     Teacher Portal
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    LIVE REAL-TIME DESK
                   </span>
                   {isMasterAdmin && (
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">

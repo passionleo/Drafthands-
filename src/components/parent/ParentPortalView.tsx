@@ -42,16 +42,16 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
 }) => {
   const { isSubscribed, subscription, subscribeToPlan, logout } = useSubscription();
 
-  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DEMO-001');
+  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DH-2025-88');
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
-    SAMPLE_WARD_PROFILES['WARD-DEMO-001']
+    SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
   );
   const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'practicalSubmissions' | 'reportCard' | 'sponsorship' | 'feedback'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
   const [isFeedbackSent, setIsFeedbackSent] = useState<boolean>(false);
 
   // Paystack Ward Sponsorship State
-  const [parentEmail, setParentEmail] = useState<string>('parent.demo@test-academy.edu.ng');
+  const [parentEmail, setParentEmail] = useState<string>('guardian@drafthands.edu.ng');
   const [sponsorshipPlan, setSponsorshipPlan] = useState<'STUDENT_TERMLY' | 'STUDENT_SESSION'>('STUDENT_SESSION');
   const [isPayingSponsorship, setIsPayingSponsorship] = useState<boolean>(false);
   const [sponsorshipReceiptRef, setSponsorshipReceiptRef] = useState<string | null>(null);
@@ -130,6 +130,10 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
                   </span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950 text-blue-300 border border-blue-500/40 uppercase">
                     Parent Portal
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    LIVE REAL-TIME TELEMETRY
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">

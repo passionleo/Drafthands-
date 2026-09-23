@@ -23,7 +23,8 @@ import {
   Compass,
   PenTool,
   CheckCircle,
-  Eye
+  Eye,
+  LogOut
 } from 'lucide-react';
 import { SAMPLE_WARD_PROFILES, getWardProfile } from '../../data/parentData';
 import { StudentWardProfile } from '../../types/parent';
@@ -41,11 +42,11 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   onClose,
   onSelectTopic
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan } = useSubscription();
+  const { isSubscribed, subscription, subscribeToPlan, logout } = useSubscription();
 
-  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DEMO-001');
+  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DH-2025-88');
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
-    SAMPLE_WARD_PROFILES['WARD-DEMO-001']
+    SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
   );
   const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'practicalSubmissions' | 'teacherNotes' | 'reportCard' | 'sponsorship'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
@@ -124,12 +125,25 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                logout();
+                onClose();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              title="Log Out of Parent Portal"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-400" />
+              <span>Log Out</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Student Ward Code Selector / Login Bar */}
@@ -155,14 +169,14 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
 
           {/* Registered Ward Selector Switches */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500 hidden sm:inline">Registered Wards:</span>
+            <span className="text-slate-500 hidden sm:inline">Active Registered Wards:</span>
             <button
               onClick={() => {
-                setWardCodeInput('WARD-DEMO-001');
-                handleSearchWard('WARD-DEMO-001');
+                setWardCodeInput('WARD-DH-2025-88');
+                handleSearchWard('WARD-DH-2025-88');
               }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors ${
-                activeProfile.wardCode === 'WARD-DEMO-001' || activeProfile.wardCode === 'WARD-DH-2025-88'
+                activeProfile.wardCode === 'WARD-DH-2025-88'
                   ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
@@ -171,11 +185,11 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
             </button>
             <button
               onClick={() => {
-                setWardCodeInput('WARD-DEMO-002');
-                handleSearchWard('WARD-DEMO-002');
+                setWardCodeInput('WARD-DH-2025-42');
+                handleSearchWard('WARD-DH-2025-42');
               }}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors ${
-                activeProfile.wardCode === 'WARD-DEMO-002' || activeProfile.wardCode === 'WARD-DH-2025-42'
+                activeProfile.wardCode === 'WARD-DH-2025-42'
                   ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
