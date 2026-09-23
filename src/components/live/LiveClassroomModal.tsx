@@ -302,135 +302,178 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    // 1. Setup Media
-    const media = new MediaStreamService();
-    mediaServiceRef.current = media;
+    let isEffectActive = true;
 
-    media.onError((errDetails) => {
-      console.warn('[LiveClassroom] Media stream error caught:', errDetails);
-      setMediaError(errDetails);
-      setParticipants(prev => prev.map(p => 
-        p.id === localParticipantId 
-          ? { ...p, hasCameraError: true, cameraStatusText: errDetails.message } 
-          : p
-      ));
-      setClassroomNotice(errDetails.message);
-    });
+    // 1. Setup Media safely
+    let media: MediaStreamService | null = null;
+    try {
+      media = new MediaStreamService();
+      mediaServiceRef.current = media;
 
-    media.initLocalMedia({ video: !isVideoOff, audio: !isAudioMuted }).then(stream => {
-      setLocalStream(stream);
-      const err = media.getLastError();
-      if (err) {
-        setMediaError(err);
-      }
-      if (webRtcServiceRef.current) {
-        webRtcServiceRef.current.setLocalStream(stream);
-      }
-    });
-
-    media.onAudioLevel((level) => {
-      if (level > 0.15) {
-        setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isSpeaking: true, audioLevel: level } : p));
-      } else {
-        setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isSpeaking: false, audioLevel: 0 } : p));
-      }
-    });
-
-    // 2. Setup Real-time Sync
-    const sync = new LiveClassSyncService(roomCode, localParticipantId, userName);
-    syncServiceRef.current = sync;
-
-    // 3. Setup WebRTC Peer Service for Video/Audio sessions
-    const webRtc = new WebRtcPeerService(
-      localParticipantId,
-      userName,
-      role,
-      sync,
-      {
-        onRemoteStream: (peerId, stream) => {
-          console.log('[LiveClassroom] Active remote video/audio track connected from peer:', peerId);
-          setRemoteStreams(prev => ({ ...prev, [peerId]: stream }));
-          setParticipants(prev => {
-            const existing = prev.find(p => p.id === peerId);
-            if (!existing) {
-              return [...prev, {
-                id: peerId,
-                name: `Participant (${peerId.slice(-4)})`,
-                role: 'STUDENT',
-                avatarBg: '#0891b2',
-                isAudioMuted: false,
-                isVideoOff: false,
-                isHandRaised: false,
-                isSpeaking: false,
-                audioLevel: 0,
-                hasDrawingPermission: false,
-                isSpotlighted: false,
-                isPeerConnected: true,
-                joinedAt: Date.now()
-              }];
-            }
-            return prev.map(p => p.id === peerId ? { ...p, isPeerConnected: true } : p);
-          });
-        },
-        onRemoteStreamRemoved: (peerId) => {
-          setRemoteStreams(prev => {
-            const next = { ...prev };
-            delete next[peerId];
-            return next;
-          });
-          setParticipants(prev => prev.map(p => p.id === peerId ? { ...p, isPeerConnected: false } : p));
-        },
-        onPeerStateChange: (peerId, state) => {
-          console.log(`[LiveClassroom] Peer ${peerId} connection state:`, state);
-        }
-      }
-    );
-    webRtcServiceRef.current = webRtc;
-    webRtc.announceJoin();
-
-    const unsubscribe = sync.subscribe((msg) => {
-      if (msg.type === 'CHAT_MESSAGE') {
-        setMessages(prev => [...prev, msg.payload]);
-        if (!isChatOpen) {
-          setUnreadChatCount(prev => prev + 1);
-        }
-      } else if (msg.type === 'LASER_POINTER_MOVE') {
-        setLaserPointer(msg.payload);
-      } else if (msg.type === 'PERMISSION_CHANGE') {
-        setDrawingPermissionMode(msg.payload.mode);
-      } else if (msg.type === 'MEDIA_STATE_CHANGE') {
+      media.onError((errDetails) => {
+        if (!isEffectActive) return;
+        console.warn('[LiveClassroom] Media stream error caught:', errDetails);
+        setMediaError(errDetails);
         setParticipants(prev => prev.map(p => 
-          p.id === msg.senderId 
-            ? { 
-                ...p, 
-                isAudioMuted: msg.payload?.isAudioMuted ?? p.isAudioMuted, 
-                isVideoOff: msg.payload?.isVideoOff ?? p.isVideoOff 
-              } 
+          p.id === localParticipantId 
+            ? { ...p, hasCameraError: true, cameraStatusText: errDetails.message } 
             : p
         ));
-      } else if (msg.type === 'CURSOR_MOVE') {
-        setRemoteCursors(prev => ({
-          ...prev,
-          [msg.senderId]: {
-            participantId: msg.senderId,
-            participantName: msg.senderName,
-            role: msg.payload.role,
-            color: msg.payload.color,
-            x: msg.payload.x,
-            y: msg.payload.y,
-            lastActive: Date.now()
+        setClassroomNotice(errDetails.message);
+      });
+
+      media.initLocalMedia({ video: !isVideoOff, audio: !isAudioMuted })
+        .then(stream => {
+          if (!isEffectActive) return;
+          setLocalStream(stream);
+          const err = media?.getLastError();
+          if (err) {
+            setMediaError(err);
           }
-        }));
+          if (webRtcServiceRef.current) {
+            webRtcServiceRef.current.setLocalStream(stream);
+          }
+        })
+        .catch(err => {
+          console.warn('[LiveClassroom] initLocalMedia rejected:', err);
+        });
+
+      media.onAudioLevel((level) => {
+        if (!isEffectActive) return;
+        if (level > 0.15) {
+          setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isSpeaking: true, audioLevel: level } : p));
+        } else {
+          setParticipants(prev => prev.map(p => p.id === localParticipantId ? { ...p, isSpeaking: false, audioLevel: 0 } : p));
+        }
+      });
+    } catch (mediaInitErr) {
+      console.warn('[LiveClassroom] Media service creation failed:', mediaInitErr);
+    }
+
+    // 2. Setup Real-time Sync safely
+    let sync: LiveClassSyncService | null = null;
+    let unsubscribe: (() => void) | null = null;
+    try {
+      sync = new LiveClassSyncService(roomCode, localParticipantId, userName);
+      syncServiceRef.current = sync;
+    } catch (syncErr) {
+      console.warn('[LiveClassroom] Sync service creation failed:', syncErr);
+    }
+
+    // 3. Setup WebRTC Peer Service for Video/Audio sessions safely
+    let webRtc: WebRtcPeerService | null = null;
+    if (sync) {
+      try {
+        webRtc = new WebRtcPeerService(
+          localParticipantId,
+          userName,
+          role,
+          sync,
+          {
+            onRemoteStream: (peerId, stream) => {
+              if (!isEffectActive) return;
+              console.log('[LiveClassroom] Active remote video/audio track connected from peer:', peerId);
+              setRemoteStreams(prev => ({ ...prev, [peerId]: stream }));
+              setParticipants(prev => {
+                const existing = prev.find(p => p.id === peerId);
+                if (!existing) {
+                  return [...prev, {
+                    id: peerId,
+                    name: `Participant (${peerId.slice(-4)})`,
+                    role: 'STUDENT',
+                    avatarBg: '#0891b2',
+                    isAudioMuted: false,
+                    isVideoOff: false,
+                    isHandRaised: false,
+                    isSpeaking: false,
+                    audioLevel: 0,
+                    hasDrawingPermission: false,
+                    isSpotlighted: false,
+                    isPeerConnected: true,
+                    joinedAt: Date.now()
+                  }];
+                }
+                return prev.map(p => p.id === peerId ? { ...p, isPeerConnected: true } : p);
+              });
+            },
+            onRemoteStreamRemoved: (peerId) => {
+              if (!isEffectActive) return;
+              setRemoteStreams(prev => {
+                const next = { ...prev };
+                delete next[peerId];
+                return next;
+              });
+              setParticipants(prev => prev.map(p => p.id === peerId ? { ...p, isPeerConnected: false } : p));
+            },
+            onPeerStateChange: (peerId, state) => {
+              console.log(`[LiveClassroom] Peer ${peerId} connection state:`, state);
+            }
+          }
+        );
+        webRtcServiceRef.current = webRtc;
+        webRtc.announceJoin();
+      } catch (rtcErr) {
+        console.warn('[LiveClassroom] WebRtcPeerService creation error:', rtcErr);
       }
-    });
+
+      try {
+        unsubscribe = sync.subscribe((msg) => {
+          if (!isEffectActive) return;
+          if (msg.type === 'CHAT_MESSAGE') {
+            setMessages(prev => [...prev, msg.payload]);
+            if (!isChatOpen) {
+              setUnreadChatCount(prev => prev + 1);
+            }
+          } else if (msg.type === 'LASER_POINTER_MOVE') {
+            setLaserPointer(msg.payload);
+          } else if (msg.type === 'PERMISSION_CHANGE') {
+            setDrawingPermissionMode(msg.payload.mode);
+          } else if (msg.type === 'MEDIA_STATE_CHANGE') {
+            setParticipants(prev => prev.map(p => 
+              p.id === msg.senderId 
+                ? { 
+                    ...p, 
+                    isAudioMuted: msg.payload?.isAudioMuted ?? p.isAudioMuted, 
+                    isVideoOff: msg.payload?.isVideoOff ?? p.isVideoOff 
+                  } 
+                : p
+            ));
+          } else if (msg.type === 'CURSOR_MOVE') {
+            setRemoteCursors(prev => ({
+              ...prev,
+              [msg.senderId]: {
+                participantId: msg.senderId,
+                participantName: msg.senderName,
+                role: msg.payload.role,
+                color: msg.payload.color,
+                x: msg.payload.x,
+                y: msg.payload.y,
+                lastActive: Date.now()
+              }
+            }));
+          }
+        });
+      } catch (subErr) {
+        console.warn('[LiveClassroom] sync.subscribe error:', subErr);
+      }
+    }
 
     return () => {
-      media.cleanup();
+      isEffectActive = false;
+      try {
+        if (media) media.cleanup();
+      } catch {}
       mediaServiceRef.current = null;
-      webRtc.destroy();
+      try {
+        if (webRtc) webRtc.destroy();
+      } catch {}
       webRtcServiceRef.current = null;
-      unsubscribe();
-      sync.destroy();
+      try {
+        if (unsubscribe) unsubscribe();
+      } catch {}
+      try {
+        if (sync) sync.destroy();
+      } catch {}
       syncServiceRef.current = null;
     };
   }, [isOpen, roomCode, localParticipantId, userName, role]);

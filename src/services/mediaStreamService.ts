@@ -45,19 +45,23 @@ export class MediaStreamService {
     this.lastError = null;
     this.isSyntheticStreamActive = false;
 
-    // Check environment support
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    // Feature-detection check: ensure navigator and mediaDevices exist
+    const hasMediaDevices = typeof navigator !== 'undefined' && 
+      Boolean(navigator.mediaDevices) && 
+      typeof navigator.mediaDevices.getUserMedia === 'function';
+
+    if (!hasMediaDevices) {
       const errDetails: MediaStreamErrorDetails = {
         code: 'UNSUPPORTED',
-        message: 'WebRTC media devices API is not supported in this browser context.',
-        recommendedAction: 'Please open Drafthands in a modern browser (Chrome, Edge, Firefox, or Safari).',
+        message: 'Camera and microphone APIs are unavailable in this browser context.',
+        recommendedAction: 'Opening in a modern browser (Chrome, Safari, Edge, or Firefox) enables camera/mic.',
         isCameraBlocked: false,
         isHardwareMissing: true,
         timestamp: Date.now()
       };
       this.lastError = errDetails;
       if (this.onErrorCallback) this.onErrorCallback(errDetails);
-      return this.createFallbackSyntheticStream('Technical Drawing Audio/Visual Node');
+      return this.createFallbackSyntheticStream('Technical Drawing Stream (Offline Camera)');
     }
 
     const wantVideo = options.video ?? true;
@@ -82,13 +86,17 @@ export class MediaStreamService {
       this.setupAudioAnalysis(stream);
       return stream;
     } catch (err: any) {
-      console.warn('[MediaStreamService] Stage 1 (HD Video/Audio) attempt failed:', err.name || err.message);
+      console.warn('[MediaStreamService] Stage 1 (HD Video/Audio) attempt failed:', err?.name || err?.message);
 
       // Handle specific browser error cases
       const errorDetails = this.classifyMediaError(err);
 
-      // STAGE 2: If overconstrained, retry with relaxed standard constraints
-      if (errorDetails.code === 'CONSTRAINTS_FAILED' || err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+      // STAGE 2: If overconstrained or failed, retry with relaxed standard constraints
+      if (
+        errorDetails.code === 'CONSTRAINTS_FAILED' || 
+        err?.name === 'OverconstrainedError' || 
+        err?.name === 'ConstraintNotSatisfiedError'
+      ) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: wantVideo,
@@ -116,9 +124,18 @@ export class MediaStreamService {
 
           // Combine real microphone audio track with high-clarity synthetic drawing canvas video track
           const canvasStream = this.createSyntheticVideoStream('Microphone Active (Camera Standby)');
-          const combinedStream = new MediaStream();
-          audioOnlyStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
-          canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+          const combinedStream = typeof MediaStream !== 'undefined' ? new MediaStream() : canvasStream;
+          
+          if (audioOnlyStream.getAudioTracks) {
+            audioOnlyStream.getAudioTracks().forEach(track => {
+              try { combinedStream.addTrack(track); } catch {}
+            });
+          }
+          if (canvasStream.getVideoTracks) {
+            canvasStream.getVideoTracks().forEach(track => {
+              try { combinedStream.addTrack(track); } catch {}
+            });
+          }
 
           this.localStream = combinedStream;
           this.setupAudioAnalysis(combinedStream);
@@ -445,7 +462,20 @@ export class MediaStreamService {
     };
     render();
 
-    const stream = (canvas as any).captureStream ? (canvas as any).captureStream(30) : new MediaStream();
+    let stream: MediaStream;
+    try {
+      if (typeof (canvas as any).captureStream === 'function') {
+        stream = (canvas as any).captureStream(30);
+      } else if (typeof (canvas as any).mozCaptureStream === 'function') {
+        stream = (canvas as any).mozCaptureStream(30);
+      } else if (typeof MediaStream !== 'undefined') {
+        stream = new MediaStream();
+      } else {
+        stream = { getTracks: () => [], getVideoTracks: () => [], getAudioTracks: () => [] } as any;
+      }
+    } catch {
+      stream = typeof MediaStream !== 'undefined' ? new MediaStream() : ({ getTracks: () => [], getVideoTracks: () => [], getAudioTracks: () => [] } as any);
+    }
     return stream;
   }
 }

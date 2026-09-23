@@ -79,18 +79,34 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    const media = new MediaStreamService();
-    mediaServiceRef.current = media;
+    let isMounted = true;
+    let media: MediaStreamService | null = null;
+    try {
+      media = new MediaStreamService();
+      mediaServiceRef.current = media;
 
-    media.initLocalMedia({ video: !isVideoOff, audio: !isAudioMuted }).then(stream => {
-      setPreviewStream(stream);
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-      }
-    });
+      media.initLocalMedia({ video: !isVideoOff, audio: !isAudioMuted })
+        .then(stream => {
+          if (!isMounted) return;
+          setPreviewStream(stream);
+          if (videoPreviewRef.current) {
+            try {
+              videoPreviewRef.current.srcObject = stream;
+            } catch {}
+          }
+        })
+        .catch(err => {
+          console.warn('[JoinClassModal] Preview stream error:', err);
+        });
+    } catch (err) {
+      console.warn('[JoinClassModal] Error initializing media service:', err);
+    }
 
     return () => {
-      media.cleanup();
+      isMounted = false;
+      try {
+        if (media) media.cleanup();
+      } catch {}
       mediaServiceRef.current = null;
     };
   }, [isOpen]);

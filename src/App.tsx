@@ -35,6 +35,7 @@ import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { ParsedCadResult } from './utils/aiCadPromptParser';
 import { CadErrorBoundary } from './components/common/CadErrorBoundary';
+import { LiveMediaErrorBoundary } from './components/common/LiveMediaErrorBoundary';
 import { Mail, CheckCircle2, Sparkles, Tv } from 'lucide-react';
 
 function AppContent() {
@@ -855,22 +856,24 @@ function AppContent() {
       />
 
       {/* 12. DRAFTHANDS LIVE VIRTUAL CLASSROOM (2-WAY VIDEO + REAL-TIME WHITEBOARD) */}
-      <LiveClassroomModal
-        isOpen={isLiveClassroomOpen}
-        onClose={() => setIsLiveClassroomOpen(false)}
-        topic={allCurriculumTopics.find(t => t.id === liveClassConfig.topicId) || activeTopic}
-        initialRole={liveClassConfig.role}
-        initialRoomCode={liveClassConfig.roomCode}
-        initialUserName={liveClassConfig.userName}
-        initialGradeClass={liveClassConfig.gradeOrClass}
-        onNavigateToAppPart={(partName) => {
-          if (partName === 'TEACHER_ASSIGNMENTS') setIsTeacherAssignmentsOpen(true);
-          else if (partName === 'STUDENT_ASSIGNMENTS') setIsStudentAssignmentsOpen(true);
-          else if (partName === 'PARENT_PORTAL') setIsParentPortalOpen(true);
-          else if (partName === 'PRACTICE_EXAM') setIsPracticeOpen(true);
-          else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
-        }}
-      />
+      <LiveMediaErrorBoundary mode="grid" onRetry={() => setIsLiveClassroomOpen(false)}>
+        <LiveClassroomModal
+          isOpen={isLiveClassroomOpen}
+          onClose={() => setIsLiveClassroomOpen(false)}
+          topic={allCurriculumTopics.find(t => t.id === liveClassConfig.topicId) || activeTopic}
+          initialRole={liveClassConfig.role}
+          initialRoomCode={liveClassConfig.roomCode}
+          initialUserName={liveClassConfig.userName}
+          initialGradeClass={liveClassConfig.gradeOrClass}
+          onNavigateToAppPart={(partName) => {
+            if (partName === 'TEACHER_ASSIGNMENTS') setIsTeacherAssignmentsOpen(true);
+            else if (partName === 'STUDENT_ASSIGNMENTS') setIsStudentAssignmentsOpen(true);
+            else if (partName === 'PARENT_PORTAL') setIsParentPortalOpen(true);
+            else if (partName === 'PRACTICE_EXAM') setIsPracticeOpen(true);
+            else if (partName === 'THEORY_STANDARDS') setIsTheoryOpen(true);
+          }}
+        />
+      </LiveMediaErrorBoundary>
 
       {/* 14. MANDATORY STUDENT EMAIL VERIFICATION ENFORCEMENT */}
       {userRole === 'STUDENT' && !isEmailVerified && (

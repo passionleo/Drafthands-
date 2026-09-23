@@ -465,7 +465,17 @@ export const FloatingStudentPipOverlay: React.FC<FloatingStudentPipOverlayProps>
                       }`}
                       style={{ backgroundColor: student.avatarBg }}
                     >
-                      {student.name.substring(0, 2).toUpperCase()}
+                      {(() => {
+                        try {
+                          const n = student?.name || 'Student';
+                          const parts = n.trim().split(/\s+/).filter(Boolean);
+                          if (parts.length === 0) return 'ST';
+                          if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                          return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                        } catch {
+                          return 'ST';
+                        }
+                      })()}
                     </div>
                     {isLocal && mediaError ? (
                       <span className="text-[9px] text-red-400 mt-1 font-mono">Camera Blocked</span>

@@ -219,13 +219,17 @@ export const ParticipantVideoTile: React.FC<{
                   }`}
                   style={{ backgroundColor: participant?.avatarBg || (isInstructor ? '#7c3aed' : '#0891b2') }}
                 >
-                  {(participant?.name || 'Draftsman')
-                    .split(' ')
-                    .map(part => part[0])
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase() || (isInstructor ? 'TD' : 'ST')}
+                  {(() => {
+                    try {
+                      const name = participant?.name || (isInstructor ? 'Technical Instructor' : 'Draftsman');
+                      const parts = name.trim().split(/\s+/).filter(Boolean);
+                      if (parts.length === 0) return isInstructor ? 'TD' : 'ST';
+                      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                    } catch {
+                      return isInstructor ? 'TD' : 'ST';
+                    }
+                  })()}
 
                   {/* Sub-badge: Crown or Compass icon */}
                   <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-slate-900 border border-slate-700 shadow-md">
