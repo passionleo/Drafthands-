@@ -4,7 +4,6 @@ import { HeroSection } from './HeroSection';
 import { ValuePropositionGrid } from './ValuePropositionGrid';
 import { CurriculumPreviewSection } from './CurriculumPreviewSection';
 import { ExamArchiveSection } from './ExamArchiveSection';
-import { LiveClassroomSpotlight } from './LiveClassroomSpotlight';
 import { TestimonialsSection } from './TestimonialsSection';
 import { LandingFooter } from './LandingFooter';
 import { NavigationVideoModal } from './NavigationVideoModal';
@@ -280,13 +279,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         onOpenPastQuestionsHub={handleLaunchPastQuestions}
       />
 
-      {/* 6. Real-Time Virtual Classroom Spotlight */}
-      <LiveClassroomSpotlight
-        onOpenLiveClass={handleLaunchTeacherPortal}
-        onOpenVideoTour={handleOpenVideoTour}
-      />
-
-      {/* 7. Testimonials & Accreditations */}
+      {/* 6. Testimonials & Accreditations */}
       <TestimonialsSection />
 
       {/* 8. Footer */}

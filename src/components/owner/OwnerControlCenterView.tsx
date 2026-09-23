@@ -628,38 +628,6 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
                   </button>
                 </div>
               </div>
-
-              {/* 6. Live Virtual Classroom Launcher */}
-              <div className="p-5 rounded-2xl bg-slate-900 border border-indigo-500/30 flex flex-col justify-between space-y-4 shadow-lg hover:border-indigo-400 transition-all group">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-950 border border-indigo-500/40 text-indigo-400 flex items-center justify-center">
-                      <Tv className="w-5 h-5" />
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-950 text-indigo-300 border border-indigo-500/30 font-bold">
-                      WebRTC Studio
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
-                      Live Broadcast & Projection Studio
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      Live high-contrast classroom smart board projection mode with ultra-large step indicators, ruler/compass simulation overlays, and student hand-raising.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-800">
-                  <button
-                    onClick={() => onLaunchStudio('SS1')}
-                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <span>Launch Studio with Projection</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         )}

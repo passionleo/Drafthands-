@@ -40,7 +40,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 }) => {
   const { 
     subscribeToPlan, 
-    enableDemoMode, 
     redeemVoucherCode,
     isMasterAdmin,
     enableMasterAdminBypass
@@ -130,11 +129,6 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         onClose();
       }, 1400);
     }
-  };
-
-  const handleActivateDemoMode = () => {
-    enableDemoMode();
-    onClose();
   };
 
   return (

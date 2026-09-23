@@ -271,23 +271,6 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Live Virtual Classroom (2-Way Video + Synced Whiteboard) */}
-        {onOpenLiveClass && (
-          <button
-            id="btn-open-live-class"
-            onClick={onOpenLiveClass}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-red-600/30 to-pink-600/30 hover:from-red-600/45 hover:to-pink-600/45 text-red-300 border border-red-500/50 transition-all shadow-sm group"
-            title="Drafthands Live Virtual Classroom: 2-Way Video/Audio & Real-Time Synchronized Technical Whiteboard"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-            </span>
-            <Tv className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
-            <span className="hidden sm:inline">Live Class</span>
-          </button>
-        )}
-
         {/* Live-Class Projection Mode (Pro Tier - HIDDEN FOR STUDENTS) */}
         {!isStudent && (isTeacher || isAdmin) && onOpenProjectionMode && (
           <button

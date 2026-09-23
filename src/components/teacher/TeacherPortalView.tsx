@@ -45,7 +45,7 @@ interface TeacherPortalViewProps {
   onSwitchToStudentView: () => void;
 }
 
-type TeacherTab = 'LESSON_NOTES' | 'GRADING_DESK' | 'LIVE_CLASS' | 'SCHEME_WORK';
+type TeacherTab = 'LESSON_NOTES' | 'GRADING_DESK' | 'PROJECTION' | 'SCHEME_WORK';
 type LessonPlanTab = 'DOCUMENT' | 'DELIVERY_GUIDE' | 'MARKING_RUBRIC' | 'BOARD_LAYOUT';
 
 export const TeacherPortalView: React.FC<TeacherPortalViewProps> = ({
@@ -255,15 +255,15 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
             </button>
 
             <button
-              onClick={() => setActiveTab('LIVE_CLASS')}
+              onClick={() => setActiveTab('PROJECTION')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                activeTab === 'LIVE_CLASS'
+                activeTab === 'PROJECTION'
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               <Tv className="w-3.5 h-3.5" />
-              <span>Live Class & Projection</span>
+              <span>Smart Board & Projection</span>
             </button>
           </nav>
 
@@ -858,7 +858,7 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
         )}
 
         {/* TAB 3: LIVE CLASSROOM HOST & SMART BOARD PROJECTION */}
-        {activeTab === 'LIVE_CLASS' && (
+        {activeTab === 'PROJECTION' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Live Virtual Classroom Launch Card */}
             <div className="p-6 bg-slate-900 border border-purple-900/40 rounded-2xl shadow-xl space-y-4">

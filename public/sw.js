@@ -1,7 +1,7 @@
 // DraftHands PWA Service Worker
-const CACHE_NAME = 'drafthands-pwa-v1';
+const CACHE_NAME = 'drafthands-pwa-v2';
 
-// Core static assets to precache on installation
+// Core static assets to precache on installation (production/offline shell)
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -28,7 +28,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activation event - prune old caches and claim clients
+// Activation event - prune old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -56,6 +56,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(request.url);
+
+  // NEVER cache Vite dev server internal assets, HMR, or dynamic src modules in development
+  if (
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.searchParams.has('v') ||
+    url.pathname.includes('hot-update')
+  ) {
+    return; // Pass straight to network, do not intercept
+  }
 
   // 1. Navigation requests (HTML pages) -> Network-first with cache fallback
   if (request.mode === 'navigate') {
