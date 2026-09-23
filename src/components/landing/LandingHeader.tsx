@@ -25,6 +25,7 @@ interface LandingHeaderProps {
   onOpenTeacherPortal?: () => void;
   onOpenParentPortal?: () => void;
   onOpenStudentPortal?: () => void;
+  onOpenOwnerPortal?: () => void;
 }
 
 export const LandingHeader: React.FC<LandingHeaderProps> = ({
@@ -34,7 +35,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   onNavigateSection,
   onOpenTeacherPortal,
   onOpenParentPortal,
-  onOpenStudentPortal
+  onOpenStudentPortal,
+  onOpenOwnerPortal
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isCurriculumDropdownOpen, setIsCurriculumDropdownOpen] = useState<boolean>(false);
@@ -145,6 +147,15 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>10-Yr WAEC Archive</span>
           </button>
+
+          <button
+            onClick={() => onOpenOwnerPortal ? onOpenOwnerPortal() : (window.location.hash = '#owner')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-300 hover:text-white hover:bg-amber-950/40 border border-amber-500/30 transition-all cursor-pointer shadow-sm"
+            title="Platform Owner Master Command Center"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            <span>Owner Portal</span>
+          </button>
         </nav>
 
         {/* Action Buttons */}
@@ -238,6 +249,18 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             >
               <FileCheck2 className="w-4 h-4 text-emerald-400" />
               <span>WAEC, NECO & NABTEB 10-Yr Past Questions</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenOwnerPortal) onOpenOwnerPortal();
+                else window.location.hash = '#owner';
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-amber-300 hover:bg-amber-950/40 border border-amber-500/30 flex items-center gap-2.5"
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+              <span>Owner Portal (Master Control & Traffic)</span>
             </button>
           </div>
 

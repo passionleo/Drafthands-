@@ -62,6 +62,7 @@ interface HeaderProps {
   onToggleSidebar?: () => void;
   onReturnToLanding?: () => void;
   onOpenPastQuestions?: () => void;
+  onOpenOwnerPortal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -91,7 +92,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   onReturnToLanding,
   onOpenPastQuestions,
-  onOpenAdminConsole
+  onOpenAdminConsole,
+  onOpenOwnerPortal
 }) => {
   const tiers: CurriculumTier[] = ['SS1', 'SS2', 'SS3', 'HIGHER_INSTITUTION'];
   const { 
@@ -342,6 +344,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <School className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden lg:inline">Admin Console</span>
+          </button>
+        )}
+
+        {/* Platform Owner Command Center (Accessible for Owner & Webmaster) */}
+        {onOpenOwnerPortal && (
+          <button
+            id="btn-open-owner-portal"
+            onClick={onOpenOwnerPortal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-gradient-to-r from-amber-600/30 via-orange-600/30 to-amber-500/30 hover:from-amber-600/50 hover:to-orange-600/50 text-amber-300 border border-amber-500/50 transition-colors shadow-sm cursor-pointer"
+            title="Platform Owner Command Center: Traffic Monitoring, All Portals Switchboard, Visitor Permissions"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Owner Portal</span>
           </button>
         )}
 

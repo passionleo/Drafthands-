@@ -34,21 +34,32 @@ import { LandingPage } from './components/landing/LandingPage';
 import { UserRoleType } from './components/landing/AuthModal';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
+import { OwnerControlCenterView } from './components/owner/OwnerControlCenterView';
+import { VisitorTracker } from './utils/visitorTracker';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 import { ParsedCadResult } from './utils/aiCadPromptParser';
 import { CadErrorBoundary } from './components/common/CadErrorBoundary';
 import { LiveMediaErrorBoundary } from './components/common/LiveMediaErrorBoundary';
-import { Mail, CheckCircle2, Sparkles, Tv } from 'lucide-react';
+import { Mail, CheckCircle2, Sparkles, Tv, ShieldCheck } from 'lucide-react';
 
 function AppContent() {
-  // Master View: Separate dedicated entities for Student Workspace, Teacher Portal, Parent Portal, Past Questions Hub, and Public Landing
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER_PORTAL' | 'PARENT_PORTAL'>('LANDING');
+  // Master View: Separate dedicated entities for Student Workspace, Teacher Portal, Parent Portal, Past Questions Hub, Owner Control Center, and Public Landing
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER_PORTAL' | 'PARENT_PORTAL' | 'OWNER_PORTAL'>('LANDING');
 
-  // URL Hash Listener for dedicated routing (#past-questions, #teacher-portal, #parent-portal, #studio, #landing)
+  // URL Hash Listener for dedicated routing (#past-questions, #teacher-portal, #parent-portal, #owner, #studio, #landing)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
+      if (hash.startsWith('#access-pass=') || hash.startsWith('#vip=')) {
+        const code = hash.replace('#access-pass=', '').replace('#vip=', '').split('&')[0];
+        if (code) {
+          VisitorTracker.redeemVipPass(code.toUpperCase());
+        }
+        window.location.hash = '#studio';
+        setCurrentView('STUDIO');
+      } else if (hash === '#owner' || hash === '#owner-portal' || hash === '#admin-portal' || hash === '#webmaster') {
+        setCurrentView('OWNER_PORTAL');
+      } else if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
         setCurrentView('PAST_QUESTIONS');
       } else if (hash === '#teacher' || hash === '#teacher-portal' || hash === '#faculty') {
         setCurrentView('TEACHER_PORTAL');
@@ -611,6 +622,50 @@ function AppContent() {
     );
   }
 
+  // Dedicated Platform Owner & Webmaster Command Center Route View (Separate Entity)
+  if (currentView === 'OWNER_PORTAL') {
+    return (
+      <CadErrorBoundary>
+        <OwnerControlCenterView
+          onReturnToHome={() => {
+            window.location.hash = '';
+            setCurrentView('LANDING');
+          }}
+          onLaunchStudio={(tier, topicId) => {
+            if (tier) handleSelectTier(tier);
+            if (topicId) handleSelectTopic(topicId);
+            window.location.hash = '#studio';
+            setCurrentView('STUDIO');
+          }}
+          onOpenTeacherPortal={() => {
+            setUserRole('TEACHER');
+            window.location.hash = '#teacher-portal';
+            setCurrentView('TEACHER_PORTAL');
+          }}
+          onOpenParentPortal={() => {
+            setUserRole('PARENT');
+            window.location.hash = '#parent-portal';
+            setCurrentView('PARENT_PORTAL');
+          }}
+          onOpenPastQuestions={() => {
+            window.location.hash = '#past-questions';
+            setCurrentView('PAST_QUESTIONS');
+          }}
+          onOpenAdminConsole={() => {
+            setIsAdminConsoleOpen(true);
+          }}
+          topics={allCurriculumTopics}
+        />
+        {isAdminConsoleOpen && (
+          <AdminConsoleModal
+            isOpen={isAdminConsoleOpen}
+            onClose={() => setIsAdminConsoleOpen(false)}
+          />
+        )}
+      </CadErrorBoundary>
+    );
+  }
+
   // If on public landing page view, directly render landing page with distinct portal navigation
   if (currentView === 'LANDING') {
     return (
@@ -631,6 +686,10 @@ function AppContent() {
             setUserRole('STUDENT');
             window.location.hash = '#studio';
             setCurrentView('STUDIO');
+          }}
+          onOpenOwnerPortal={() => {
+            window.location.hash = '#owner';
+            setCurrentView('OWNER_PORTAL');
           }}
         />
       </CadErrorBoundary>
@@ -676,6 +735,10 @@ function AppContent() {
           onOpenPastQuestions={() => {
             window.location.hash = '#past-questions';
             setCurrentView('PAST_QUESTIONS');
+          }}
+          onOpenOwnerPortal={() => {
+            window.location.hash = '#owner';
+            setCurrentView('OWNER_PORTAL');
           }}
         />
 

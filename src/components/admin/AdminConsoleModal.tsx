@@ -61,30 +61,44 @@ export const AdminConsoleModal: React.FC<AdminConsoleModalProps> = ({ isOpen, on
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 px-4 pt-2 bg-slate-950/60 border-b border-slate-800 text-xs font-semibold overflow-x-auto">
-          {[
-            { id: 'OVERVIEW', label: 'School Overview', icon: Building2 },
-            { id: 'LICENSES', label: 'Multi-Seat Licenses', icon: Key },
-            { id: 'ROSTER', label: 'Student & Staff Roster', icon: Users },
-            { id: 'BILLING', label: 'Paystack Institution Billing', icon: CreditCard }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium transition-all ${
-                  isActive
-                    ? 'border-amber-400 text-amber-300 bg-amber-500/5'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between px-4 pt-2 bg-slate-950/60 border-b border-slate-800 text-xs font-semibold overflow-x-auto gap-2">
+          <div className="flex items-center gap-1">
+            {[
+              { id: 'OVERVIEW', label: 'School Overview', icon: Building2 },
+              { id: 'LICENSES', label: 'Multi-Seat Licenses', icon: Key },
+              { id: 'ROSTER', label: 'Student & Staff Roster', icon: Users },
+              { id: 'BILLING', label: 'Paystack Institution Billing', icon: CreditCard }
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-medium transition-all ${
+                    isActive
+                      ? 'border-amber-400 text-amber-300 bg-amber-500/5'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => {
+              window.location.hash = '#owner';
+              onClose();
+            }}
+            className="shrink-0 mb-1 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Switch to Platform Owner Command Center"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            <span>Platform Owner Master Hub →</span>
+          </button>
         </div>
 
         {/* Content */}

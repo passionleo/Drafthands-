@@ -19,12 +19,14 @@ interface LandingFooterProps {
   onLaunchStudio: (tier?: CurriculumTier) => void;
   onOpenAuth: (mode?: 'SIGN_IN' | 'REGISTER') => void;
   onOpenVideoTour: () => void;
+  onOpenOwnerPortal?: () => void;
 }
 
 export const LandingFooter: React.FC<LandingFooterProps> = ({
   onLaunchStudio,
   onOpenAuth,
-  onOpenVideoTour
+  onOpenVideoTour,
+  onOpenOwnerPortal
 }) => {
   return (
     <footer className="bg-slate-950 border-t border-slate-800 text-slate-400 text-xs">
@@ -172,6 +174,15 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
               <li>
                 <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
                   School Admin Licensing
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onOpenOwnerPortal ? onOpenOwnerPortal() : (window.location.hash = '#owner')} 
+                  className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
+                >
+                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                  <span>Platform Owner & Master Hub</span>
                 </button>
               </li>
               <li>

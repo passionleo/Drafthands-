@@ -20,10 +20,12 @@ import {
   SubscriptionPlan, 
   SubscriptionPlanType, 
   SUBSCRIPTION_PLANS, 
-  FREE_TOPICS_PER_TIER 
+  FREE_TOPICS_PER_TIER,
+  UserRoleType
 } from '../../types/subscription';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payWithPaystack, formatNaira } from '../../utils/paystack';
+import { VisitorTracker } from '../../utils/visitorTracker';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -50,7 +52,35 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   const [voucherInput, setVoucherInput] = useState<string>('');
   const [voucherFeedback, setVoucherFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
+  // Visitor Access Request to Owner state
+  const [isRequestSectionOpen, setIsRequestSectionOpen] = useState<boolean>(false);
+  const [requestName, setRequestName] = useState<string>('');
+  const [requestEmail, setRequestEmail] = useState<string>('');
+  const [requestRole, setRequestRole] = useState<UserRoleType>('STUDENT');
+  const [requestInstitution, setRequestInstitution] = useState<string>('');
+  const [requestReason, setRequestReason] = useState<string>('');
+  const [requestFeedback, setRequestFeedback] = useState<string | null>(null);
+
   if (!isOpen) return null;
+
+  const handleSubmitAccessRequest = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestName.trim() || !requestEmail.trim()) return;
+
+    VisitorTracker.submitAccessRequest({
+      name: requestName.trim(),
+      email: requestEmail.trim(),
+      role: requestRole,
+      institution: requestInstitution.trim() || 'Technical College / Secondary School',
+      reason: requestReason.trim() || 'Requesting visitor access from platform owner for technical drawing study.'
+    });
+
+    setRequestFeedback('Your request has been forwarded directly to the Platform Owner (passion4dami@gmail.com). You will receive access once approved.');
+    setTimeout(() => {
+      setRequestFeedback(null);
+      setIsRequestSectionOpen(false);
+    }, 4500);
+  };
 
   const handleApplyMasterBypass = () => {
     enableMasterAdminBypass('passion4dami@gmail.com');
@@ -443,6 +473,104 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                   voucherFeedback.success ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60' : 'bg-red-950/60 text-red-300 border border-red-800/60'
                 }`}>
                   {voucherFeedback.message}
+                </div>
+              )}
+            </div>
+
+            {/* Direct Visitor Permit Request from Owner */}
+            <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Visiting School, Teacher, or Need Special Permit?</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsRequestSectionOpen(prev => !prev)}
+                  className="text-xs font-bold text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                >
+                  {isRequestSectionOpen ? 'Hide Request Form' : 'Request Access from Platform Owner'}
+                </button>
+              </div>
+
+              {isRequestSectionOpen && (
+                <form onSubmit={handleSubmitAccessRequest} className="pt-2 space-y-3 border-t border-slate-800/80 animate-in fade-in duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="block text-slate-400 text-[10px] mb-1">Your Full Name:</label>
+                      <input
+                        type="text"
+                        value={requestName}
+                        onChange={(e) => setRequestName(e.target.value)}
+                        placeholder="e.g. Engr. Mohammed Bello"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-[10px] mb-1">Email Address:</label>
+                      <input
+                        type="email"
+                        value={requestEmail}
+                        onChange={(e) => setRequestEmail(e.target.value)}
+                        placeholder="e.g. bello@govcollege.edu.ng"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-[10px] mb-1">Role / Designation:</label>
+                      <select
+                        value={requestRole}
+                        onChange={(e) => setRequestRole(e.target.value as any)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                      >
+                        <option value="STUDENT">Student Candidate</option>
+                        <option value="TEACHER">Technical Drawing Instructor</option>
+                        <option value="PARENT">Parent / Guardian</option>
+                        <option value="ADMIN">School Administrator / Inspector</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-[10px] mb-1">School / Institution:</label>
+                      <input
+                        type="text"
+                        value={requestInstitution}
+                        onChange={(e) => setRequestInstitution(e.target.value)}
+                        placeholder="e.g. King's College Lagos"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-[10px] mb-1">Reason for Access Request:</label>
+                    <textarea
+                      rows={2}
+                      value={requestReason}
+                      onChange={(e) => setRequestReason(e.target.value)}
+                      placeholder="e.g. Evaluating interactive smartboard projection for SS2 WAEC preparation..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Owner Notification: passion4dami@gmail.com
+                    </span>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-600/30 transition-all cursor-pointer"
+                    >
+                      Submit Access Request to Owner
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {requestFeedback && (
+                <div className="p-2.5 rounded-lg text-xs font-medium bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 animate-in fade-in duration-200">
+                  {requestFeedback}
                 </div>
               )}
             </div>

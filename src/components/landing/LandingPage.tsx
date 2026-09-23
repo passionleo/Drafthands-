@@ -26,13 +26,15 @@ interface LandingPageProps {
   onOpenTeacherPortal?: () => void;
   onOpenParentPortal?: () => void;
   onOpenStudentPortal?: () => void;
+  onOpenOwnerPortal?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onEnterStudio = () => {},
   onOpenTeacherPortal,
   onOpenParentPortal,
-  onOpenStudentPortal
+  onOpenStudentPortal,
+  onOpenOwnerPortal
 }) => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
@@ -92,6 +94,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         onOpenTeacherPortal={onOpenTeacherPortal}
         onOpenParentPortal={onOpenParentPortal}
         onOpenStudentPortal={onOpenStudentPortal}
+        onOpenOwnerPortal={onOpenOwnerPortal}
       />
 
       {/* 2. Hero Section */}
@@ -136,6 +139,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         onLaunchStudio={handleLaunchStudio}
         onOpenAuth={handleOpenAuth}
         onOpenVideoTour={handleOpenVideoTour}
+        onOpenOwnerPortal={onOpenOwnerPortal}
       />
 
       {/* Modals */}
