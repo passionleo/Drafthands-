@@ -19,6 +19,10 @@ interface LandingFooterProps {
   onLaunchStudio: (tier?: CurriculumTier) => void;
   onOpenAuth: (mode?: 'SIGN_IN' | 'REGISTER') => void;
   onOpenVideoTour: () => void;
+  onOpenStudentPortal?: () => void;
+  onOpenTeacherPortal?: () => void;
+  onOpenParentPortal?: () => void;
+  onOpenPastQuestions?: () => void;
   onOpenOwnerPortal?: () => void;
 }
 
@@ -26,6 +30,10 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
   onLaunchStudio,
   onOpenAuth,
   onOpenVideoTour,
+  onOpenStudentPortal,
+  onOpenTeacherPortal,
+  onOpenParentPortal,
+  onOpenPastQuestions,
   onOpenOwnerPortal
 }) => {
   return (
@@ -59,7 +67,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                 onClick={() => onLaunchStudio('SS1')}
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white font-semibold text-sm transition-all"
               >
-                <span>Try Demo in Browser</span>
+                <span>Launch Interactive Studio</span>
               </button>
             </div>
           </div>
@@ -138,12 +146,18 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchStudio('SS3')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenPastQuestions ? onOpenPastQuestions() : onLaunchStudio('SS3')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   10-Yr WAEC Past Papers
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenTeacherPortal ? onOpenTeacherPortal() : onOpenAuth('SIGN_IN')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   Teacher Lesson Generator
                 </button>
               </li>
@@ -157,22 +171,34 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
             </div>
             <ul className="space-y-1.5 text-xs">
               <li>
-                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenStudentPortal ? onOpenStudentPortal() : onLaunchStudio('SS1')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   Student Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenTeacherPortal ? onOpenTeacherPortal() : onOpenAuth('SIGN_IN')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   Technical Teacher Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenParentPortal ? onOpenParentPortal() : onOpenAuth('SIGN_IN')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   Parent Monitoring Portal
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenAuth('SIGN_IN')} className="hover:text-cyan-300 transition-colors">
+                <button 
+                  onClick={() => onOpenAuth('REGISTER')} 
+                  className="hover:text-cyan-300 transition-colors"
+                >
                   School Admin Licensing
                 </button>
               </li>

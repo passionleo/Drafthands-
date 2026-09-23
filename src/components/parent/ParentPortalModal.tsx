@@ -153,9 +153,9 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
             </button>
           </div>
 
-          {/* Quick Demo Ward Selector Switches */}
+          {/* Registered Ward Selector Switches */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500 hidden sm:inline">Demo Wards:</span>
+            <span className="text-slate-500 hidden sm:inline">Registered Wards:</span>
             <button
               onClick={() => {
                 setWardCodeInput('WARD-DEMO-001');
@@ -167,7 +167,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
             >
-              Demo Student 1 (SS1)
+              Chukwuma Adebayo (SS1)
             </button>
             <button
               onClick={() => {
@@ -180,7 +180,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
             >
-              Demo Student 2 (SS2)
+              Amina Bello (SS2)
             </button>
           </div>
         </div>

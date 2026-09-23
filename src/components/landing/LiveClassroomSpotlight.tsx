@@ -187,7 +187,7 @@ export const LiveClassroomSpotlight: React.FC<LiveClassroomSpotlightProps> = ({
                 onClick={onOpenVideoTour}
                 className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs sm:text-sm transition-all"
               >
-                <span>Watch Classroom Demo</span>
+                <span>Watch Video Tour</span>
               </button>
             </div>
           </div>

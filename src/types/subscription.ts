@@ -27,6 +27,7 @@ export interface UserProfile {
   institution?: string;
   role: UserRoleType;
   isEmailVerified: boolean;
+  isAuthenticated?: boolean;
   registeredAt?: string;
 }
 
@@ -40,6 +41,7 @@ export interface UserSubscriptionState {
   unlockedTopicIds: string[];
   isDemo?: boolean;
   isMasterAdmin?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanType, SubscriptionPlan> = {

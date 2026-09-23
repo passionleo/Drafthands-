@@ -159,7 +159,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 <span className="text-[10px] font-mono text-cyan-400 hidden sm:inline-block">
-                  {heroMediaMode === 'VIDEO' ? '0:35 Interactive Demo' : 'ISO Standards'}
+                  {heroMediaMode === 'VIDEO' ? '0:35 Platform Overview' : 'ISO Standards'}
                 </span>
               </div>
 

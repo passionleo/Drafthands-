@@ -18,12 +18,14 @@ export interface SubscriptionContextType {
   isDemoMode: boolean;
   isTeacherOrAdmin: boolean;
   isMasterAdmin: boolean;
+  isAuthenticated: boolean;
   userRole: UserRoleType;
   userProfile?: UserProfile;
   currentPlan: SubscriptionPlan;
   isEmailVerified: boolean;
   setUserRole: (role: UserRoleType) => void;
   setUserProfile: (profile: UserProfile) => void;
+  authenticateUser: (profile: UserProfile) => void;
   enableMasterAdminBypass: (ownerEmail?: string) => void;
   disableMasterAdminBypass: () => void;
   verifyEmail: (code: string) => { success: boolean; message: string };
@@ -278,6 +280,50 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     (hasTeacherToken && (userRole === 'TEACHER' || userRole === 'ADMIN')) || 
     (hasActivePaidSubscription && (subscription?.plan === 'TEACHER_PRO' || subscription?.plan === 'INSTITUTION_PASS'))
   );
+
+  const isAuthenticated = Boolean(
+    isMasterAdmin ||
+    (subscription?.isAuthenticated && Boolean(subscription?.userProfile?.isEmailVerified)) ||
+    (subscription?.userProfile?.email && subscription.userProfile.email.trim().length > 0 && subscription.userProfile.isEmailVerified)
+  );
+
+  const authenticateUser = (profile: UserProfile) => {
+    const isOwner = isOwnerOrMasterEmail(profile.email);
+    if (isOwner && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(MASTER_BYPASS_STORAGE_KEY, 'true');
+        localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, `MASTER_TOKEN_${Date.now()}`);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        if (profile.role === 'TEACHER' || profile.role === 'ADMIN') {
+          localStorage.setItem(TEACHER_TOKEN_STORAGE_KEY, `TCH_${Date.now()}`);
+        } else if (profile.role === 'PARENT') {
+          localStorage.setItem(PARENT_TOKEN_STORAGE_KEY, `PRNT_${Date.now()}`);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    setSubscription(prev => ({
+      ...prev,
+      isAuthenticated: true,
+      isMasterAdmin: isOwner ? true : prev.isMasterAdmin,
+      isSubscribed: isOwner ? true : prev.isSubscribed,
+      plan: isOwner ? 'INSTITUTION_PASS' : prev.plan,
+      userRole: profile.role,
+      userProfile: {
+        ...profile,
+        isAuthenticated: true,
+        isEmailVerified: true
+      }
+    }));
+  };
 
   const setUserRole = (role: UserRoleType) => {
     try {
@@ -629,12 +675,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isDemoMode,
         isTeacherOrAdmin,
         isMasterAdmin,
+        isAuthenticated,
         userRole,
         userProfile,
         currentPlan,
         isEmailVerified,
         setUserRole,
         setUserProfile,
+        authenticateUser,
         enableMasterAdminBypass,
         disableMasterAdminBypass,
         verifyEmail,

@@ -240,7 +240,7 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
                 type="text"
                 value={wardCodeInput}
                 onChange={(e) => setWardCodeInput(e.target.value)}
-                placeholder="e.g. WARD-DEMO-001"
+                placeholder="e.g. WARD-DH-2025-88"
                 className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-xs text-white uppercase font-mono w-44 focus:outline-none focus:border-blue-500"
               />
             </div>

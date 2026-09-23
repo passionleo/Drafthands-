@@ -302,8 +302,8 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
                   Master Webmaster
                 </span>
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/80 text-[10px] font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Network Live</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>Network Online</span>
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -361,7 +361,7 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto text-xs font-semibold py-2">
           {[
             { id: 'SWITCHBOARD', label: 'All Portals Switchboard', icon: Sliders },
-            { id: 'TRAFFIC', label: 'Site Live Traffic & Analytics', icon: TrendingUp },
+            { id: 'TRAFFIC', label: 'Site Traffic & Analytics', icon: TrendingUp },
             { id: 'VISITORS', label: `Visitor Access & Permissions`, icon: Users, badge: pendingRequestsCount > 0 ? pendingRequestsCount : null },
             { id: 'VIP_PASSES', label: 'VIP One-Time Pass Links', icon: Key }
           ].map(tab => {
@@ -672,7 +672,7 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
               <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/30 relative overflow-hidden">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-semibold">Active Visitors Right Now</span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                 </div>
                 <div className="text-3xl font-extrabold text-white mt-2 font-mono flex items-baseline gap-2">
                   <span>{metrics.liveActiveCount}</span>
@@ -784,36 +784,6 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Live Real-time Activity Stream */}
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
-                  <span>Real-Time Live Academy Activity Stream</span>
-                </h3>
-                <span className="text-[10px] text-slate-400 font-mono">Updates automatically</span>
-              </div>
-
-              <div className="divide-y divide-slate-800">
-                {metrics.recentActivityEvents.map(evt => (
-                  <div key={evt.id} className="py-2.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        evt.type === 'drawing' ? 'bg-cyan-400' : evt.type === 'request' ? 'bg-amber-400' : 'bg-emerald-400'
-                      }`} />
-                      <span className="text-slate-200 font-medium">{evt.description}</span>
-                    </div>
-                    <div className="flex items-center gap-3 font-mono text-[11px] text-slate-400 shrink-0">
-                      <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                        {evt.location}
-                      </span>
-                      <span>{evt.timestamp}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -851,7 +821,7 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
                     {sitePolicy === 'OPEN_ALL_VISITORS' && <Check className="w-4 h-4 text-emerald-400" />}
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Temporarily permits ALL visitors to access all topics and tools without paywall (ideal for exam week promos or demos).
+                    Temporarily permits ALL visitors to access all topics and tools without paywall (ideal for promotional open days or exam review weeks).
                   </p>
                 </button>
 
@@ -1090,7 +1060,7 @@ export const OwnerControlCenterView: React.FC<OwnerControlCenterViewProps> = ({
                     onChange={(e) => setNewPassDurationHours(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value={1}>1 Hour (Quick Demo)</option>
+                    <option value={1}>1 Hour (Short Trial)</option>
                     <option value={24}>24 Hours (1 Day)</option>
                     <option value={168}>7 Days (1 Week)</option>
                     <option value={720}>30 Days (1 Month)</option>

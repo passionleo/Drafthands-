@@ -286,7 +286,7 @@ export const AppWalkthroughVideo: React.FC<AppWalkthroughVideoProps> = ({
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/85 border border-cyan-500/40 text-cyan-300 text-[10px] sm:text-xs font-mono font-bold shadow-md">
             <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-amber-400'}`} />
-            <span>{isPlaying ? 'LIVE DEMO • 1080P' : 'PAUSED'}</span>
+            <span>{isPlaying ? 'WALKTHROUGH • 1080P' : 'PAUSED'}</span>
           </div>
           <span className="text-xs sm:text-sm font-bold text-white tracking-wide truncate max-w-[150px] sm:max-w-xs">
             {currentScene.title}: {currentScene.badge}

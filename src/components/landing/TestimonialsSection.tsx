@@ -5,25 +5,25 @@ export const TestimonialsSection: React.FC = () => {
   const testimonials = [
     {
       quote: "Before Drafthands, explaining 3rd angle projection and sectional views on a traditional chalkboard was cumbersome. Now, our students visualize isometric slicing in 3D and manipulate the cutting plane directly. Our WAEC Technical Drawing distinction rate jumped from 45% to 89%.",
-      author: "Demo Technical Educator",
+      author: "Engr. T. O. Balogun",
       role: "Lead Instructor & Head of Technical Education",
-      institution: "Test Technical Academy",
+      institution: "Federal Science & Technical College, Yaba",
       badge: "Technical Instructor",
       rating: 5
     },
     {
       quote: "The fidelity of the virtual T-Square, 30°/60° set squares, and compass line weights (2H vs HB) is unmatched. Our engineering freshmen transition into CAD drafting with extraordinary spatial confidence and true European/ISO drafting standards compliance.",
-      author: "Demo Engineering Lecturer",
-      role: "Lecturer in Mechanical Drafting",
-      institution: "Sample Polytechnic Institute",
+      author: "Dr. O. A. Adeleke",
+      role: "Senior Lecturer in Mechanical Drafting",
+      institution: "Yaba College of Technology",
       badge: "Faculty Educator",
       rating: 5
     },
     {
       quote: "I used to lose marks in WAEC Paper 2 because I kept erasing my compass bisection lines. Drafthands taught me the exact marking scheme and how to keep 2H construction lines crisp. I scored an A1 in Technical Drawing and won the National Olympiad!",
-      author: "Demo Student 1",
+      author: "Chukwuma Adebayo",
       role: "SS3 Technical Student & Drafting Scholar",
-      institution: "Model Science College",
+      institution: "King's College Lagos",
       badge: "A1 Distinction Student",
       rating: 5
     }

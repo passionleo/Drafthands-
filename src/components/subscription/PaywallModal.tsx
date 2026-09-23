@@ -402,11 +402,11 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={handleActivateDemoMode}
+                      onClick={onClose}
                       className="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 font-mono text-[11px] border border-slate-700/80 transition-colors"
-                      title="Demo mode unlocks free introductory content only"
+                      title="Explore free starter curriculum content"
                     >
-                      Preview Free Tier
+                      Explore Free Topics
                     </button>
 
                     <button

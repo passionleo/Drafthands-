@@ -25,6 +25,7 @@ interface LandingHeaderProps {
   onOpenTeacherPortal?: () => void;
   onOpenParentPortal?: () => void;
   onOpenStudentPortal?: () => void;
+  onOpenPastQuestions?: () => void;
   onOpenOwnerPortal?: () => void;
 }
 
@@ -36,6 +37,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   onOpenTeacherPortal,
   onOpenParentPortal,
   onOpenStudentPortal,
+  onOpenPastQuestions,
   onOpenOwnerPortal
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -141,7 +143,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           </button>
 
           <button
-            onClick={() => handleNavClick('past-questions')}
+            onClick={() => {
+              if (onOpenPastQuestions) {
+                onOpenPastQuestions();
+              } else {
+                handleNavClick('past-questions');
+              }
+            }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 transition-colors"
           >
             <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -244,7 +252,14 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             </button>
 
             <button
-              onClick={() => handleNavClick('past-questions')}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (onOpenPastQuestions) {
+                  onOpenPastQuestions();
+                } else {
+                  handleNavClick('past-questions');
+                }
+              }}
               className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-200 hover:bg-slate-900 flex items-center gap-2.5"
             >
               <FileCheck2 className="w-4 h-4 text-emerald-400" />

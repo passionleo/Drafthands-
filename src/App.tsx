@@ -687,6 +687,10 @@ function AppContent() {
             window.location.hash = '#studio';
             setCurrentView('STUDIO');
           }}
+          onOpenPastQuestions={() => {
+            window.location.hash = '#past-questions';
+            setCurrentView('PAST_QUESTIONS');
+          }}
           onOpenOwnerPortal={() => {
             window.location.hash = '#owner';
             setCurrentView('OWNER_PORTAL');
