@@ -49,14 +49,14 @@ function AppContent() {
 
   // Startup initialization with try / catch / finally and 2.5s fallback safety timeout
   useEffect(() => {
-    // 2.5-second fallback safety timeout so workspace always opens no matter what
+    // 1.5-second fallback safety timeout so workspace always opens no matter what
     const safetyTimer = setTimeout(() => {
       setIsLoading(false);
       const preLoader = document.getElementById('dh-pre-loader');
       if (preLoader) {
         preLoader.remove();
       }
-    }, 2500);
+    }, 1500);
 
     const initializeApp = () => {
       try {
@@ -1209,8 +1209,12 @@ function AppContent() {
     );
   }
 
-  // Safe fallback: If no valid route matches, default to directly returning LandingPage without a blank fragment
-  return <LandingPage onEnterStudio={handleEnterStudioFromLanding} />;
+  // Fail-safe fallback: If currentView is undefined, null, or unrecognized, fallback unconditionally to LandingPage
+  return (
+    <CadErrorBoundary>
+      <LandingPage onEnterStudio={() => setCurrentView('STUDIO')} />
+    </CadErrorBoundary>
+  );
 }
 
 export default function App() {
