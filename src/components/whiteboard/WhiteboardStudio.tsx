@@ -55,6 +55,7 @@ import { CadErrorBoundary } from '../common/CadErrorBoundary';
 import { ParsedCadResult } from '../../utils/aiCadPromptParser';
 import { getTopicById, allCurriculumTopics } from '../../data/curriculumData';
 import { ConstructionElement } from '../../types/curriculum';
+import { AudioCadVoiceBar } from './AudioCadVoiceBar';
 
 interface WhiteboardStudioProps {
   topic?: DrawingTopic;
@@ -101,6 +102,66 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
   // AutoCAD Dynamic Input State (DYN / F12)
   const [dynamicInputEnabled, setDynamicInputEnabled] = useState<boolean>(true);
+  const [isAudioVoiceBarOpen, setIsAudioVoiceBarOpen] = useState<boolean>(false);
+
+  const handleExecuteVoiceInstruction = (instruction: string) => {
+    const lower = instruction.toLowerCase();
+    setHistory(prev => [...(Array.isArray(prev) ? prev : []), [...elements]]);
+    setRedoStack([]);
+
+    let newEl: WhiteboardElement | null = null;
+    const center = { x: 350 + Math.random() * 100, y: 250 + Math.random() * 100 };
+
+    if (lower.includes('circle') || lower.includes('radius')) {
+      newEl = {
+        id: `voice-circle-${Date.now()}`,
+        type: 'CIRCLE',
+        layer: activeLayer,
+        lineWeight: 'THIN_CONTINUOUS',
+        color: getLayerColor(activeLayer),
+        cx: center.x,
+        cy: center.y,
+        r: 65
+      };
+    } else if (lower.includes('rectangle') || lower.includes('box') || lower.includes('square')) {
+      newEl = {
+        id: `voice-rect-${Date.now()}`,
+        type: 'RECTANGLE',
+        layer: activeLayer,
+        lineWeight: 'THIN_CONTINUOUS',
+        color: getLayerColor(activeLayer),
+        x1: center.x - 70,
+        y1: center.y - 45,
+        width: 140,
+        height: 90
+      };
+    } else {
+      newEl = {
+        id: `voice-line-${Date.now()}`,
+        type: 'LINE',
+        layer: activeLayer,
+        lineWeight: 'THIN_CONTINUOUS',
+        color: getLayerColor(activeLayer),
+        x1: center.x - 90,
+        y1: center.y,
+        x2: center.x + 90,
+        y2: center.y
+      };
+    }
+
+    if (newEl) {
+      setElements(prev => [...prev, newEl]);
+      setCadHistory(prev => [
+        ...prev,
+        {
+          command: 'VOICE_TRANSCRIPTION',
+          timestamp: new Date().toLocaleTimeString().substring(0, 5),
+          status: 'SUCCESS',
+          message: `Transcribed & constructed: "${instruction}"`
+        }
+      ]);
+    }
+  };
   const [dynamicValues, setDynamicValues] = useState<DynamicDimensionValues>({
     length: 100,
     angle: 0,
@@ -2061,8 +2122,16 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           dynamicInputEnabled={dynamicInputEnabled}
           onToggleDynamicInput={() => setDynamicInputEnabled(prev => !prev)}
           onClearCanvas={handleClear}
+          onOpenVoiceAssistant={() => setIsAudioVoiceBarOpen(true)}
         />
       )}
+
+      {/* AI Voice Transcription & Google Search Grounding Assistant */}
+      <AudioCadVoiceBar
+        isOpen={isAudioVoiceBarOpen}
+        onClose={() => setIsAudioVoiceBarOpen(false)}
+        onExecuteInstruction={handleExecuteVoiceInstruction}
+      />
 
       {/* AI PROMPT-TO-CAD COMMAND BAR INTEGRATED DIRECTLY IN CAD STATION INTERFACE */}
       {workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen && (

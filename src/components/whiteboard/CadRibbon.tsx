@@ -41,6 +41,7 @@ interface CadRibbonProps {
   dynamicInputEnabled: boolean;
   onToggleDynamicInput: () => void;
   onClearCanvas: () => void;
+  onOpenVoiceAssistant?: () => void;
 }
 
 type RibbonTab = 'HOME' | 'DRAW' | 'MODIFY' | 'ANNOTATE' | 'PARAMETRIC';
@@ -58,7 +59,8 @@ export const CadRibbon: React.FC<CadRibbonProps> = ({
   onToggleOrthoLock,
   dynamicInputEnabled,
   onToggleDynamicInput,
-  onClearCanvas
+  onClearCanvas,
+  onOpenVoiceAssistant
 }) => {
   const [activeTab, setActiveTab] = useState<RibbonTab>('HOME');
 
@@ -347,6 +349,18 @@ export const CadRibbon: React.FC<CadRibbonProps> = ({
             ))}
           </select>
         </div>
+
+        {/* AI Voice Transcription & Search Grounding Button */}
+        {onOpenVoiceAssistant && (
+          <button
+            onClick={onOpenVoiceAssistant}
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer shrink-0 animate-pulse"
+            title="Transcribe Audio / Voice CAD Construction (gemini-3.5-transcribe)"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Voice AI</span>
+          </button>
+        )}
       </div>
     </div>
   );
