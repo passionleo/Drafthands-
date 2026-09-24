@@ -106,7 +106,8 @@ export const Header: React.FC<HeaderProps> = ({
     logout,
     isMasterAdmin,
     enableMasterAdminBypass,
-    disableMasterAdminBypass
+    disableMasterAdminBypass,
+    wardCode
   } = useSubscription();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
@@ -114,9 +115,9 @@ export const Header: React.FC<HeaderProps> = ({
   const currentPlan = SUBSCRIPTION_PLANS[subscription?.plan || 'FREE'] || SUBSCRIPTION_PLANS.FREE;
   // Strict check: active role student with safe optional chaining
   const isStudent = userRoleVal === 'STUDENT';
+  const isParent = userRoleVal === 'PARENT';
   const isInstructor = userRoleVal === 'TEACHER' || (userRoleVal as string) === 'INSTRUCTOR' || (isMasterAdmin && userRoleVal !== 'STUDENT');
   const isTeacher = isInstructor;
-  const isParent = userRoleVal === 'PARENT' || (isMasterAdmin && userRoleVal !== 'STUDENT');
   const isAdmin = userRoleVal === 'ADMIN' || isMasterAdmin;
 
   // Role labels and badge styling
@@ -212,137 +213,141 @@ export const Header: React.FC<HeaderProps> = ({
         })}
       </nav>
 
-      {/* Global Actions: Search, Subscription Plan Badge, Parent Portal, Live Projection, Teacher Portal, Whiteboard Studio, Modals */}
+      {/* Global Actions: Role-Based Navbar Filtering */}
       <div className="flex items-center gap-2">
-        {/* Quick Search */}
-        <div className="relative hidden 2xl:block w-36">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search topic..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-slate-950/90 text-slate-200 text-xs pl-8 pr-3 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500"
-          />
-        </div>
-
-        {/* Freemium / Subscription Upgrade Button */}
-        {isSubscribed ? (
-          <button
-            onClick={() => openPaywall()}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/70 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 transition-colors shadow-sm"
-            title="Subscription Active - Click to view details"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="font-mono text-[11px]">{currentPlan.badge}</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => openPaywall()}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 shadow-md shadow-amber-500/20 transition-all"
-            title="Freemium: First 3 Topics Free per class level. Upgrade for complete syllabus"
-          >
-            <Zap className="w-3.5 h-3.5 fill-slate-950" />
-            <span>Paystack Pro</span>
-          </button>
+        {/* STUDENT ROLE: ONLY My Tasks, CAD Studio, Ward Code: [DH-XXXX], and Log Out */}
+        {isStudent && (
+          <>
+            {wardCode && (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-slate-900 border border-slate-800 text-cyan-300 shadow-sm" title="Your Unique Student Ward Code for Parent Linking">
+                <span>Ward Code: {wardCode}</span>
+              </div>
+            )}
+            {onOpenStudentAssignments && (
+              <button
+                id="btn-open-student-assignments"
+                onClick={onOpenStudentAssignments}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 transition-colors shadow-sm"
+                title="View My Tasks"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden md:inline">My Tasks</span>
+              </button>
+            )}
+            {onToggleWhiteboardStudio && (
+              <button
+                id="btn-toggle-whiteboard-studio"
+                onClick={onToggleWhiteboardStudio}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm transition-colors"
+                title="Open CAD Studio & Practice Workspace"
+              >
+                <PenTool className="w-3.5 h-3.5" />
+                <span>CAD Studio</span>
+              </button>
+            )}
+          </>
         )}
 
-        {/* Student Practical Tasks Hub */}
-        {onOpenStudentAssignments && (
-          <button
-            id="btn-open-student-assignments"
-            onClick={onOpenStudentAssignments}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 transition-colors shadow-sm"
-            title="Student Assignments & Submissions Hub: View Tasks, Launch Studio, Submit Drawings"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline">My Tasks</span>
-          </button>
+        {/* PARENT ROLE: ONLY Ward Progress, Sponsor Ward, and Log Out */}
+        {isParent && (
+          <>
+            {onOpenParentPortal && (
+              <>
+                <button
+                  id="btn-open-parent-ward-progress"
+                  onClick={onOpenParentPortal}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-colors"
+                  title="View Ward Progress & CA Scores"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Ward Progress</span>
+                </button>
+                <button
+                  id="btn-open-parent-sponsor-ward"
+                  onClick={onOpenParentPortal}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-extrabold bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-sm transition-colors"
+                  title="Sponsor Ward (₦3,500/term)"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Sponsor Ward (₦3,500/term)</span>
+                </button>
+              </>
+            )}
+          </>
         )}
 
-        {/* Teacher Task Dispatch & Rubric Evaluation (HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isTeacher || isAdmin) && onOpenTeacherAssignments && (
-          <button
-            id="btn-open-teacher-assignments"
-            onClick={onOpenTeacherAssignments}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
-            title="Teacher Assignments & Evaluation Console: Dispatch Practical Tasks & Grade Drawings with WAEC Rubrics"
-          >
-            <Award className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden lg:inline">Grading Desk</span>
-          </button>
-        )}
+        {/* INSTRUCTOR / TEACHER / ADMIN ROLE */}
+        {!isStudent && !isParent && (
+          <>
+            {/* Freemium / Subscription Upgrade Button */}
+            {isSubscribed ? (
+              <button
+                onClick={() => openPaywall()}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/70 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 transition-colors shadow-sm"
+                title="Subscription Active - Click to view details"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono text-[11px]">{currentPlan.badge}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => openPaywall()}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 shadow-md shadow-amber-500/20 transition-all"
+                title="Freemium: First 3 Topics Free per class level. Upgrade for complete syllabus"
+              >
+                <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                <span>Paystack Pro</span>
+              </button>
+            )}
 
-        {/* Live-Class Projection Mode (Pro Tier - HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isTeacher || isAdmin) && onOpenProjectionMode && (
-          <button
-            id="btn-open-projection-mode"
-            onClick={() => {
-              if (!isSubscribed) {
-                openPaywall();
-                return;
-              }
-              onOpenProjectionMode();
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-red-500/20 hover:from-amber-500/30 hover:to-red-500/30 text-amber-300 border border-amber-500/40 transition-colors shadow-sm"
-            title="Teacher Live Projection Mode: Smart Board / Projector Interface with Laser Pointer & Step Playback"
-          >
-            <Tv className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden md:inline">Live Projection</span>
-            {!isSubscribed && <Lock className="w-3 h-3 text-amber-400/80 ml-0.5" />}
-          </button>
-        )}
+            {isTeacher && onOpenTeacherAssignments && (
+              <button
+                id="btn-open-teacher-assignments"
+                onClick={onOpenTeacherAssignments}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
+                title="Teacher Assignments & Evaluation Console"
+              >
+                <Award className="w-3.5 h-3.5 text-purple-400" />
+                <span className="hidden lg:inline">Grading Desk</span>
+              </button>
+            )}
 
-        {/* Parent Monitoring Portal (HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isParent || isAdmin) && onOpenParentPortal && (
-          <button
-            id="btn-open-parent-portal"
-            onClick={onOpenParentPortal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-blue-300 border border-blue-500/40 transition-colors shadow-sm"
-            title="Parent Monitoring & Feedback Portal: View Ward Analytics, CA Scores & Progress Report"
-          >
-            <Users className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden md:inline">Parent Portal</span>
-          </button>
-        )}
+            {isTeacher && onOpenTeacherPortal && (
+              <button
+                id="btn-open-teacher-portal"
+                onClick={onOpenTeacherPortal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
+                title="Open Teacher Portal: Generate & Export Lesson Notes"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
+                <span className="hidden lg:inline">Teacher Notes</span>
+              </button>
+            )}
 
-        {/* Teacher Lesson Note Generator Portal (HIDDEN FOR STUDENTS) */}
-        {!isStudent && (isTeacher || isAdmin) && onOpenTeacherPortal && (
-          <button
-            id="btn-open-teacher-portal"
-            onClick={onOpenTeacherPortal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-300 border border-purple-500/40 transition-colors shadow-sm"
-            title="Open Teacher Portal: Generate & Export Lesson Notes"
-          >
-            <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden lg:inline">Teacher Notes</span>
-          </button>
-        )}
+            {isAdmin && onOpenAdminConsole && (
+              <button
+                id="btn-open-admin-console"
+                onClick={onOpenAdminConsole}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/50 transition-colors shadow-sm"
+                title="Institutional School Administrator Console"
+              >
+                <School className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden lg:inline">Admin Console</span>
+              </button>
+            )}
 
-        {/* School Administrator Console (ADMIN ONLY - HIDDEN FOR STUDENTS) */}
-        {!isStudent && isAdmin && onOpenAdminConsole && (
-          <button
-            id="btn-open-admin-console"
-            onClick={onOpenAdminConsole}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-300 border border-amber-500/50 transition-colors shadow-sm"
-            title="Institutional School Administrator Console"
-          >
-            <School className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden lg:inline">Admin Console</span>
-          </button>
-        )}
-
-        {/* Platform Owner Command Center (Accessible for Owner & Webmaster) */}
-        {!isStudent && isMasterAdmin && onOpenOwnerPortal && (
-          <button
-            id="btn-open-owner-portal"
-            onClick={onOpenOwnerPortal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-gradient-to-r from-amber-600/30 via-orange-600/30 to-amber-500/30 hover:from-amber-600/50 hover:to-orange-600/50 text-amber-300 border border-amber-500/50 transition-colors shadow-sm cursor-pointer"
-            title="Platform Owner Command Center: Traffic Monitoring, All Portals Switchboard, Visitor Permissions"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Owner Portal</span>
-          </button>
+            {isMasterAdmin && onOpenOwnerPortal && (
+              <button
+                id="btn-open-owner-portal"
+                onClick={onOpenOwnerPortal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-gradient-to-r from-amber-600/30 via-orange-600/30 to-amber-500/30 hover:from-amber-600/50 hover:to-orange-600/50 text-amber-300 border border-amber-500/50 transition-colors shadow-sm cursor-pointer"
+                title="Platform Owner Command Center"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Owner Portal</span>
+              </button>
+            )}
+          </>
         )}
 
         {/* Whiteboard Drawing Studio Mode Toggle */}

@@ -47,6 +47,8 @@ export interface SubscriptionContextType {
   closePaywall: () => void;
   isPaywallOpen: boolean;
   paywallTargetTopic: DrawingTopic | null;
+  wardCode: string;
+  sponsorWard: (code: string) => { success: boolean; message: string };
 }
 
 const STORAGE_KEY = 'drafthands_subscription_v1';
@@ -121,6 +123,38 @@ const VOUCHER_CODES: Record<string, { plan: SubscriptionPlanType; role: UserRole
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [wardCode] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('drafthands_ward_code');
+      if (stored) return stored;
+      const code = `DH-${Math.random().toString(36).substring(2, 5).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+      localStorage.setItem('drafthands_ward_code', code);
+      return code;
+    }
+    return 'DH-742K';
+  });
+
+  const sponsorWard = (code: string) => {
+    const clean = code.trim().toUpperCase();
+    if (!clean) {
+      return { success: false, message: 'Please enter a valid Ward Code (e.g. DH-742K).' };
+    }
+    setSubscription(prev => ({
+      ...prev,
+      isSubscribed: true,
+      plan: 'STUDENT_TERMLY',
+      activeUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+    }));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('drafthands_sponsored_ward', clean);
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    return { success: true, message: `Successfully sponsored ward ${clean}! Pro access (₦3,500/term) is now active across all class levels.` };
+  };
+
   const [subscription, setSubscription] = useState<UserSubscriptionState>(() => {
     try {
       const storedBypass = typeof window !== 'undefined' ? localStorage.getItem(MASTER_BYPASS_STORAGE_KEY) : null;
@@ -696,7 +730,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         openPaywall,
         closePaywall,
         isPaywallOpen,
-        paywallTargetTopic
+        paywallTargetTopic,
+        wardCode,
+        sponsorWard
       }}
     >
       {children}

@@ -40,9 +40,9 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
   onSwitchToStudentView,
   onSelectTopic
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan, logout } = useSubscription();
+  const { isSubscribed, subscription, subscribeToPlan, logout, wardCode, sponsorWard } = useSubscription();
 
-  const [wardCodeInput, setWardCodeInput] = useState<string>('WARD-DH-2025-88');
+  const [wardCodeInput, setWardCodeInput] = useState<string>(wardCode || 'DH-742K');
   const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
     SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
   );
@@ -67,6 +67,7 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
 
   const handlePaystackSponsorship = () => {
     setIsPayingSponsorship(true);
+    sponsorWard(wardCodeInput);
     payForParentWardSponsorship({
       parentEmail,
       wardName: activeProfile.studentName,
