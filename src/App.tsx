@@ -45,36 +45,89 @@ import { Mail, CheckCircle2, Sparkles, Tv, ShieldCheck } from 'lucide-react';
 function AppContent() {
   // Master View: Separate dedicated entities for Student Workspace, Teacher Portal, Parent Portal, Past Questions Hub, Owner Control Center, and Public Landing
   const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER_PORTAL' | 'PARENT_PORTAL' | 'OWNER_PORTAL'>('LANDING');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // URL Hash Listener for dedicated routing (#past-questions, #teacher-portal, #parent-portal, #owner, #studio, #landing)
+  // Startup initialization with try / catch / finally and 2.5s fallback safety timeout
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash.startsWith('#access-pass=') || hash.startsWith('#vip=')) {
-        const code = hash.replace('#access-pass=', '').replace('#vip=', '').split('&')[0];
-        if (code) {
-          VisitorTracker.redeemVipPass(code.toUpperCase());
+    // 2.5-second fallback safety timeout so workspace always opens no matter what
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+      const preLoader = document.getElementById('dh-pre-loader');
+      if (preLoader) {
+        preLoader.remove();
+      }
+    }, 2500);
+
+    const initializeApp = () => {
+      try {
+        const hash = window.location.hash.toLowerCase();
+        if (hash.startsWith('#access-pass=') || hash.startsWith('#vip=')) {
+          const code = hash.replace('#access-pass=', '').replace('#vip=', '').split('&')[0];
+          if (code) {
+            VisitorTracker.redeemVipPass(code.toUpperCase());
+          }
+          window.location.hash = '#studio';
+          setCurrentView('STUDIO');
+        } else if (hash === '#owner' || hash === '#owner-portal' || hash === '#admin-portal' || hash === '#webmaster') {
+          setCurrentView('OWNER_PORTAL');
+        } else if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
+          setCurrentView('PAST_QUESTIONS');
+        } else if (hash === '#teacher' || hash === '#teacher-portal' || hash === '#faculty') {
+          setCurrentView('TEACHER_PORTAL');
+        } else if (hash === '#parent' || hash === '#parent-portal' || hash === '#guardian') {
+          setCurrentView('PARENT_PORTAL');
+        } else if (hash === '#student' || hash === '#student-portal' || hash === '#studio') {
+          setCurrentView('STUDIO');
+        } else if (hash === '#landing') {
+          setCurrentView('LANDING');
         }
-        window.location.hash = '#studio';
-        setCurrentView('STUDIO');
-      } else if (hash === '#owner' || hash === '#owner-portal' || hash === '#admin-portal' || hash === '#webmaster') {
-        setCurrentView('OWNER_PORTAL');
-      } else if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
-        setCurrentView('PAST_QUESTIONS');
-      } else if (hash === '#teacher' || hash === '#teacher-portal' || hash === '#faculty') {
-        setCurrentView('TEACHER_PORTAL');
-      } else if (hash === '#parent' || hash === '#parent-portal' || hash === '#guardian') {
-        setCurrentView('PARENT_PORTAL');
-      } else if (hash === '#student' || hash === '#student-portal' || hash === '#studio') {
-        setCurrentView('STUDIO');
-      } else if (hash === '#landing') {
-        setCurrentView('LANDING');
+      } catch (err) {
+        console.warn('[DraftHands App Startup Error Caught & Bypassed]', err);
+      } finally {
+        // Guaranteed to run even if an API, auth, or storage call fails
+        setIsLoading(false);
+        const preLoader = document.getElementById('dh-pre-loader');
+        if (preLoader) {
+          preLoader.remove();
+        }
       }
     };
 
-    handleHashChange();
+    initializeApp();
+
+    const handleHashChange = () => {
+      try {
+        const hash = window.location.hash.toLowerCase();
+        if (hash.startsWith('#access-pass=') || hash.startsWith('#vip=')) {
+          const code = hash.replace('#access-pass=', '').replace('#vip=', '').split('&')[0];
+          if (code) {
+            VisitorTracker.redeemVipPass(code.toUpperCase());
+          }
+          window.location.hash = '#studio';
+          setCurrentView('STUDIO');
+        } else if (hash === '#owner' || hash === '#owner-portal' || hash === '#admin-portal' || hash === '#webmaster') {
+          setCurrentView('OWNER_PORTAL');
+        } else if (hash === '#past-questions' || hash === '#pastquestions' || hash === '#archive') {
+          setCurrentView('PAST_QUESTIONS');
+        } else if (hash === '#teacher' || hash === '#teacher-portal' || hash === '#faculty') {
+          setCurrentView('TEACHER_PORTAL');
+        } else if (hash === '#parent' || hash === '#parent-portal' || hash === '#guardian') {
+          setCurrentView('PARENT_PORTAL');
+        } else if (hash === '#student' || hash === '#student-portal' || hash === '#studio') {
+          setCurrentView('STUDIO');
+        } else if (hash === '#landing') {
+          setCurrentView('LANDING');
+        }
+      } catch (err) {
+        console.warn('[DraftHands Hash Change Error]', err);
+      }
+    };
+
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      clearTimeout(safetyTimer);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   // Navigation & Tier state (Default to official SS1 start: Week 1 Intro to Technical Drawing)

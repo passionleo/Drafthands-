@@ -116,6 +116,13 @@
         </div>
         <p class="dh-pulsing" style="font-size: 12px; color: #64748b; margin: 0; font-family: monospace;">Loading technical drawing workspace...</p>
       </div>
+      <script>
+        // Fallback safety timeout so preloader never obstructs landing page or workspace
+        setTimeout(function() {
+          var p = document.getElementById('dh-pre-loader');
+          if (p) p.remove();
+        }, 2500);
+      </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
