@@ -45,7 +45,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   targetPortal = 'STUDENT',
   onAuthSuccess
 }) => {
-  const [mode, setMode] = useState<'SIGN_IN' | 'REGISTER' | 'VERIFY_EMAIL'>(initialMode);
+  const [mode, setMode] = useState<'SIGN_IN' | 'REGISTER'>(initialMode);
   const [selectedRole, setSelectedRole] = useState<UserRoleType>(() => {
     if (targetPortal === 'OWNER') return 'ADMIN';
     if (initialRole) return initialRole;
@@ -62,13 +62,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [institutionName, setInstitutionName] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
-
-  // Email verification state
-  const [dispatchedCode, setDispatchedCode] = useState<string>('849201');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationError, setVerificationError] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [resendNotification, setResendNotification] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Sync state when props change
   useEffect(() => {
@@ -85,8 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setSelectedRole('STUDENT');
     }
     setMode(initialMode);
-    setVerificationError('');
-    setVerificationCode('');
+    setErrorMsg('');
   }, [targetPortal, initialRole, initialMode, isOpen]);
 
   if (!isOpen) return null;
@@ -100,7 +93,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           badge: 'Owner Access',
           icon: ShieldCheck,
           badgeColor: 'bg-amber-950 text-amber-300 border-amber-500/40',
-          desc: 'Owner access authentication. A 6-digit verification code will be sent to your email.'
+          desc: 'Owner access authentication. Enter master credentials for instant root access.'
         };
       case 'TEACHER':
         return {
@@ -140,72 +133,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const portalInfo = getPortalInfo();
   const PortalIcon = portalInfo.icon;
 
-  const triggerVerificationDispatch = () => {
-    // Generate random 6-digit verification code
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setDispatchedCode(generatedCode);
-    setVerificationCode('');
-    setVerificationError('');
-    setResendNotification(false);
-    setMode('VERIFY_EMAIL');
-  };
-
-  // Submit form and trigger email verification code dispatch
+  // Submit form and sign in immediately with username/email and password
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!emailOrUsername.trim()) {
-      setVerificationError('Please enter your email or username.');
+      setErrorMsg('Please enter your email or username.');
       return;
     }
 
-    // Require 6-digit email verification code for final access
-    triggerVerificationDispatch();
-  };
-
-  // Verify entered 6-digit code
-  const handleVerifyEmail = (e: React.FormEvent) => {
-    e.preventDefault();
-    setVerificationError('');
-    setIsVerifying(true);
-
-    const cleanCode = verificationCode.trim();
-    if (cleanCode.length < 6 && cleanCode !== dispatchedCode && cleanCode !== '849201') {
-      setIsVerifying(false);
-      setVerificationError('Please enter the complete 6-digit verification code sent to your email.');
+    if (!password.trim()) {
+      setErrorMsg('Please enter your password.');
       return;
     }
 
-    setTimeout(() => {
-      setIsVerifying(false);
-      const isOwner = targetPortal === 'OWNER' || 
-                      selectedRole === 'ADMIN' || 
-                      emailOrUsername.toLowerCase().includes('passion4dami');
+    const isOwner = targetPortal === 'OWNER' || 
+                    selectedRole === 'ADMIN' || 
+                    emailOrUsername.toLowerCase().includes('passion4dami');
 
-      if (isOwner) {
-        onAuthSuccess('ADMIN', {
-          name: fullName || 'Engr. Dami (Platform Owner)',
-          email: emailOrUsername || 'passion4dami@gmail.com',
-          institution: institutionName || 'DraftHands Technical College',
-          isEmailVerified: true
-        }, 'OWNER');
-      } else {
-        onAuthSuccess(selectedRole, {
-          name: fullName || (selectedRole === 'STUDENT' ? 'Student Scholar' : selectedRole === 'TEACHER' ? 'Technical Instructor' : selectedRole === 'PARENT' ? 'Parent Guardian' : 'School Dean'),
-          email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername.toLowerCase()}@test-academy.edu.ng`,
-          institution: institutionName || 'Technical College Lagos',
-          isEmailVerified: true
-        }, targetPortal);
-      }
-      onClose();
-    }, 400);
-  };
-
-  const handleResendCode = () => {
-    const freshCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setDispatchedCode(freshCode);
-    setResendNotification(true);
-    setTimeout(() => setResendNotification(false), 4000);
+    if (isOwner) {
+      onAuthSuccess('ADMIN', {
+        name: fullName || 'Engr. Dami (Platform Owner)',
+        email: emailOrUsername || 'passion4dami@gmail.com',
+        institution: institutionName || 'DraftHands Technical College',
+        isEmailVerified: true
+      }, 'OWNER');
+    } else {
+      onAuthSuccess(selectedRole, {
+        name: fullName || (selectedRole === 'STUDENT' ? 'Student Scholar' : selectedRole === 'TEACHER' ? 'Technical Instructor' : selectedRole === 'PARENT' ? 'Parent Guardian' : 'School Dean'),
+        email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername.toLowerCase()}@test-academy.edu.ng`,
+        institution: institutionName || 'Technical College Lagos',
+        isEmailVerified: true
+      }, targetPortal);
+    }
+    onClose();
   };
 
   return (
@@ -231,11 +192,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                {mode === 'VERIFY_EMAIL'
-                  ? 'Verify email address with 6-digit code to finalize access'
-                  : mode === 'SIGN_IN'
-                    ? 'Login with username & password to enter portal'
-                    : 'Register your account to enter portal'}
+                {portalInfo.desc}
               </p>
             </div>
           </div>
@@ -247,312 +204,209 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Tab switch: Sign in vs Register (hidden when in verification mode) */}
-        {mode !== 'VERIFY_EMAIL' && (
-          <div className="grid grid-cols-2 p-1.5 bg-slate-950 border-b border-slate-800 text-xs font-semibold">
-            <button
-              onClick={() => setMode('SIGN_IN')}
-              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'SIGN_IN'
-                  ? 'bg-slate-800 text-cyan-300 shadow-sm font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Login with Username & Password</span>
-            </button>
-            <button
-              onClick={() => setMode('REGISTER')}
-              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'REGISTER'
-                  ? 'bg-slate-800 text-cyan-300 shadow-sm font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Register Now</span>
-            </button>
-          </div>
-        )}
+        {/* Tab switch: Sign in vs Register */}
+        <div className="grid grid-cols-2 p-1.5 bg-slate-950 border-b border-slate-800 text-xs font-semibold">
+          <button
+            onClick={() => setMode('SIGN_IN')}
+            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              mode === 'SIGN_IN'
+                ? 'bg-slate-800 text-cyan-300 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Sign In (Username & Password)</span>
+          </button>
+          <button
+            onClick={() => setMode('REGISTER')}
+            className={`py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              mode === 'REGISTER'
+                ? 'bg-slate-800 text-cyan-300 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Register New Account</span>
+          </button>
+        </div>
 
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar">
-          {mode === 'VERIFY_EMAIL' ? (
-            /* STEP 2: VERIFICATION CODE SENT TO EMAIL */
-            <div className="space-y-4 py-1">
-              <div className="p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/40 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto shadow-inner">
-                  <Mail className="w-6 h-6 animate-pulse" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-white">Please Check Your Email for Access Code</h4>
-                  <p className="text-xs text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
-                    First-time visitors and returning users: An official 6-digit authorization code has been dispatched to{' '}
-                    <span className="font-semibold text-cyan-300 underline">{emailOrUsername || 'your registered email'}</span>.
-                    Please refer to your email inbox or spam folder to retrieve your access code.
-                  </p>
-                </div>
+          {/* Role Selection Tabs (Only when not in Owner portal) */}
+          {targetPortal !== 'OWNER' && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-300">
+                Select Your Academic Role
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('STUDENT')}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    selectedRole === 'STUDENT'
+                      ? 'bg-cyan-950/80 border-cyan-500 text-white shadow-sm'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <GraduationCap className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'STUDENT' ? 'text-cyan-400' : 'text-slate-500'}`} />
+                  <div className="text-xs font-bold leading-tight">Student</div>
+                  <div className="text-[10px] text-slate-400">SS1–SS3 & Poly</div>
+                </button>
 
-                {/* Email Verification Protocol Card */}
-                <div className="p-3.5 rounded-lg bg-slate-900/90 border border-cyan-500/30 text-left space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                      <span>Real-Time Email Dispatch Active</span>
-                    </span>
-                    <span className="text-[10px] text-emerald-400 font-semibold font-mono">STATUS: SENT</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug">
-                    Please refer to the message from <strong className="text-white">DraftHands Access Gate</strong>. If not visible in your inbox within 30 seconds, please check your promotions or spam folder.
-                  </p>
-                  {/* Subtle testing hint for environments without external SMTP */}
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
-                    <span>Code sent to inbox</span>
-                    <span className="text-slate-400">Ref: #{dispatchedCode?.slice(-4)}</span>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('TEACHER')}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    selectedRole === 'TEACHER'
+                      ? 'bg-purple-950/80 border-purple-500 text-white shadow-sm'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <Briefcase className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'TEACHER' ? 'text-purple-400' : 'text-slate-500'}`} />
+                  <div className="text-xs font-bold leading-tight">Instructor</div>
+                  <div className="text-[10px] text-slate-400">Lesson Generator</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('PARENT')}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    selectedRole === 'PARENT'
+                      ? 'bg-blue-950/80 border-blue-500 text-white shadow-sm'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <Users className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'PARENT' ? 'text-blue-400' : 'text-slate-500'}`} />
+                  <div className="text-xs font-bold leading-tight">Parent</div>
+                  <div className="text-[10px] text-slate-400">Ward Progress</div>
+                </button>
               </div>
+            </div>
+          )}
 
-              {/* 6-Digit Code Input Form */}
-              <form onSubmit={handleVerifyEmail} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-300 text-center">
-                    Enter 6-Digit Verification Code
-                  </label>
+          {/* Form Fields */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {mode === 'REGISTER' && (
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Full Legal Name
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
                   <input
                     type="text"
-                    maxLength={6}
-                    value={verificationCode}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      setVerificationCode(val);
-                      if (verificationError) setVerificationError('');
-                    }}
-                    placeholder="e.g. 849201"
-                    className="w-full text-center text-2xl tracking-[0.4em] font-mono font-bold py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                    autoFocus
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Babatunde Adeleke"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
                   />
-                  {verificationError && (
-                    <p className="text-[11px] text-rose-400 flex items-center justify-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{verificationError}</span>
-                    </p>
-                  )}
                 </div>
+              </div>
+            )}
 
-                <button
-                  type="submit"
-                  disabled={isVerifying}
-                  className={`w-full py-3 rounded-xl text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    targetPortal === 'OWNER'
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-amber-600/30'
-                      : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 shadow-emerald-600/30'
-                  }`}
-                >
-                  {isVerifying ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Verifying Security Code...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Confirm Code & Enter Portal</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setMode('SIGN_IN')}
-                    className="text-slate-400 hover:text-slate-200 transition-colors"
-                  >
-                    ← Back to Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResendCode}
-                    className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
-                  >
-                    Resend Code
-                  </button>
-                </div>
-
-                {resendNotification && (
-                  <p className="text-[11px] text-emerald-400 text-center font-semibold animate-in fade-in">
-                    ✓ Fresh 6-digit verification code dispatched!
-                  </p>
-                )}
-              </form>
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-300">
+                {mode === 'SIGN_IN' ? 'Username or Email Address' : 'Email Address'}
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <input
+                  type="text"
+                  required
+                  value={emailOrUsername}
+                  onChange={(e) => {
+                    setEmailOrUsername(e.target.value);
+                    if (errorMsg) setErrorMsg('');
+                  }}
+                  placeholder={targetPortal === 'OWNER' ? 'passion4dami@gmail.com' : 'e.g. student@drafthands.edu.ng'}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                />
+              </div>
             </div>
-          ) : (
-            /* STEP 1: LOGIN OR REGISTRATION FORM */
-            <>
-              {/* Role Selection Tabs (Only when not in Owner portal) */}
-              {targetPortal !== 'OWNER' && (
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-300">
-                    Select Your Academic Role
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('STUDENT')}
-                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                        selectedRole === 'STUDENT'
-                          ? 'bg-cyan-950/80 border-cyan-500 text-white shadow-sm'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                      }`}
-                    >
-                      <GraduationCap className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'STUDENT' ? 'text-cyan-400' : 'text-slate-500'}`} />
-                      <div className="text-xs font-bold leading-tight">Student</div>
-                      <div className="text-[10px] text-slate-400">SS1–SS3 & Poly</div>
-                    </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('TEACHER')}
-                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                        selectedRole === 'TEACHER'
-                          ? 'bg-purple-950/80 border-purple-500 text-white shadow-sm'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                      }`}
-                    >
-                      <Briefcase className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'TEACHER' ? 'text-purple-400' : 'text-slate-500'}`} />
-                      <div className="text-xs font-bold leading-tight">Instructor</div>
-                      <div className="text-[10px] text-slate-400">Lesson Generator</div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('PARENT')}
-                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                        selectedRole === 'PARENT'
-                          ? 'bg-blue-950/80 border-blue-500 text-white shadow-sm'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                      }`}
-                    >
-                      <Users className={`w-4 h-4 mx-auto mb-1 ${selectedRole === 'PARENT' ? 'text-blue-400' : 'text-slate-500'}`} />
-                      <div className="text-xs font-bold leading-tight">Parent</div>
-                      <div className="text-[10px] text-slate-400">Ward Progress</div>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Form Fields */}
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                {mode === 'REGISTER' && (
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Full Legal Name
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Babatunde Adeleke"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-slate-300">
-                    {mode === 'SIGN_IN' ? 'Username or Email Address' : 'Email Address'}
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                    <input
-                      type="text"
-                      required
-                      value={emailOrUsername}
-                      onChange={(e) => setEmailOrUsername(e.target.value)}
-                      placeholder={targetPortal === 'OWNER' ? 'passion4dami@gmail.com' : 'e.g. student@drafthands.edu.ng'}
-                      className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Password
-                    </label>
-                    {mode === 'SIGN_IN' && (
-                      <span className="text-[11px] text-cyan-400 hover:text-cyan-300 cursor-pointer">
-                        Forgot Password?
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {mode === 'REGISTER' && (
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Secondary School or Technical College (Optional)
-                    </label>
-                    <div className="relative">
-                      <School className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={institutionName}
-                        onChange={(e) => setInstitutionName(e.target.value)}
-                        placeholder="e.g. Kings College Lagos / Federal Tech College"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="rounded bg-slate-950 border-slate-700 text-cyan-600 focus:ring-0"
-                    />
-                    <span>Remember this session</span>
-                  </label>
-                  <span className="text-[11px] text-slate-400">
-                    📧 Code sent to mail before access
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Password
+                </label>
+                {mode === 'SIGN_IN' && (
+                  <span className="text-[11px] text-cyan-400 hover:text-cyan-300 cursor-pointer">
+                    Forgot Password?
                   </span>
-                </div>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMsg) setErrorMsg('');
+                  }}
+                  placeholder="••••••••••••"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                />
+              </div>
+            </div>
 
-                <button
-                  type="submit"
-                  className={`w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${
-                    targetPortal === 'OWNER'
-                      ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-amber-600/30'
-                      : 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 shadow-cyan-600/30'
-                  }`}
-                >
-                  <span>
-                    {mode === 'SIGN_IN' 
-                      ? 'Sign In & Send Verification Code' 
-                      : 'Register Now & Send Verification Code'}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </form>
-            </>
-          )}
+            {mode === 'REGISTER' && (
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Secondary School or Technical College (Optional)
+                </label>
+                <div className="relative">
+                  <School className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={institutionName}
+                    onChange={(e) => setInstitutionName(e.target.value)}
+                    placeholder="e.g. Kings College Lagos / Federal Tech College"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded bg-slate-950 border-slate-700 text-cyan-600 focus:ring-0"
+                />
+                <span>Remember this session</span>
+              </label>
+              <span className="text-[11px] text-emerald-400 font-mono">
+                ✓ Instant Sign-In Active
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              className={`w-full py-2.5 rounded-xl text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 transition-all mt-2 cursor-pointer ${
+                targetPortal === 'OWNER'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 shadow-amber-600/30'
+                  : 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 shadow-cyan-600/30'
+              }`}
+            >
+              <span>
+                {mode === 'SIGN_IN' 
+                  ? 'Sign In & Enter Portal' 
+                  : 'Register Now & Enter Portal'}
+              </span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       </div>
     </div>
