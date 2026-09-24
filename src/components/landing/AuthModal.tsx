@@ -133,41 +133,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const portalInfo = getPortalInfo();
   const PortalIcon = portalInfo.icon;
 
-  // Submit form and sign in immediately with username/email and password
+  // Submit form and sign in immediately with username/email and password (bypassing OTP)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!emailOrUsername.trim()) {
+    if (!emailOrUsername?.trim()) {
       setErrorMsg('Please enter your email or username.');
       return;
     }
 
-    if (!password.trim()) {
+    if (!password?.trim()) {
       setErrorMsg('Please enter your password.');
       return;
     }
 
-    const isOwner = targetPortal === 'OWNER' || 
-                    selectedRole === 'ADMIN' || 
-                    emailOrUsername.toLowerCase().includes('passion4dami');
+    const email = emailOrUsername.includes('@') ? emailOrUsername : (emailOrUsername ? `${emailOrUsername.toLowerCase()}@drafthands.edu.ng` : 'user@drafthands.edu.ng');
+    const roleToUse = selectedRole || 'STUDENT';
 
-    if (isOwner) {
-      onAuthSuccess('ADMIN', {
-        name: fullName || 'Engr. Dami (Platform Owner)',
-        email: emailOrUsername || 'passion4dami@gmail.com',
-        institution: institutionName || 'DraftHands Technical College',
-        isEmailVerified: true
-      }, 'OWNER');
-    } else {
-      onAuthSuccess(selectedRole, {
-        name: fullName || (selectedRole === 'STUDENT' ? 'Student Scholar' : selectedRole === 'TEACHER' ? 'Technical Instructor' : selectedRole === 'PARENT' ? 'Parent Guardian' : 'School Dean'),
-        email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername.toLowerCase()}@test-academy.edu.ng`,
-        institution: institutionName || 'Technical College Lagos',
-        isEmailVerified: true
-      }, targetPortal);
-    }
-    onClose();
+    // Set authenticated user state directly
+    const user = {
+      id: 'user_1',
+      name: fullName || 'Engr. Kolawole',
+      email: email,
+      role: roleToUse
+    };
+
+    let resolvedPortal: PortalTargetType = targetPortal;
+    if (roleToUse === 'ADMIN' || targetPortal === 'OWNER') resolvedPortal = 'OWNER';
+    else if (roleToUse === 'TEACHER') resolvedPortal = 'TEACHER';
+    else if (roleToUse === 'PARENT') resolvedPortal = 'PARENT';
+    else resolvedPortal = 'STUDENT';
+
+    onAuthSuccess?.(roleToUse, {
+      name: user?.name || 'Engr. Kolawole',
+      email: user?.email || 'user@drafthands.edu.ng',
+      institution: institutionName || 'DraftHands Technical College',
+      isEmailVerified: true
+    }, resolvedPortal);
+
+    onClose?.();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
@@ -180,24 +187,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 ? 'bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-amber-600/30' 
                 : 'bg-gradient-to-tr from-cyan-600 to-blue-600 text-white shadow-cyan-600/30'
             }`}>
-              <PortalIcon className="w-5 h-5 text-white" />
+              {PortalIcon ? <PortalIcon className="w-5 h-5 text-white" /> : <Lock className="w-5 h-5 text-white" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-white tracking-tight">
-                  {portalInfo.title}
+                  {portalInfo?.title || 'Authentication'}
                 </h3>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${portalInfo.badgeColor}`}>
-                  {portalInfo.badge}
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${portalInfo?.badgeColor || 'bg-cyan-950 text-cyan-300'}`}>
+                  {portalInfo?.badge || 'Portal'}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                {portalInfo.desc}
+                {portalInfo?.desc || 'Sign in to access your portal.'}
               </p>
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => onClose?.()}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -401,8 +408,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             >
               <span>
                 {mode === 'SIGN_IN' 
-                  ? 'Sign In & Enter Portal' 
-                  : 'Register Now & Enter Portal'}
+                  ? 'Sign In & Send Verification Code' 
+                  : 'Sign In'}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
