@@ -189,6 +189,14 @@ export const Header: React.FC<HeaderProps> = ({
             </p>
           </div>
         </div>
+
+        {isStudent && (
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 whitespace-nowrap">
+            <span className="font-bold text-white">{userProfile?.name || 'Student'}</span>
+            <span className="text-slate-500">•</span>
+            <span>Ward Code: {wardCode || 'DH-742K'}</span>
+          </div>
+        )}
       </div>
 
       {/* Curriculum Tier Switcher Tabs */}

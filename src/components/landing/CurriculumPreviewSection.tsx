@@ -13,11 +13,13 @@ import {
   ChevronRight,
   Eye,
   X,
-  Maximize2
+  Maximize2,
+  Lock
 } from 'lucide-react';
 import { CurriculumTier, DrawingTopic } from '../../types/curriculum';
 import { allCurriculumTopics, getTopicsByTier, TIER_CONFIG } from '../../data/curriculumData';
 import { getTopicSpecificSVG } from '../../utils/vectorBlueprint';
+import { useSubscription } from '../../context/SubscriptionContext';
 
 interface CurriculumPreviewSectionProps {
   onSelectTopicToLaunch: (topicId: string) => void;
@@ -28,6 +30,11 @@ export const CurriculumPreviewSection: React.FC<CurriculumPreviewSectionProps> =
 }) => {
   const [activeTier, setActiveTier] = useState<CurriculumTier>('SS1');
   const [previewTopic, setPreviewTopic] = useState<DrawingTopic | null>(null);
+  const { subscription, openPaywall, userRole, userProfile, isSubscribed } = useSubscription();
+  const activeUser = userProfile || { id: 'guest', name: 'Student', role: userRole || 'STUDENT', isPro: isSubscribed };
+  const isPro = subscription?.isSubscribed || (activeUser as any)?.isPro;
+  const role = activeUser?.role || userRole;
+  const isPrivileged = role === 'TEACHER' || role === 'ADMIN';
 
   const tiers: { id: CurriculumTier; label: string; badge: string; desc: string }[] = [
     { id: 'SS1', label: 'Senior Secondary 1', badge: 'Plane Geometry', desc: 'Lines, angles, bisections, polygons, scale ratio and tangency loci.' },
@@ -150,13 +157,24 @@ export const CurriculumPreviewSection: React.FC<CurriculumPreviewSectionProps> =
                   <Eye className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Blueprint</span>
                 </button>
-                <button
-                  onClick={() => onSelectTopicToLaunch(topic.id)}
-                  className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                >
-                  <span>Launch Module</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
+                {index >= 3 && !isPro && !isPrivileged ? (
+                  <button
+                    onClick={() => openPaywall(topic)}
+                    className="px-3 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/50 text-amber-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Unlock Pro Tier to access Week 4+"
+                  >
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    <span>🔒 Unlock (Pro)</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onSelectTopicToLaunch(topic.id)}
+                    className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <span>Launch Module</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             </div>
           ))}
