@@ -72,8 +72,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
   onToggleCollapse
 }) => {
-  const { isSubscribed, checkTopicAccess, openPaywall } = useSubscription();
+  const { isSubscribed, checkTopicAccess, openPaywall, userRole, subscription, isMasterAdmin } = useSubscription();
   const [selectedTerm, setSelectedTerm] = useState<CurriculumTerm | 'ALL'>('ALL');
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const userRoleVal = subscription?.userProfile?.role || userRole || 'STUDENT';
+  const isStudent = userRoleVal === 'STUDENT';
+  const isInstructorOrAdmin = userRoleVal === 'TEACHER' || userRoleVal === 'ADMIN' || isMasterAdmin || (userRoleVal as string) === 'INSTRUCTOR';
+
   const currentTierConfig = TIER_CONFIG[activeTier];
   const topicsInCurrentTier = getTopicsByTier(activeTier);
 
@@ -93,7 +99,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return matchesTier && matchesTerm && matchesSearch;
   });
 
-  const handleTopicClick = (topic: DrawingTopic) => {
+  const handleTopicClick = (topic: DrawingTopic, idx: number = 0) => {
+    // Keep Week 1 (index 0) unlocked, lock subsequent weeks for student unless instructor/admin
+    const isLockedForStudent = isStudent && idx > 0 && !isInstructorOrAdmin;
+    if (isLockedForStudent) {
+      setToastMsg("Complete preceding exercises to unlock this module.");
+      setTimeout(() => setToastMsg(null), 3500);
+      return;
+    }
+
     const tierTopics = getTopicsByTier(topic.tier);
     const access = checkTopicAccess(topic, tierTopics);
 
@@ -284,23 +298,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Topics List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar relative">
+        {toastMsg && (
+          <div className="sticky top-0 z-20 mb-2 p-2.5 bg-amber-950/95 border border-amber-500/80 rounded-xl text-amber-200 text-xs flex items-center justify-between shadow-2xl animate-in fade-in">
+            <span>{toastMsg}</span>
+            <button onClick={() => setToastMsg(null)} className="text-amber-400 hover:text-white font-bold px-1">×</button>
+          </div>
+        )}
+
         {filteredTopics.length === 0 ? (
           <div className="p-6 text-center text-slate-500 text-xs">
             No matching curriculum modules found for &quot;{searchQuery}&quot;.
           </div>
         ) : (
-          filteredTopics.map((topic) => {
+          filteredTopics.map((topic, idx) => {
             const isActive = topic.id === activeTopicId;
+            const isLockedForStudent = isStudent && idx > 0 && !isInstructorOrAdmin;
             const tierTopics = getTopicsByTier(topic.tier);
             const access = checkTopicAccess(topic, tierTopics);
-            const isLocked = !access.isAllowed;
+            const isLocked = isLockedForStudent || !access.isAllowed;
 
             return (
               <button
                 key={topic.id}
                 id={`topic-item-${topic.id}`}
-                onClick={() => handleTopicClick(topic)}
+                onClick={() => handleTopicClick(topic, idx)}
                 className={`w-full text-left p-3 rounded-xl transition-all duration-150 relative border ${
                   isActive
                     ? 'bg-slate-800/90 text-white border-cyan-500/50 shadow-md shadow-cyan-950/30'

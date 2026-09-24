@@ -110,12 +110,14 @@ export const Header: React.FC<HeaderProps> = ({
   } = useSubscription();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
-  const currentPlan = SUBSCRIPTION_PLANS[subscription.plan];
-  // Strict check: active role student
-  const isStudent = userRole === 'STUDENT';
-  const isTeacher = userRole === 'TEACHER' || (isMasterAdmin && userRole !== 'STUDENT');
-  const isParent = userRole === 'PARENT' || (isMasterAdmin && userRole !== 'STUDENT');
-  const isAdmin = userRole === 'ADMIN' || (isMasterAdmin && userRole !== 'STUDENT');
+  const userRoleVal = subscription?.userProfile?.role || userRole || 'STUDENT';
+  const currentPlan = SUBSCRIPTION_PLANS[subscription?.plan || 'FREE'] || SUBSCRIPTION_PLANS.FREE;
+  // Strict check: active role student with safe optional chaining
+  const isStudent = userRoleVal === 'STUDENT';
+  const isInstructor = userRoleVal === 'TEACHER' || (userRoleVal as string) === 'INSTRUCTOR' || (isMasterAdmin && userRoleVal !== 'STUDENT');
+  const isTeacher = isInstructor;
+  const isParent = userRoleVal === 'PARENT' || (isMasterAdmin && userRoleVal !== 'STUDENT');
+  const isAdmin = userRoleVal === 'ADMIN' || isMasterAdmin;
 
   // Role labels and badge styling
   const roleConfig: Record<UserRoleType, { label: string; badgeClass: string; icon: any }> = {
@@ -331,7 +333,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Platform Owner Command Center (Accessible for Owner & Webmaster) */}
-        {onOpenOwnerPortal && (
+        {!isStudent && isMasterAdmin && onOpenOwnerPortal && (
           <button
             id="btn-open-owner-portal"
             onClick={onOpenOwnerPortal}
