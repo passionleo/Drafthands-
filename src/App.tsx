@@ -44,7 +44,7 @@ import { Mail, CheckCircle2, Sparkles, Tv, ShieldCheck } from 'lucide-react';
 
 function AppContent() {
   // Master View: Separate dedicated entities for Student Workspace, Teacher Portal, Parent Portal, Past Questions Hub, Owner Control Center, and Public Landing
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER_PORTAL' | 'PARENT_PORTAL' | 'OWNER_PORTAL'>('LANDING');
+  const [currentView, setCurrentView] = useState('LANDING');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Startup initialization with try / catch / finally and 2.5s fallback safety timeout
@@ -1211,9 +1211,9 @@ function AppContent() {
 
   // Fail-safe fallback: If currentView is undefined, null, or unrecognized, fallback unconditionally to LandingPage
   return (
-    <CadErrorBoundary>
+    <div className="min-h-screen bg-slate-950 text-white">
       <LandingPage onEnterStudio={() => setCurrentView('STUDIO')} />
-    </CadErrorBoundary>
+    </div>
   );
 }
 
