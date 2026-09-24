@@ -6,20 +6,18 @@ import { Sidebar } from './components/layout/Sidebar';
 import { ProcedurePanel } from './components/curriculum/ProcedurePanel';
 import { DrawingCanvas } from './components/drafting/DrawingCanvas';
 import { allCurriculumTopics } from './data/curriculumData';
-import { CurriculumTier, DrawingTopic } from './types/curriculum';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT'>('LANDING');
-  const [currentTopic, setCurrentTopic] = useState<DrawingTopic>(allCurriculumTopics[0] || null);
+  const [currentTopic, setCurrentTopic] = useState<any>(allCurriculumTopics[0] || null);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [selectedTier, setSelectedTier] = useState<CurriculumTier>(CurriculumTier.JSS1);
+  const [selectedTier, setSelectedTier] = useState<any>('JSS1');
 
   const handleReturnHome = () => setCurrentView('LANDING');
 
   return (
     <SubscriptionProvider>
       <main className="min-h-screen bg-slate-950 text-white w-full overflow-x-hidden relative">
-        {/* LANDING VIEW */}
         {currentView === 'LANDING' && (
           <LandingPage
             onEnterStudio={() => setCurrentView('STUDIO')}
@@ -31,7 +29,6 @@ export default function App() {
           />
         )}
 
-        {/* CAD STUDIO WORKSPACE (STUDENT & GENERAL ACCESS) */}
         {currentView === 'STUDIO' && (
           <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-900">
             <Header onReturnHome={handleReturnHome} />
@@ -40,7 +37,7 @@ export default function App() {
                 selectedTier={selectedTier}
                 onSelectTier={setSelectedTier}
                 currentTopic={currentTopic}
-                onSelectTopic={(topic) => {
+                onSelectTopic={(topic: any) => {
                   setCurrentTopic(topic);
                   setCurrentStepIndex(0);
                 }}
@@ -59,7 +56,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TEACHER MANAGEMENT DESK */}
         {currentView === 'TEACHER' && (
           <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
             <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900">
@@ -120,7 +116,6 @@ export default function App() {
           </div>
         )}
 
-        {/* PARENT / SPONSOR MONITORING PORTAL */}
         {currentView === 'PARENT' && (
           <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
             <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900">
@@ -177,4 +172,5 @@ export default function App() {
       </main>
     </SubscriptionProvider>
   );
-}
+    }
+         
