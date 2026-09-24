@@ -1,40 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { LandingPage } from './components/landing/LandingPage';
-import Studio from './components/practice/Studio';
-import TeacherPortalView from './components/teacher/TeacherPortalView';
-import ParentPortalView from './components/parent/ParentPortalView';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT'>('LANDING');
-
-  const handleReturnHome = () => setCurrentView('LANDING');
-
   return (
     <SubscriptionProvider>
       <main className="min-h-screen bg-slate-950 text-white w-full overflow-x-hidden relative">
-        {currentView === 'STUDIO' && (
-          <Studio onReturnHome={handleReturnHome} />
-        )}
-
-        {currentView === 'TEACHER' && (
-          <TeacherPortalView onReturnHome={handleReturnHome} />
-        )}
-
-        {currentView === 'PARENT' && (
-          <ParentPortalView onReturnHome={handleReturnHome} />
-        )}
-
-        {currentView === 'LANDING' && (
-          <LandingPage
-            onEnterStudio={() => setCurrentView('STUDIO')}
-            onOpenStudentPortal={() => setCurrentView('STUDIO')}
-            onOpenTeacherPortal={() => setCurrentView('TEACHER')}
-            onOpenParentPortal={() => setCurrentView('PARENT')}
-            onOpenPastQuestions={() => setCurrentView('STUDIO')}
-            onOpenOwnerPortal={() => setCurrentView('TEACHER')}
-          />
-        )}
+        <LandingPage
+          onEnterStudio={() => console.log('Studio trigger')}
+          onOpenStudentPortal={() => console.log('Student portal trigger')}
+          onOpenTeacherPortal={() => console.log('Teacher portal trigger')}
+          onOpenParentPortal={() => console.log('Parent portal trigger')}
+          onOpenPastQuestions={() => console.log('Past questions trigger')}
+          onOpenOwnerPortal={() => console.log('Owner portal trigger')}
+        />
       </main>
     </SubscriptionProvider>
   );
