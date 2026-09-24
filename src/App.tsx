@@ -22,7 +22,7 @@ import { PaywallModal } from './components/subscription/PaywallModal';
 import { LandingPage } from './components/landing/LandingPage';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
 
-// 1. React ErrorBoundary around the app
+// 3. Error Visibility Fallback
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -40,25 +40,17 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6 font-sans">
-          <div className="max-w-md w-full bg-slate-900 border border-red-500/50 rounded-2xl p-6 shadow-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto border border-red-500/30">
-              ⚠️
-            </div>
-            <h2 className="text-lg font-bold text-white">Academy Application Recovery</h2>
-            <p className="text-xs text-slate-300 font-mono">
-              {this.state.error?.message || 'An unexpected rendering error occurred.'}
-            </p>
-            <button
-              onClick={() => {
-                window.location.hash = '#landing';
-                window.location.reload();
-              }}
-              className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all"
-            >
-              Restart Application
-            </button>
-          </div>
+        <div className="p-8 text-center text-white min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+          <h2 className="text-xl font-bold">Loading failed. Return to home.</h2>
+          <button 
+            onClick={() => {
+              window.location.hash = '';
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-white font-bold text-xs"
+          >
+            Home
+          </button>
         </div>
       );
     }
@@ -228,10 +220,9 @@ const Studio: React.FC<{ onReturnHome: () => void }> = ({ onReturnHome }) => {
 };
 
 function AppContent() {
-  // 2. Force the initial state
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'PAST_QUESTIONS' | 'TEACHER' | 'PARENT'>('LANDING');
+  // 1. Unconditional Landing Page Mount: Default strictly to 'LANDING', ignoring hash fragments
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT'>('LANDING');
 
-  // 4. In the main return, unconditionally render with zero null/undefined
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {currentView === 'STUDIO' ? (
