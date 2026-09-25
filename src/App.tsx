@@ -110,6 +110,18 @@ export default function App() {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
+    try {
+      const loader = document.getElementById('dh-pre-loader');
+      if (loader) loader.remove();
+      if (typeof window !== 'undefined') {
+        (window as any).__drafthandsMounted = true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }, []);
+
+  useEffect(() => {
     if (currentTopic && currentTopic.parameters) {
       const defaults: Record<string, number> = {};
       currentTopic.parameters.forEach(p => {
