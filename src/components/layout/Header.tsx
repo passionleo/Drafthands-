@@ -58,6 +58,8 @@ interface HeaderProps {
   onResetView: () => void;
   onExportSvg: () => void;
   currentTopicTitle: string;
+  currentStepIndex?: number;
+  totalSteps?: number;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   onReturnToLanding?: () => void;
@@ -88,6 +90,8 @@ export const Header: React.FC<HeaderProps> = ({
   onResetView,
   onExportSvg,
   currentTopicTitle,
+  currentStepIndex = 0,
+  totalSteps = 1,
   isSidebarCollapsed = false,
   onToggleSidebar,
   onReturnToLanding,
@@ -220,6 +224,24 @@ export const Header: React.FC<HeaderProps> = ({
           );
         })}
       </nav>
+
+      {/* Step Progress & Completion Percentage Indicator */}
+      {totalSteps > 0 && (
+        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs shadow-sm">
+          <div className="flex flex-col gap-1 w-32">
+            <div className="flex justify-between text-[10px] font-mono text-slate-400">
+              <span>Step {currentStepIndex + 1} of {totalSteps}</span>
+              <span className="text-cyan-400 font-extrabold">{Math.round(((currentStepIndex + 1) / totalSteps) * 100)}%</span>
+            </div>
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full transition-all duration-300 rounded-full"
+                style={{ width: `${Math.min(100, Math.max(0, ((currentStepIndex + 1) / totalSteps) * 100))}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Global Actions: Role-Based Navbar Filtering */}
       <div className="flex items-center gap-2">

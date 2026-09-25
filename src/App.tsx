@@ -22,6 +22,7 @@ import { SectionalAssemblyViewer } from './components/tools/SectionalAssemblyVie
 import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanViewer';
 import { LiveProjectionMode } from './components/projection/LiveProjectionMode';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
+import { LiveClassroomModal } from './components/live/LiveClassroomModal';
 
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
@@ -113,6 +114,7 @@ export default function App() {
   const [isSectionalOpen, setIsSectionalOpen] = useState<boolean>(false);
   const [isArchPlanOpen, setIsArchPlanOpen] = useState<boolean>(false);
   const [isProjectionOpen, setIsProjectionOpen] = useState<boolean>(false);
+  const [isLiveClassOpen, setIsLiveClassOpen] = useState<boolean>(false);
   const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
   const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState<boolean>(false);
@@ -247,6 +249,8 @@ export default function App() {
                 }}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
+                currentStepIndex={currentStepIndex}
+                totalSteps={totalSteps}
                 onOpenTheory={() => setIsTheoryOpen(true)}
                 onOpenPractice={() => setIsPracticeOpen(true)}
                 onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
@@ -260,7 +264,7 @@ export default function App() {
                 onOpenTeacherAssignments={() => changeView('TEACHER')}
                 onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
                 onOpenAdminConsole={() => setIsAdminConsoleOpen(true)}
-                onOpenLiveClass={() => setIsProjectionOpen(true)}
+                onOpenLiveClass={() => setIsLiveClassOpen(true)}
                 onToggleWhiteboardStudio={() => setIsWhiteboardOpen(!isWhiteboardOpen)}
                 isWhiteboardOpen={isWhiteboardOpen}
                 onResetView={() => setCurrentStepIndex(0)}
@@ -462,6 +466,15 @@ export default function App() {
               currentStepIndex={currentStepIndex}
               onStepChange={setCurrentStepIndex}
               parameters={paramValues}
+            />
+          )}
+
+          {isLiveClassOpen && currentTopic && (
+            <LiveClassroomModal
+              isOpen={isLiveClassOpen}
+              onClose={() => setIsLiveClassOpen(false)}
+              topic={currentTopic}
+              initialRole="STUDENT"
             />
           )}
 
