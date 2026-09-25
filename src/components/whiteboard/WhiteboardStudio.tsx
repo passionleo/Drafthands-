@@ -1854,15 +1854,64 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       if (activeTool === 'ERASER' || activeTool === 'CAD_TRIM') {
         setElements(prev => {
           if (!Array.isArray(prev)) return [];
-          const threshold = 15;
+          const threshold = 18;
+          const newElements = [...prev];
+
+          // Find clicked line
+          const clickedIndex = newElements.findIndex(el => {
+            if (!el || el.locked || el.type !== 'LINE') return false;
+            const x1 = el.x1!; const y1 = el.y1!; const x2 = el.x2!; const y2 = el.y2!;
+            const lineLen = Math.hypot(x2 - x1, y2 - y1);
+            if (lineLen === 0) return false;
+            const t = Math.max(0, Math.min(1, ((coords.x - x1) * (x2 - x1) + (coords.y - y1) * (y2 - y1)) / (lineLen * lineLen)));
+            const projX = x1 + t * (x2 - x1);
+            const projY = y1 + t * (y2 - y1);
+            return Math.hypot(coords.x - projX, coords.y - projY) < threshold;
+          });
+
+          if (clickedIndex !== -1) {
+            const targetLine = newElements[clickedIndex];
+            let nearestIntersection: { x: number; y: number } | null = null;
+            let minDist = Infinity;
+
+            newElements.forEach((other, oIdx) => {
+              if (oIdx === clickedIndex || !other || other.type !== 'LINE') return;
+              const x1 = targetLine.x1!, y1 = targetLine.y1!, x2 = targetLine.x2!, y2 = targetLine.y2!;
+              const x3 = other.x1!, y3 = other.y1!, x4 = other.x2!, y4 = other.y2!;
+              const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+              if (Math.abs(denom) > 1e-5) {
+                const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+                const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+                if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                  const ix = x1 + ua * (x2 - x1);
+                  const iy = y1 + ua * (y2 - y1);
+                  const d = Math.hypot(coords.x - ix, coords.y - iy);
+                  if (d < minDist) {
+                    minDist = d;
+                    nearestIntersection = { x: ix, y: iy };
+                  }
+                }
+              }
+            });
+
+            if (nearestIntersection && minDist < 40) {
+              const d1 = Math.hypot(targetLine.x1! - (nearestIntersection as any).x, targetLine.y1! - (nearestIntersection as any).y);
+              const d2 = Math.hypot(targetLine.x2! - (nearestIntersection as any).x, targetLine.y2! - (nearestIntersection as any).y);
+              if (d1 < d2) {
+                targetLine.x1 = (nearestIntersection as any).x;
+                targetLine.y1 = (nearestIntersection as any).y;
+              } else {
+                targetLine.x2 = (nearestIntersection as any).x;
+                targetLine.y2 = (nearestIntersection as any).y;
+              }
+              return newElements;
+            } else {
+              return newElements.filter((_, idx) => idx !== clickedIndex);
+            }
+          }
+
           return prev.filter(el => {
             if (!el || el.locked) return true;
-            if (el.type === 'LINE' && Number.isFinite(el.x1) && Number.isFinite(el.y1) && Number.isFinite(el.x2) && Number.isFinite(el.y2)) {
-              const midX = (el.x1! + el.x2!) / 2;
-              const midY = (el.y1! + el.y2!) / 2;
-              const dist = Math.hypot(coords.x - midX, coords.y - midY);
-              return dist > threshold;
-            }
             if (el.type === 'CIRCLE' && Number.isFinite(el.cx) && Number.isFinite(el.cy)) {
               const dist = Math.hypot(coords.x - el.cx!, coords.y - el.cy!);
               return Math.abs(dist - (el.r || 0)) > threshold && dist > threshold;
