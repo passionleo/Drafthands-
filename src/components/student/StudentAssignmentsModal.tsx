@@ -17,6 +17,7 @@ import {
 import { DrawingTopic } from '../../types/curriculum';
 import { TeacherAssignment, StudentSubmission } from '../../types/assignments';
 import { INITIAL_TEACHER_ASSIGNMENTS, INITIAL_STUDENT_SUBMISSIONS } from '../../data/assignmentsData';
+import { useSubscription } from '../../context/SubscriptionContext';
 
 interface StudentAssignmentsModalProps {
   isOpen: boolean;
@@ -33,9 +34,13 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
 }) => {
   if (!isOpen) return null;
 
-  const [assignments] = useState<TeacherAssignment[]>(INITIAL_TEACHER_ASSIGNMENTS);
-  const [submissions] = useState<StudentSubmission[]>(INITIAL_STUDENT_SUBMISSIONS);
-  const [selectedAssignment, setSelectedAssignment] = useState<TeacherAssignment | null>(assignments[0] || null);
+  const { userProfile, subscription } = useSubscription();
+  const isAuthenticatedUser = !!userProfile?.isAuthenticated || !!subscription?.isAuthenticated;
+  const [isSandboxMode, setIsSandboxMode] = useState<boolean>(!isAuthenticatedUser);
+
+  const [assignments] = useState<TeacherAssignment[]>(() => isSandboxMode ? INITIAL_TEACHER_ASSIGNMENTS : []);
+  const [submissions] = useState<StudentSubmission[]>(() => isSandboxMode ? INITIAL_STUDENT_SUBMISSIONS : []);
+  const [selectedAssignment, setSelectedAssignment] = useState<TeacherAssignment | null>(() => isSandboxMode ? (INITIAL_TEACHER_ASSIGNMENTS[0] || null) : null);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -75,7 +80,14 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
               Assigned Tasks ({assignments.length})
             </h3>
 
-            {assignments.map((asg) => {
+            {(assignments || []).length === 0 ? (
+              <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-xl space-y-3 mt-4">
+                <BookOpen className="w-8 h-8 text-slate-600 mx-auto" />
+                <p className="text-xs font-semibold text-slate-300">No teacher classrooms or assignments joined yet.</p>
+                <p className="text-[11px] text-slate-500">Enter your teacher's 6-digit room code to join their active classroom and receive practical drawing assignments.</p>
+              </div>
+            ) : (
+              (assignments || []).map((asg) => {
               const sub = submissions.find((s) => s.assignmentId === asg.id);
               const isSelected = selectedAssignment?.id === asg.id;
 
@@ -121,7 +133,8 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
                   </div>
                 </div>
               );
-            })}
+            })
+            )}
           </div>
 
           {/* Selected Assignment Details & Actions (7 Cols) */}

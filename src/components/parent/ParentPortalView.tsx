@@ -40,12 +40,12 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
   onSwitchToStudentView,
   onSelectTopic
 }) => {
-  const { isSubscribed, subscription, subscribeToPlan, logout, wardCode, sponsorWard } = useSubscription();
+  const { isSubscribed, subscription, subscribeToPlan, logout, wardCode, sponsorWard, userProfile } = useSubscription();
+  const isAuthenticatedUser = !!userProfile?.isAuthenticated || !!subscription?.isAuthenticated;
+  const [isSandboxMode, setIsSandboxMode] = useState<boolean>(!isAuthenticatedUser);
 
-  const [wardCodeInput, setWardCodeInput] = useState<string>(wardCode || 'DH-742K');
-  const [activeProfile, setActiveProfile] = useState<StudentWardProfile>(
-    SAMPLE_WARD_PROFILES['WARD-DH-2025-88']
-  );
+  const [wardCodeInput, setWardCodeInput] = useState<string>(() => isSandboxMode ? (wardCode || 'DH-742K') : '');
+  const [activeProfile, setActiveProfile] = useState<StudentWardProfile | null>(() => isSandboxMode ? SAMPLE_WARD_PROFILES['WARD-DH-2025-88'] : null);
   const [activeTab, setActiveTab] = useState<'analytics' | 'weakAreas' | 'assessments' | 'practicalSubmissions' | 'reportCard' | 'sponsorship' | 'feedback'>('analytics');
   const [parentFeedbackMsg, setParentFeedbackMsg] = useState<string>('');
   const [isFeedbackSent, setIsFeedbackSent] = useState<boolean>(false);
@@ -266,6 +266,29 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
       </div>
 
       {/* 2. Main Parent Portal Body */}
+      {!activeProfile ? (
+        <main className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-xl mx-auto space-y-4 my-auto">
+          <div className="w-16 h-16 rounded-2xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 mx-auto shadow-xl">
+            <Users className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white">No Ward Linked to Your Account</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Enter your student's DraftHands Student ID or invite code above (e.g. <code className="text-cyan-400 font-mono">WARD-DH-2025-88</code>) to monitor their curriculum progress, practical drafting submissions, and WAEC/NECO exam readiness.
+          </p>
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={() => {
+                setWardCodeInput('WARD-DH-2025-88');
+                setActiveProfile(SAMPLE_WARD_PROFILES['WARD-DH-2025-88']);
+                setIsSandboxMode(true);
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/30"
+            >
+              Preview Demo Ward Data
+            </button>
+          </div>
+        </main>
+      ) : (
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         
         {/* TAB 1: WARD ANALYTICS & CA SCORES */}
@@ -621,6 +644,7 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
           </div>
         )}
       </main>
+      )}
     </div>
   );
 };

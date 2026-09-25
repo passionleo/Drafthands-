@@ -58,7 +58,9 @@ export const TeacherPortalView: React.FC<TeacherPortalViewProps> = ({
   onReturnToHome,
   onSwitchToStudentView
 }) => {
-  const { userProfile, logout, isMasterAdmin } = useSubscription();
+  const { userProfile, logout, isMasterAdmin, subscription } = useSubscription();
+  const isAuthenticatedUser = !!userProfile?.isAuthenticated || !!subscription?.isAuthenticated;
+  const [isSandboxMode, setIsSandboxMode] = useState<boolean>(!isAuthenticatedUser);
 
   const [activeTab, setActiveTab] = useState<TeacherTab>('LESSON_NOTES');
   const [lessonPlanTab, setLessonPlanTab] = useState<LessonPlanTab>('DOCUMENT');
@@ -76,10 +78,10 @@ export const TeacherPortalView: React.FC<TeacherPortalViewProps> = ({
     activeTopic.week ? `Week ${activeTopic.week}` : 'Week 1'
   );
 
-  // Assignments State
-  const [assignments, setAssignments] = useState<TeacherAssignment[]>(INITIAL_TEACHER_ASSIGNMENTS);
-  const [submissions, setSubmissions] = useState<StudentSubmission[]>(INITIAL_STUDENT_SUBMISSIONS);
-  const [selectedSubmission, setSelectedSubmission] = useState<StudentSubmission | null>(submissions[0] || null);
+  // Assignments State (Purged for authenticated users unless sandbox mode)
+  const [assignments, setAssignments] = useState<TeacherAssignment[]>(() => isSandboxMode ? INITIAL_TEACHER_ASSIGNMENTS : []);
+  const [submissions, setSubmissions] = useState<StudentSubmission[]>(() => isSandboxMode ? INITIAL_STUDENT_SUBMISSIONS : []);
+  const [selectedSubmission, setSelectedSubmission] = useState<StudentSubmission | null>(() => isSandboxMode ? (INITIAL_STUDENT_SUBMISSIONS[0] || null) : null);
   const [gradingMarks, setGradingMarks] = useState<{ accuracy: number; linework: number; lettering: number; speed: number }>({
     accuracy: 38,
     linework: 27,
@@ -671,7 +673,14 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
                 </div>
 
                 <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
-                  {submissions.map(sub => {
+                  {(submissions || []).length === 0 ? (
+                    <div className="p-8 text-center bg-slate-950/40 border border-slate-800 rounded-xl space-y-3">
+                      <Users className="w-8 h-8 text-slate-600 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-300">No registered students or submissions yet.</p>
+                      <p className="text-[11px] text-slate-500">Share your classroom room code with students to enroll them and receive drawing submissions.</p>
+                    </div>
+                  ) : (
+                    (submissions || []).map(sub => {
                     const isSelected = selectedSubmission?.id === sub.id;
                     const totalScore = sub.grade?.totalScore;
                     const waecGrade = sub.grade?.waecGrade;
@@ -715,7 +724,8 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
                         </div>
                       </button>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
             </div>
