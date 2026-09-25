@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ProcedurePanel } from './components/curriculum/ProcedurePanel';
@@ -6,12 +6,69 @@ import { DrawingCanvas } from './components/drafting/DrawingCanvas';
 import { allCurriculumTopics } from './data/curriculumData';
 import { SubscriptionProvider } from './context/SubscriptionContext';
 
+interface Props {
+  children: ReactNode;
+  onReset: () => void;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class StudioInlineBoundary extends Component<Props, State> {
+  public state: State = { hasError: false, error: null };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Studio render error caught:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col justify-center items-center bg-slate-900 p-6 text-white text-center">
+          <div className="max-w-md w-full bg-red-950/90 border border-red-500 rounded-xl p-6">
+            <h3 className="font-bold text-red-400 text-lg mb-2">CAD Studio Render Halt</h3>
+            <pre className="bg-black/60 p-3 rounded text-left text-xs text-red-300 overflow-x-auto whitespace-pre-wrap font-mono mb-4">
+              {this.state.error?.toString()}
+            </pre>
+            <button
+              onClick={this.props.onReset}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded text-xs font-semibold text-white"
+            >
+              Return to Landing
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT'>('LANDING');
-  
-  // Ensure safe fallback if array is empty or loading
-  const topicsList = Array.isArray(allCurriculumTopics) ? allCurriculumTopics : [];
-  const [currentTopic, setCurrentTopic] = useState<any>(topicsList[0] || null);
+
+  // Hardened fallback array so .filter() and indexing can never be undefined
+  const topicsList = Array.isArray(allCurriculumTopics) && allCurriculumTopics.length > 0 
+    ? allCurriculumTopics 
+    : [
+        {
+          id: 'bisection-angle',
+          title: 'Bisection of an Angle',
+          tier: 'JSS1',
+          steps: [
+            { title: 'Step 1: Base Line', instructions: 'Draw baseline AB.' },
+            { title: 'Step 2: Arc', instructions: 'Strike an arc from vertex O.' }
+          ]
+        }
+      ];
+
+  const [currentTopic, setCurrentTopic] = useState<any>(topicsList[0]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [selectedTier, setSelectedTier] = useState<any>('JSS1');
 
@@ -20,7 +77,7 @@ export default function App() {
   return (
     <SubscriptionProvider>
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
-        {/* LANDING SCREEN */}
+        {/* 1. LANDING VIEW */}
         {currentView === 'LANDING' && (
           <div className="flex-1 flex flex-col">
             <header className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/60 backdrop-blur sticky top-0 z-50">
@@ -104,37 +161,39 @@ export default function App() {
           </div>
         )}
 
-        {/* CAD STUDIO WORKSPACE */}
+        {/* 2. CAD STUDIO VIEW */}
         {currentView === 'STUDIO' && (
-          <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-900">
-            <Header onReturnHome={handleReturnHome} />
-            <div className="flex flex-1 overflow-hidden relative">
-              <Sidebar
-                topics={topicsList}
-                allTopics={topicsList}
-                selectedTier={selectedTier}
-                onSelectTier={setSelectedTier}
-                currentTopic={currentTopic}
-                onSelectTopic={(topic: any) => {
-                  setCurrentTopic(topic);
-                  setCurrentStepIndex(0);
-                }}
-              />
-              <main className="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
-                <DrawingCanvas topic={currentTopic} stepIndex={currentStepIndex} />
-                {currentTopic && (
-                  <ProcedurePanel
-                    topic={currentTopic}
-                    currentStepIndex={currentStepIndex}
-                    onStepChange={setCurrentStepIndex}
-                  />
-                )}
-              </main>
+          <StudioInlineBoundary onReset={handleReturnHome}>
+            <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-900">
+              <Header onReturnHome={handleReturnHome} />
+              <div className="flex flex-1 overflow-hidden relative">
+                <Sidebar
+                  topics={topicsList}
+                  allTopics={topicsList}
+                  selectedTier={selectedTier}
+                  onSelectTier={setSelectedTier}
+                  currentTopic={currentTopic}
+                  onSelectTopic={(topic: any) => {
+                    setCurrentTopic(topic);
+                    setCurrentStepIndex(0);
+                  }}
+                />
+                <main className="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
+                  <DrawingCanvas topic={currentTopic} stepIndex={currentStepIndex} />
+                  {currentTopic && (
+                    <ProcedurePanel
+                      topic={currentTopic}
+                      currentStepIndex={currentStepIndex}
+                      onStepChange={setCurrentStepIndex}
+                    />
+                  )}
+                </main>
+              </div>
             </div>
-          </div>
+          </StudioInlineBoundary>
         )}
 
-        {/* TEACHER MANAGEMENT DESK */}
+        {/* 3. TEACHER VIEW */}
         {currentView === 'TEACHER' && (
           <div className="min-h-screen bg-slate-950 p-6 flex flex-col">
             <div className="max-w-5xl mx-auto w-full space-y-6">
@@ -150,28 +209,21 @@ export default function App() {
                   Exit to Home
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
-                  <h3 className="font-semibold text-white mb-2">Classroom Projection Mode</h3>
-                  <p className="text-xs text-slate-400 mb-4">Project interactive drafting steps to projectors or large displays for classroom instruction.</p>
-                  <button
-                    onClick={() => setCurrentView('STUDIO')}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-semibold text-white"
-                  >
-                    Open Board For Presentation
-                  </button>
-                </div>
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
-                  <h3 className="font-semibold text-white mb-2">Curriculum Standards</h3>
-                  <p className="text-xs text-slate-400 mb-2">Active Syllabus: NERDC Basic Technology & SS1-SS3 Technical Drawing.</p>
-                  <span className="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">Verified WAEC/NECO Alignment</span>
-                </div>
+              <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
+                <h3 className="font-semibold text-white mb-2">Classroom Projection Mode</h3>
+                <p className="text-xs text-slate-400 mb-4">Project interactive drafting steps to displays for classroom instruction.</p>
+                <button
+                  onClick={() => setCurrentView('STUDIO')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-semibold text-white"
+                >
+                  Open Board For Presentation
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* PARENT PORTAL */}
+        {/* 4. PARENT VIEW */}
         {currentView === 'PARENT' && (
           <div className="min-h-screen bg-slate-950 p-6 flex flex-col">
             <div className="max-w-4xl mx-auto w-full space-y-6">
@@ -189,9 +241,6 @@ export default function App() {
               </div>
               <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
                 <h3 className="font-semibold text-white">Student Learning Status</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Your ward has full access to guided drafting tools, construction steps for geometric problems, and past WAEC questions.
-                </p>
                 <button
                   onClick={() => setCurrentView('STUDIO')}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white"
@@ -206,3 +255,4 @@ export default function App() {
     </SubscriptionProvider>
   );
 }
+  
