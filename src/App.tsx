@@ -9,6 +9,20 @@ import { ParentPortalView } from './components/parent/ParentPortalView';
 import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
 import { OwnerControlCenterView } from './components/owner/OwnerControlCenterView';
 import { PaywallModal } from './components/subscription/PaywallModal';
+
+// Modals & Viewers
+import { TheoryModal } from './components/theory/TheoryModal';
+import { PracticeModal } from './components/practice/PracticeModal';
+import { StudentAssignmentsModal } from './components/student/StudentAssignmentsModal';
+import { AdminConsoleModal } from './components/admin/AdminConsoleModal';
+import { IsoDiagramViewer } from './components/common/IsoDiagramViewer';
+import { OrthographicViewport } from './components/tools/OrthographicViewport';
+import { SurfaceDevelopmentViewer } from './components/tools/SurfaceDevelopmentViewer';
+import { SectionalAssemblyViewer } from './components/tools/SectionalAssemblyViewer';
+import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanViewer';
+import { LiveProjectionMode } from './components/projection/LiveProjectionMode';
+import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
+
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { CurriculumTier, DrawingTopic, InstrumentState, ProceduralStep } from './types/curriculum';
@@ -52,7 +66,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 this.setState({ hasError: false, error: null });
                 this.props.onReset();
               }}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-sm transition shadow-lg shadow-blue-500/20"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-sm transition shadow-lg shadow-blue-500/25"
             >
               Return to Home
             </button>
@@ -79,6 +93,19 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [gridMode, setGridMode] = useState<GridMode>('ISOMETRIC');
   const [paramValues, setParamValues] = useState<Record<string, number>>({});
+
+  // Feature modals & viewers state
+  const [isTheoryOpen, setIsTheoryOpen] = useState<boolean>(false);
+  const [isPracticeOpen, setIsPracticeOpen] = useState<boolean>(false);
+  const [isIsoDiagramOpen, setIsIsoDiagramOpen] = useState<boolean>(false);
+  const [isOrthoViewportOpen, setIsOrthoViewportOpen] = useState<boolean>(false);
+  const [isSurfaceDevOpen, setIsSurfaceDevOpen] = useState<boolean>(false);
+  const [isSectionalOpen, setIsSectionalOpen] = useState<boolean>(false);
+  const [isArchPlanOpen, setIsArchPlanOpen] = useState<boolean>(false);
+  const [isProjectionOpen, setIsProjectionOpen] = useState<boolean>(false);
+  const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
+  const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
+  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState<boolean>(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -165,17 +192,36 @@ export default function App() {
                 }}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                onOpenTheory={() => {}}
-                onOpenPractice={() => {}}
+                onOpenTheory={() => setIsTheoryOpen(true)}
+                onOpenPractice={() => setIsPracticeOpen(true)}
+                onOpenIsoDiagram={() => setIsIsoDiagramOpen(true)}
+                onOpenOrthographicViewport={() => setIsOrthoViewportOpen(true)}
+                onOpenSurfaceDevelopment={() => setIsSurfaceDevOpen(true)}
+                onOpenSectionalAssembly={() => setIsSectionalOpen(true)}
+                onOpenArchitecturalPlan={() => setIsArchPlanOpen(true)}
                 onOpenTeacherPortal={() => setCurrentView('TEACHER')}
                 onOpenParentPortal={() => setCurrentView('PARENT')}
+                onOpenProjectionMode={() => setIsProjectionOpen(true)}
                 onOpenTeacherAssignments={() => setCurrentView('TEACHER')}
-                onOpenStudentAssignments={() => {}}
-                onOpenLiveClass={() => {}}
-                onToggleWhiteboardStudio={() => {}}
-                isWhiteboardOpen={false}
+                onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
+                onOpenAdminConsole={() => setIsAdminConsoleOpen(true)}
+                onOpenLiveClass={() => setIsProjectionOpen(true)}
+                onToggleWhiteboardStudio={() => setIsWhiteboardOpen(!isWhiteboardOpen)}
+                isWhiteboardOpen={isWhiteboardOpen}
                 onResetView={() => setCurrentStepIndex(0)}
-                onExportSvg={() => {}}
+                onExportSvg={() => {
+                  if (svgRef.current) {
+                    const svgData = new XMLSerializer().serializeToString(svgRef.current);
+                    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${currentTopic?.title || 'drawing'}_drafting.svg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                }}
                 currentTopicTitle={currentTopic?.title || 'Drafting Board'}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -230,7 +276,7 @@ export default function App() {
                       onParamChange={(paramId, value) => {
                         setParamValues(prev => ({ ...prev, [paramId]: value }));
                       }}
-                      onOpenTheory={() => {}}
+                      onOpenTheory={() => setIsTheoryOpen(true)}
                     />
                   )}
                 </main>
@@ -290,8 +336,104 @@ export default function App() {
               onOpenTeacherPortal={() => setCurrentView('TEACHER')}
               onOpenParentPortal={() => setCurrentView('PARENT')}
               onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
-              onOpenAdminConsole={() => {}}
+              onOpenAdminConsole={() => setIsAdminConsoleOpen(true)}
               topics={allCurriculumTopics}
+            />
+          )}
+
+          {/* Feature Modals & Viewers */}
+          {isTheoryOpen && currentTopic && (
+            <TheoryModal
+              isOpen={isTheoryOpen}
+              onClose={() => setIsTheoryOpen(false)}
+              topic={currentTopic}
+            />
+          )}
+
+          {isPracticeOpen && currentTopic && (
+            <PracticeModal
+              isOpen={isPracticeOpen}
+              onClose={() => setIsPracticeOpen(false)}
+              topic={currentTopic}
+            />
+          )}
+
+          {isIsoDiagramOpen && (
+            <IsoDiagramViewer
+              topic={currentTopic}
+              isOpen={isIsoDiagramOpen}
+              onClose={() => setIsIsoDiagramOpen(false)}
+              viewMode="MODAL"
+            />
+          )}
+
+          {isOrthoViewportOpen && (
+            <OrthographicViewport
+              isOpen={isOrthoViewportOpen}
+              onClose={() => setIsOrthoViewportOpen(false)}
+              viewMode="MODAL"
+            />
+          )}
+
+          {isSurfaceDevOpen && (
+            <SurfaceDevelopmentViewer
+              isOpen={isSurfaceDevOpen}
+              onClose={() => setIsSurfaceDevOpen(false)}
+              viewMode="MODAL"
+            />
+          )}
+
+          {isSectionalOpen && (
+            <SectionalAssemblyViewer
+              isOpen={isSectionalOpen}
+              onClose={() => setIsSectionalOpen(false)}
+              viewMode="MODAL"
+            />
+          )}
+
+          {isArchPlanOpen && (
+            <ArchitecturalPlanViewer
+              isOpen={isArchPlanOpen}
+              onClose={() => setIsArchPlanOpen(false)}
+              viewMode="MODAL"
+            />
+          )}
+
+          {isProjectionOpen && currentTopic && (
+            <LiveProjectionMode
+              isOpen={isProjectionOpen}
+              onClose={() => setIsProjectionOpen(false)}
+              topic={currentTopic}
+              currentStepIndex={currentStepIndex}
+              onStepChange={setCurrentStepIndex}
+              parameters={paramValues}
+            />
+          )}
+
+          {isStudentAssignmentsOpen && (
+            <StudentAssignmentsModal
+              isOpen={isStudentAssignmentsOpen}
+              onClose={() => setIsStudentAssignmentsOpen(false)}
+              topics={allCurriculumTopics}
+              onOpenWhiteboardForAssignment={(_assignment) => {
+                setIsStudentAssignmentsOpen(false);
+                setIsWhiteboardOpen(true);
+              }}
+            />
+          )}
+
+          {isAdminConsoleOpen && (
+            <AdminConsoleModal
+              isOpen={isAdminConsoleOpen}
+              onClose={() => setIsAdminConsoleOpen(false)}
+            />
+          )}
+
+          {isWhiteboardOpen && (
+            <WhiteboardStudio
+              topic={currentTopic}
+              onClose={() => setIsWhiteboardOpen(false)}
+              initialMode="TRADITIONAL_BOARD"
             />
           )}
 
