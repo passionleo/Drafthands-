@@ -1062,6 +1062,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           const bx = center.x - bw / 2;
           const by = center.y - bh / 2;
 
+          // Outer Walls
           newElements.push({
             id: `ai-arch-wall-${now}`,
             type: 'RECTANGLE',
@@ -1074,18 +1075,46 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             height: bh
           });
 
+          // Room 1 / Living Room Partition
           newElements.push({
-            id: `ai-arch-partition-${now}`,
+            id: `ai-arch-part-1-${now}`,
             type: 'LINE',
             layer: 'CONSTRUCTION_2H',
             lineWeight: 'THIN_CONTINUOUS',
             color: '#94a3b8',
-            x1: bx + bw * 0.4,
+            x1: bx + bw * 0.55,
             y1: by,
-            x2: bx + bw * 0.4,
-            y2: by + bh
+            x2: bx + bw * 0.55,
+            y2: by + bh * 0.7
           });
 
+          // Room 2 / Bedroom Partition
+          newElements.push({
+            id: `ai-arch-part-2-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#94a3b8',
+            x1: bx + bw * 0.55,
+            y1: by + bh * 0.7,
+            x2: bx + bw,
+            y2: by + bh * 0.7
+          });
+
+          // Kitchen / Bath Partition
+          newElements.push({
+            id: `ai-arch-part-3-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#94a3b8',
+            x1: bx,
+            y1: by + bh * 0.5,
+            x2: bx + bw * 0.55,
+            y2: by + bh * 0.5
+          });
+
+          // Dimensions ISO 4157
           newElements.push({
             id: `ai-arch-dim-l-${now}`,
             type: 'DIMENSION',
@@ -1096,11 +1125,26 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             y1: by + bh + 30,
             x2: bx + bw,
             y2: by + bh + 30,
-            dimensionText: `Building Length: ${l} mm (ISO 4157)`
+            dimensionText: `Overall Length: ${l} mm (ISO 4157 Floor Plan)`
+          });
+
+          newElements.push({
+            id: `ai-arch-dim-w-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: bx - 35,
+            y1: by,
+            x2: bx - 35,
+            y2: by + bh,
+            dimensionText: `Overall Width: ${w} mm`
           });
         } else if (gType === 'MECHANICAL_PART' || gType === 'ASSEMBLY' || gType === 'BRACKET') {
           const size = p.size || 200;
           const s = size * 1.2;
+          
+          // Main Body
           newElements.push({
             id: `ai-mech-rect-${now}`,
             type: 'RECTANGLE',
@@ -1112,6 +1156,33 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             width: s,
             height: s * 0.7
           });
+
+          // Centerlines
+          newElements.push({
+            id: `ai-mech-cline-h-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#38bdf8',
+            x1: center.x - s / 2 - 20,
+            y1: center.y,
+            x2: center.x + s / 2 + 20,
+            y2: center.y
+          });
+
+          newElements.push({
+            id: `ai-mech-cline-v-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#38bdf8',
+            x1: center.x,
+            y1: center.y - s / 2 - 20,
+            x2: center.x,
+            y2: center.y + s / 2 + 20
+          });
+
+          // Primary Hole
           newElements.push({
             id: `ai-mech-hole-${now}`,
             type: 'CIRCLE',
@@ -1120,8 +1191,30 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             color: '#f8fafc',
             cx: center.x,
             cy: center.y,
-            r: s * 0.2
+            r: s * 0.18
           });
+
+          // Bolt holes on corners
+          const rOffset = s * 0.35;
+          [
+            { cx: center.x - rOffset, cy: center.y - rOffset * 0.5 },
+            { cx: center.x + rOffset, cy: center.y - rOffset * 0.5 },
+            { cx: center.x - rOffset, cy: center.y + rOffset * 0.5 },
+            { cx: center.x + rOffset, cy: center.y + rOffset * 0.5 }
+          ].forEach((bHole, bIdx) => {
+            newElements.push({
+              id: `ai-mech-bhole-${now}-${bIdx}`,
+              type: 'CIRCLE',
+              layer: 'OUTLINE_HB',
+              lineWeight: 'THICK_CONTINUOUS',
+              color: '#f8fafc',
+              cx: bHole.cx,
+              cy: bHole.cy,
+              r: s * 0.05
+            });
+          });
+
+          // ISO 128 Dimensions
           newElements.push({
             id: `ai-mech-dim-${now}`,
             type: 'DIMENSION',
@@ -1132,7 +1225,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             y1: center.y + s * 0.35 + 25,
             x2: center.x + s / 2,
             y2: center.y + s * 0.35 + 25,
-            dimensionText: `Component Nominal Size: ${size} mm (ISO 128)`
+            dimensionText: `Machine Component Size: ${size} mm (ISO 128 Mechanical)`
           });
         } else if (gType === 'ISOMETRIC_BLOCK' || gType === '3D_BLOCK' || gType === 'CUBOID') {
           const l = p.length || p.l || 600;
