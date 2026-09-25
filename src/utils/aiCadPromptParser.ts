@@ -132,6 +132,45 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   try {
 
   // ==========================================
+  // 0. ISOMETRIC 3D BLOCK / CUBOID / SOLID BOX
+  // e.g. "Create an isometric 3D block measuring 600 mm × 400 mm × 300 mm"
+  // ==========================================
+  if (clean.includes('isometric') || clean.includes('3d block') || clean.includes('cuboid') || clean.includes('rectangular solid') || clean.includes('box') || (clean.includes('length') && clean.includes('width') && clean.includes('height'))) {
+    matchedKeywords.push('isometric_block');
+    const nums = extractAllNumbers(clean);
+    const length = nums[0] !== undefined ? nums[0] : 600;
+    const width = nums[1] !== undefined ? nums[1] : 400;
+    const height = nums[2] !== undefined ? nums[2] : 300;
+
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'ISOMETRIC_BLOCK',
+      geometryTitle: `Isometric 3D Block (${length} × ${width} × ${height} mm)`,
+      topicId: 'ss2-isometric-projection',
+      tier: 'SS2',
+      confidence: 0.99,
+      description: `Constructing standard isometric 3D block projection with Length = ${length}mm, Width = ${width}mm, and Height = ${height}mm with ISO dimension annotations.`,
+      parameters: {
+        length,
+        width,
+        height,
+        l: length,
+        w: width,
+        h: height
+      },
+      extractedParams: [
+        { key: 'length', label: 'Length', value: length, unit: 'mm' },
+        { key: 'width', label: 'Width', value: width, unit: 'mm' },
+        { key: 'height', label: 'Height', value: height, unit: 'mm' }
+      ],
+      matchedKeywords: ['isometric', '3d_block', 'cuboid'],
+      executionPlan: `Generated 3D isometric block projection: L=${length}mm, W=${width}mm, H=${height}mm with ISO dimensioning.`,
+      cadCommandEcho: `CAD_3D_ISOMETRIC_BLOCK [L=${length}, W=${width}, H=${height}]`
+    };
+  }
+
+  // ==========================================
   // 1. PARABOLA (Rectangular / Tangent Method)
   // e.g. "Construct a parabola with span 120mm and rise 80mm"
   // ==========================================

@@ -1053,7 +1053,95 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const p = safeParams;
         const now = Date.now();
 
-        if (gType === 'CIRCLE') {
+        if (gType === 'ISOMETRIC_BLOCK' || gType === '3D_BLOCK' || gType === 'CUBOID') {
+          const l = p.length || p.l || 600;
+          const w = p.width || p.w || 400;
+          const h = p.height || p.h || 300;
+          
+          const scale = 0.35;
+          const scL = l * scale;
+          const scW = w * scale;
+          const scH = h * scale;
+
+          const origin = { x: center.x - (scL - scW) / 2, y: center.y + scH / 2 };
+          const cos30 = 0.866;
+          const sin30 = 0.5;
+
+          const pBottomFront = { x: origin.x, y: origin.y };
+          const pBottomLeft = { x: origin.x - scL * cos30, y: origin.y + scL * sin30 };
+          const pBottomRight = { x: origin.x + scW * cos30, y: origin.y + scW * sin30 };
+          const pBottomBack = { x: origin.x - scL * cos30 + scW * cos30, y: origin.y + scL * sin30 + scW * sin30 };
+
+          const pTopFront = { x: pBottomFront.x, y: pBottomFront.y - scH };
+          const pTopLeft = { x: pBottomLeft.x, y: pBottomLeft.y - scH };
+          const pTopRight = { x: pBottomRight.x, y: pBottomRight.y - scH };
+          const pTopBack = { x: pBottomBack.x, y: pBottomBack.y - scH };
+
+          const edges = [
+            [pBottomFront, pTopFront],
+            [pBottomLeft, pTopLeft],
+            [pBottomRight, pTopRight],
+            [pTopFront, pTopLeft],
+            [pTopFront, pTopRight],
+            [pTopLeft, pTopBack],
+            [pTopRight, pTopBack],
+            [pBottomFront, pBottomLeft],
+            [pBottomFront, pBottomRight]
+          ];
+
+          edges.forEach((edge, idx) => {
+            newElements.push({
+              id: `ai-iso-edge-${now}-${idx}`,
+              type: 'LINE',
+              layer: 'OUTLINE_HB',
+              lineWeight: 'THICK_CONTINUOUS',
+              color: '#f8fafc',
+              x1: Math.round(edge[0].x),
+              y1: Math.round(edge[0].y),
+              x2: Math.round(edge[1].x),
+              y2: Math.round(edge[1].y)
+            });
+          });
+
+          newElements.push({
+            id: `ai-dim-l-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: Math.round(pBottomLeft.x),
+            y1: Math.round(pBottomLeft.y + 25),
+            x2: Math.round(pBottomFront.x),
+            y2: Math.round(pBottomFront.y + 25),
+            dimensionText: `Length: ${l} mm`
+          });
+
+          newElements.push({
+            id: `ai-dim-w-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: Math.round(pBottomFront.x),
+            y1: Math.round(pBottomFront.y + 25),
+            x2: Math.round(pBottomRight.x),
+            y2: Math.round(pBottomRight.y + 25),
+            dimensionText: `Width: ${w} mm`
+          });
+
+          newElements.push({
+            id: `ai-dim-h-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: Math.round(pTopRight.x + 25),
+            y1: Math.round(pTopRight.y),
+            x2: Math.round(pBottomRight.x + 25),
+            y2: Math.round(pBottomRight.y),
+            dimensionText: `Height: ${h} mm`
+          });
+        } else if (gType === 'CIRCLE') {
           const r = Math.max(10, p.radius || (p.diameter ? p.diameter / 2 : undefined) || 60);
           newElements.push({
             id: `ai-direct-circle-${now}`,
