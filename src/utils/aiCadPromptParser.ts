@@ -132,6 +132,35 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   try {
 
   // ==========================================
+  // 0. RECTANGLE / SQUARE / BOX / POLYGON
+  // e.g. "Construction a rectangle length 500mm and breadth 300mm"
+  // ==========================================
+  if (clean.includes('rectangle') || clean.includes('rect') || clean.includes('square') || clean.includes('box')) {
+    const dimPair = extractDimensionPair(clean);
+    const length = dimPair ? dimPair[0] : (extractNumberWithKeywords(clean, ['length', 'l', 'span']) || 500);
+    const breadth = dimPair ? dimPair[1] : (extractNumberWithKeywords(clean, ['breadth', 'b', 'width', 'w', 'height', 'h']) || 300);
+
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'RECTANGLE',
+      geometryTitle: `Rectangle (${length}mm × ${breadth}mm)`,
+      topicId: 'ss1-rect-construction',
+      tier: 'SS1',
+      confidence: 0.99,
+      description: `Constructing rectangle with length ${length}mm and breadth ${breadth}mm with perpendicular corners and ISO dimensions.`,
+      parameters: { length, breadth, width: breadth, height: breadth },
+      extractedParams: [
+        { key: 'length', label: 'Length', value: length, unit: 'mm' },
+        { key: 'breadth', label: 'Breadth', value: breadth, unit: 'mm' }
+      ],
+      matchedKeywords: ['rectangle', 'rect', 'box'],
+      executionPlan: `Generated 2D rectangular entity: Length=${length}mm, Breadth=${breadth}mm.`,
+      cadCommandEcho: `REC ${length},${breadth}`
+    };
+  }
+
+  // ==========================================
   // A. ARCHITECTURAL / BUILDING DRAWING
   // ==========================================
   if (clean.includes('building') || clean.includes('floor plan') || clean.includes('house') || clean.includes('room') || clean.includes('architectural') || clean.includes('wall') || clean.includes('plan')) {
