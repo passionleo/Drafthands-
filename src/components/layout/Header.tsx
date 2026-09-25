@@ -26,7 +26,8 @@ import {
   School,
   ChevronDown,
   Check,
-  LogOut
+  LogOut,
+  Radio
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
@@ -394,6 +395,19 @@ export const Header: React.FC<HeaderProps> = ({
           <PenTool className="w-3.5 h-3.5 text-emerald-400" />
           <span className="hidden lg:inline">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
         </button>
+
+        {/* Live Virtual Classroom Button */}
+        {onOpenLiveClass && (
+          <button
+            id="btn-open-live-virtual-class"
+            onClick={onOpenLiveClass}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white shadow-md shadow-red-600/30 transition-all cursor-pointer"
+            title="Open Live Virtual Classroom & Video Stream"
+          >
+            <Radio className="w-3.5 h-3.5 text-red-200 animate-pulse" />
+            <span className="hidden sm:inline">Live Class</span>
+          </button>
+        )}
 
         {/* ISO 128 Blueprint Viewer Button (Subscription Gated) */}
         {onOpenIsoDiagram && (
