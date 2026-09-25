@@ -336,6 +336,9 @@ export default function App() {
                         setParamValues(prev => ({ ...prev, [paramId]: value }));
                       }}
                       onOpenTheory={() => setIsTheoryOpen(true)}
+                      onOpenTraditionalBoard={() => setIsWhiteboardOpen(true)}
+                      onOpenCadWorkstation={() => setIsWhiteboardOpen(true)}
+                      onOpenLiveClass={() => setIsLiveClassOpen(true)}
                     />
                   )}
                 </main>
