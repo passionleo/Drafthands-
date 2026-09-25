@@ -99,22 +99,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return matchesTier && matchesTerm && matchesSearch;
   });
 
-  const handleTopicClick = (topic: DrawingTopic, idx: number = 0) => {
-    // Keep Week 1 (index 0) unlocked, lock subsequent weeks for student unless instructor/admin
-    const isLockedForStudent = isStudent && idx > 0 && !isInstructorOrAdmin;
-    if (isLockedForStudent) {
-      setToastMsg("Complete preceding exercises to unlock this module.");
-      setTimeout(() => setToastMsg(null), 3500);
-      return;
-    }
-
+  const handleTopicClick = (topic: DrawingTopic, _idx: number = 0) => {
     const tierTopics = getTopicsByTier(topic.tier);
     const access = checkTopicAccess(topic, tierTopics);
 
     if (access.isAllowed) {
       onSelectTopic(topic.id);
     } else {
-      // Trigger Paywall Modal with targeted topic
+      // Trigger Paywall Modal with targeted topic requiring payment
       openPaywall(topic);
     }
   };
@@ -313,10 +305,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           filteredTopics.map((topic, idx) => {
             const isActive = topic.id === activeTopicId;
-            const isLockedForStudent = isStudent && idx > 0 && !isInstructorOrAdmin;
             const tierTopics = getTopicsByTier(topic.tier);
             const access = checkTopicAccess(topic, tierTopics);
-            const isLocked = isLockedForStudent || !access.isAllowed;
+            const isLocked = !access.isAllowed;
 
             return (
               <button
