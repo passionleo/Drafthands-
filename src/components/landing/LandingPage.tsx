@@ -370,10 +370,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </span>
                 </div>
                 <h4 className="text-base font-extrabold text-white leading-tight">
-                  Unlock Complete NERDC Syllabus & 10-Year WAEC/NECO Solved Papers
+                  {justVerifiedUser?.role === 'TEACHER' 
+                    ? 'Teacher Professional & Classroom License Payment' 
+                    : justVerifiedUser?.role === 'PARENT'
+                    ? 'Parent Ward Sponsorship & Full Package Pass'
+                    : 'Unlock Complete NERDC Syllabus & 10-Year WAEC/NECO Solved Papers'}
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Your identity has been confirmed via email. Free access includes starter Plane Geometry topics. To unlock the full curriculum package across all senior classes, payment should be made.
+                  {justVerifiedUser?.role === 'TEACHER'
+                    ? 'Activate your Teacher Master Pass to access NERDC lesson notes, student grading desk, and live virtual classes.'
+                    : justVerifiedUser?.role === 'PARENT'
+                    ? "Sponsor your ward's full session access to track continuous assessment, drafting sheets, and WAEC exam readiness."
+                    : 'Your identity has been confirmed via email. Free access includes starter Plane Geometry topics. To unlock the full curriculum package across all senior classes, payment should be made.'}
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-slate-300">
