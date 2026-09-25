@@ -107,7 +107,15 @@
     </script>
   </head>
   <body class="bg-slate-950 text-slate-100 min-h-screen m-0 p-0 antialiased selection:bg-cyan-500 selection:text-slate-950">
-    <div id="root" class="min-h-screen w-full bg-slate-950"></div>
+    <div id="root" class="min-h-screen w-full bg-slate-950">
+      <div id="dh-pre-loader" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background-color: #020617; color: #f8fafc;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <div style="width: 28px; height: 28px; border: 3px solid #0284c7; border-top-color: transparent; border-radius: 50%; animation: dh-spin 0.9s linear infinite;"></div>
+          <span style="font-weight: 800; font-size: 20px; letter-spacing: -0.02em; color: #ffffff; font-family: sans-serif;">Draft<span style="color: #38bdf8;">hands</span></span>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin: 0; font-family: monospace;">Loading Technical & Engineering Drawing Academy...</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
