@@ -1,46 +1,60 @@
-import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useState, Component, ErrorInfo, ReactNode, useRef, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ProcedurePanel } from './components/curriculum/ProcedurePanel';
 import { DrawingCanvas } from './components/drafting/DrawingCanvas';
-import { allCurriculumTopics } from './data/curriculumData';
-import { SubscriptionProvider } from './context/SubscriptionContext';
+import { LandingPage } from './components/landing/LandingPage';
+import { TeacherPortalView } from './components/teacher/TeacherPortalView';
+import { ParentPortalView } from './components/parent/ParentPortalView';
+import { PastQuestionsHub } from './components/pastquestions/PastQuestionsHub';
+import { OwnerControlCenterView } from './components/owner/OwnerControlCenterView';
+import { PaywallModal } from './components/subscription/PaywallModal';
+import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
+import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
+import { CurriculumTier, DrawingTopic, InstrumentState, ProceduralStep } from './types/curriculum';
+import { GridMode } from './components/drafting/ToolDock';
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode;
   onReset: () => void;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
 
-class StudioInlineBoundary extends Component<Props, State> {
-  public state: State = { hasError: false, error: null };
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false, error: null };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Studio render error caught:", error, errorInfo);
+    console.error("Uncaught application error:", error, errorInfo);
   }
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="flex-1 flex flex-col justify-center items-center bg-slate-900 p-6 text-white text-center">
-          <div className="max-w-md w-full bg-red-950/90 border border-red-500 rounded-xl p-6">
-            <h3 className="font-bold text-red-400 text-lg mb-2">CAD Studio Render Halt</h3>
-            <pre className="bg-black/60 p-3 rounded text-left text-xs text-red-300 overflow-x-auto whitespace-pre-wrap font-mono mb-4">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8 text-center">
+          <div className="max-w-md w-full bg-slate-900 border border-red-500/50 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-red-400 mb-2">Application Notice</h2>
+            <p className="text-sm text-slate-300 mb-4">
+              An unexpected render interruption occurred. Please return to home to restore normal session state.
+            </p>
+            <pre className="bg-black/50 p-3 rounded text-xs text-red-300 overflow-x-auto text-left font-mono mb-6 max-h-32">
               {this.state.error?.toString()}
             </pre>
             <button
-              onClick={this.props.onReset}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded text-xs font-semibold text-white"
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                this.props.onReset();
+              }}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-sm transition shadow-lg shadow-blue-500/20"
             >
-              Return to Landing
+              Return to Home
             </button>
           </div>
         </div>
@@ -50,209 +64,241 @@ class StudioInlineBoundary extends Component<Props, State> {
   }
 }
 
+function GlobalPaywallWrapper() {
+  const { isPaywallOpen, closePaywall, paywallTargetTopic } = useSubscription();
+  return <PaywallModal isOpen={isPaywallOpen} onClose={closePaywall} targetTopic={paywallTargetTopic} />;
+}
+
 export default function App() {
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT'>('LANDING');
-
-  // Hardened fallback array so .filter() and indexing can never be undefined
-  const topicsList = Array.isArray(allCurriculumTopics) && allCurriculumTopics.length > 0 
-    ? allCurriculumTopics 
-    : [
-        {
-          id: 'bisection-angle',
-          title: 'Bisection of an Angle',
-          tier: 'JSS1',
-          steps: [
-            { title: 'Step 1: Base Line', instructions: 'Draw baseline AB.' },
-            { title: 'Step 2: Arc', instructions: 'Strike an arc from vertex O.' }
-          ]
-        }
-      ];
-
-  const [currentTopic, setCurrentTopic] = useState<any>(topicsList[0]);
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT' | 'PAST_QUESTIONS' | 'OWNER'>('LANDING');
+  
+  const [selectedTier, setSelectedTier] = useState<CurriculumTier>('SS1');
+  const [currentTopic, setCurrentTopic] = useState<DrawingTopic>(allCurriculumTopics[0]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [selectedTier, setSelectedTier] = useState<any>('JSS1');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [gridMode, setGridMode] = useState<GridMode>('ISOMETRIC');
+  const [paramValues, setParamValues] = useState<Record<string, number>>({});
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  useEffect(() => {
+    if (currentTopic && currentTopic.parameters) {
+      const defaults: Record<string, number> = {};
+      currentTopic.parameters.forEach(p => {
+        defaults[p.id] = p.defaultValue;
+      });
+      setParamValues(defaults);
+    }
+    setCurrentStepIndex(0);
+  }, [currentTopic]);
 
   const handleReturnHome = () => setCurrentView('LANDING');
 
+  const tierTopics = getTopicsByTier(selectedTier);
+  const steps: ProceduralStep[] = currentTopic && typeof currentTopic.generateSteps === 'function'
+    ? currentTopic.generateSteps(paramValues)
+    : [];
+  
+  const activeStep = steps[currentStepIndex] || {
+    stepIndex: 0,
+    title: currentTopic?.title || 'Drafting Step',
+    instruction: currentTopic?.shortDescription || '',
+    detailedNotes: '',
+    technicalPrinciple: '',
+    activeInstrument: { toolType: 'RULER', x: 100, y: 100, visible: true },
+    elements: []
+  };
+
+  const totalSteps = steps.length > 0 ? steps.length : 1;
+  const canvasElements = activeStep.elements || [];
+  const defaultInstrument: InstrumentState = activeStep.activeInstrument || {
+    toolType: 'RULER',
+    x: 100,
+    y: 100,
+    visible: true
+  };
+
   return (
     <SubscriptionProvider>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
-        {/* 1. LANDING VIEW */}
-        {currentView === 'LANDING' && (
-          <div className="flex-1 flex flex-col">
-            <header className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-lg">
-                  D
-                </div>
-                <span className="font-bold text-lg tracking-wide text-white">DraftHands</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setCurrentView('TEACHER')}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-                >
-                  Teacher Desk
-                </button>
-                <button
-                  onClick={() => setCurrentView('PARENT')}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
-                >
-                  Parent Portal
-                </button>
-                <button
-                  onClick={() => setCurrentView('STUDIO')}
-                  className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition"
-                >
-                  Launch Studio
-                </button>
-              </div>
-            </header>
+      <ErrorBoundary onReset={handleReturnHome}>
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
+          {/* 1. LANDING VIEW */}
+          {currentView === 'LANDING' && (
+            <LandingPage
+              onEnterStudio={(options) => {
+                if (options?.tier) setSelectedTier(options.tier);
+                if (options?.topicId) {
+                  const t = getTopicById(options.topicId);
+                  if (t) setCurrentTopic(t);
+                }
+                if (options?.openTeacher || options?.portal === 'TEACHER') {
+                  setCurrentView('TEACHER');
+                } else if (options?.openParent || options?.portal === 'PARENT') {
+                  setCurrentView('PARENT');
+                } else if (options?.openPastQuestions) {
+                  setCurrentView('PAST_QUESTIONS');
+                } else {
+                  setCurrentView('STUDIO');
+                }
+              }}
+              onOpenTeacherPortal={() => setCurrentView('TEACHER')}
+              onOpenParentPortal={() => setCurrentView('PARENT')}
+              onOpenStudentPortal={() => setCurrentView('STUDIO')}
+              onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
+              onOpenOwnerPortal={() => setCurrentView('OWNER')}
+            />
+          )}
 
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-16 max-w-4xl mx-auto">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-400 border border-blue-800/80 mb-6">
-                NERDC Curriculum Aligned &bull; Technical Drawing & Basic Tech
-              </span>
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
-                Master Technical Drawing & CAD Step-by-Step
-              </h1>
-              <p className="text-slate-400 text-base sm:text-lg max-w-2xl mb-8 leading-relaxed">
-                Interactive geometric constructions, orthographic projections, isometric drafting, and WAEC/NECO examination modules built for Nigerian secondary schools.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <button
-                  onClick={() => setCurrentView('STUDIO')}
-                  className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-xl shadow-blue-600/30 transition transform active:scale-95"
-                >
-                  Launch Interactive Studio
-                </button>
-                <button
-                  onClick={() => setCurrentView('TEACHER')}
-                  className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition"
-                >
-                  Access Teacher Desk
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mt-16 text-left">
-                <div
-                  onClick={() => setCurrentView('STUDIO')}
-                  className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-blue-500/50 cursor-pointer transition"
-                >
-                  <div className="text-blue-400 font-bold text-sm mb-1">Student CAD Board</div>
-                  <p className="text-xs text-slate-400">Step-by-step drafting procedures with compass, rules, and isometric guides.</p>
-                </div>
-                <div
-                  onClick={() => setCurrentView('TEACHER')}
-                  className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition"
-                >
-                  <div className="text-emerald-400 font-bold text-sm mb-1">Teacher Management Desk</div>
-                  <p className="text-xs text-slate-400">Curriculum-aligned lesson projections and classroom drafting demonstrations.</p>
-                </div>
-                <div
-                  onClick={() => setCurrentView('PARENT')}
-                  className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition"
-                >
-                  <div className="text-indigo-400 font-bold text-sm mb-1">Parent & Sponsor Portal</div>
-                  <p className="text-xs text-slate-400">Track student progress, topic mastery, and practical drawing submissions.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 2. CAD STUDIO VIEW */}
-        {currentView === 'STUDIO' && (
-          <StudioInlineBoundary onReset={handleReturnHome}>
+          {/* 2. CAD STUDIO VIEW */}
+          {currentView === 'STUDIO' && (
             <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-900">
-              <Header onReturnHome={handleReturnHome} />
-              <div className="flex flex-1 overflow-hidden relative">
-                <Sidebar
-                  topics={topicsList}
-                  allTopics={topicsList}
-                  selectedTier={selectedTier}
-                  onSelectTier={setSelectedTier}
-                  currentTopic={currentTopic}
-                  onSelectTopic={(topic: any) => {
-                    setCurrentTopic(topic);
+              <Header
+                activeTier={selectedTier}
+                onSelectTier={(tier) => {
+                  setSelectedTier(tier);
+                  const topicsInTier = getTopicsByTier(tier);
+                  if (topicsInTier.length > 0) {
+                    setCurrentTopic(topicsInTier[0]);
                     setCurrentStepIndex(0);
-                  }}
-                />
+                  }
+                }}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onOpenTheory={() => {}}
+                onOpenPractice={() => {}}
+                onOpenTeacherPortal={() => setCurrentView('TEACHER')}
+                onOpenParentPortal={() => setCurrentView('PARENT')}
+                onOpenTeacherAssignments={() => setCurrentView('TEACHER')}
+                onOpenStudentAssignments={() => {}}
+                onOpenLiveClass={() => {}}
+                onToggleWhiteboardStudio={() => {}}
+                isWhiteboardOpen={false}
+                onResetView={() => setCurrentStepIndex(0)}
+                onExportSvg={() => {}}
+                currentTopicTitle={currentTopic?.title || 'Drafting Board'}
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onReturnToLanding={handleReturnHome}
+                onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
+                onOpenOwnerPortal={() => setCurrentView('OWNER')}
+              />
+              <div className="flex flex-1 overflow-hidden relative">
+                {!isSidebarCollapsed && (
+                  <Sidebar
+                    topics={tierTopics}
+                    activeTopicId={currentTopic?.id || ''}
+                    onSelectTopic={(id) => {
+                      const t = getTopicById(id);
+                      if (t) {
+                        setCurrentTopic(t);
+                        setCurrentStepIndex(0);
+                      }
+                    }}
+                    activeTier={selectedTier}
+                    onSelectTier={(tier) => {
+                      setSelectedTier(tier);
+                      const t = getTopicsByTier(tier);
+                      if (t.length > 0) {
+                        setCurrentTopic(t[0]);
+                        setCurrentStepIndex(0);
+                      }
+                    }}
+                    searchQuery={searchQuery}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                  />
+                )}
                 <main className="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
-                  <DrawingCanvas topic={currentTopic} stepIndex={currentStepIndex} />
+                  <DrawingCanvas
+                    topic={currentTopic}
+                    elements={canvasElements}
+                    instrument={defaultInstrument}
+                    activeStep={currentStepIndex}
+                    totalSteps={totalSteps}
+                    gridMode={gridMode}
+                    onSelectGridMode={setGridMode}
+                    svgRef={svgRef}
+                  />
                   {currentTopic && (
                     <ProcedurePanel
                       topic={currentTopic}
+                      step={activeStep}
                       currentStepIndex={currentStepIndex}
-                      onStepChange={setCurrentStepIndex}
+                      totalSteps={totalSteps}
+                      parameters={paramValues}
+                      onParamChange={(paramId, value) => {
+                        setParamValues(prev => ({ ...prev, [paramId]: value }));
+                      }}
+                      onOpenTheory={() => {}}
                     />
                   )}
                 </main>
               </div>
             </div>
-          </StudioInlineBoundary>
-        )}
+          )}
 
-        {/* 3. TEACHER VIEW */}
-        {currentView === 'TEACHER' && (
-          <div className="min-h-screen bg-slate-950 p-6 flex flex-col">
-            <div className="max-w-5xl mx-auto w-full space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-emerald-400">Teacher Management Desk</h1>
-                  <p className="text-xs text-slate-400">Curriculum Facilitator & Classroom Control</p>
-                </div>
-                <button
-                  onClick={handleReturnHome}
-                  className="px-3.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-200"
-                >
-                  Exit to Home
-                </button>
-              </div>
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
-                <h3 className="font-semibold text-white mb-2">Classroom Projection Mode</h3>
-                <p className="text-xs text-slate-400 mb-4">Project interactive drafting steps to displays for classroom instruction.</p>
-                <button
-                  onClick={() => setCurrentView('STUDIO')}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-semibold text-white"
-                >
-                  Open Board For Presentation
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          {/* 3. TEACHER DESK VIEW */}
+          {currentView === 'TEACHER' && (
+            <TeacherPortalView
+              topics={allCurriculumTopics}
+              activeTopic={currentTopic}
+              onSelectTopic={(topicId) => {
+                const t = getTopicById(topicId);
+                if (t) setCurrentTopic(t);
+              }}
+              onReturnToHome={handleReturnHome}
+              onSwitchToStudentView={() => setCurrentView('STUDIO')}
+            />
+          )}
 
-        {/* 4. PARENT VIEW */}
-        {currentView === 'PARENT' && (
-          <div className="min-h-screen bg-slate-950 p-6 flex flex-col">
-            <div className="max-w-4xl mx-auto w-full space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-indigo-400">Parent & Sponsor Portal</h1>
-                  <p className="text-xs text-slate-400">Ward Academic Progress Monitoring</p>
-                </div>
-                <button
-                  onClick={handleReturnHome}
-                  className="px-3.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-200"
-                >
-                  Exit to Home
-                </button>
-              </div>
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
-                <h3 className="font-semibold text-white">Student Learning Status</h3>
-                <button
-                  onClick={() => setCurrentView('STUDIO')}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white"
-                >
-                  Inspect Student Studio Board
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          {/* 4. PARENT PORTAL VIEW */}
+          {currentView === 'PARENT' && (
+            <ParentPortalView
+              onReturnToHome={handleReturnHome}
+              onSwitchToStudentView={() => setCurrentView('STUDIO')}
+              onSelectTopic={(topicId) => {
+                const t = getTopicById(topicId);
+                if (t) {
+                  setCurrentTopic(t);
+                  setCurrentView('STUDIO');
+                }
+              }}
+            />
+          )}
+
+          {/* 5. PAST QUESTIONS VIEW */}
+          {currentView === 'PAST_QUESTIONS' && (
+            <PastQuestionsHub
+              onBackToStudio={() => setCurrentView('STUDIO')}
+              onReturnToLanding={handleReturnHome}
+            />
+          )}
+
+          {/* 6. OWNER CONTROL CENTER VIEW */}
+          {currentView === 'OWNER' && (
+            <OwnerControlCenterView
+              onReturnToHome={handleReturnHome}
+              onLaunchStudio={(tier, topicId) => {
+                if (tier) setSelectedTier(tier);
+                if (topicId) {
+                  const t = getTopicById(topicId);
+                  if (t) setCurrentTopic(t);
+                }
+                setCurrentView('STUDIO');
+              }}
+              onOpenTeacherPortal={() => setCurrentView('TEACHER')}
+              onOpenParentPortal={() => setCurrentView('PARENT')}
+              onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
+              onOpenAdminConsole={() => {}}
+              topics={allCurriculumTopics}
+            />
+          )}
+
+          {/* Global Paywall Modal */}
+          <GlobalPaywallWrapper />
+        </div>
+      </ErrorBoundary>
     </SubscriptionProvider>
   );
 }
-  
