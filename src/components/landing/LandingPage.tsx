@@ -57,7 +57,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     hasActivePaidSubscription, 
     isMasterAdmin, 
     authenticateUser, 
-    openPaywall 
+    openPaywall,
+    setUserRole
   } = useSubscription();
 
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
@@ -112,7 +113,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // 1. Student Portal handler with gatekeeping
   const handleLaunchStudentPortal = (tier?: CurriculumTier) => {
+    setUserRole('STUDENT');
     gatePortalAccess('STUDENT', 'STUDENT', 'SIGN_IN', () => {
+      setUserRole('STUDENT');
       if (onOpenStudentPortal) {
         onOpenStudentPortal();
       } else {
@@ -123,14 +126,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // 2. Syllabus Topic click handler with gatekeeping
   const handleLaunchTopic = (topicId: string) => {
+    setUserRole('STUDENT');
     gatePortalAccess('STUDENT', 'STUDENT', 'SIGN_IN', () => {
+      setUserRole('STUDENT');
       onEnterStudio({ topicId, portal: 'STUDENT' });
     });
   };
 
   // 3. Teacher Portal handler with gatekeeping
   const handleLaunchTeacherPortal = () => {
+    setUserRole('TEACHER');
     gatePortalAccess('TEACHER', 'TEACHER', 'SIGN_IN', () => {
+      setUserRole('TEACHER');
       if (onOpenTeacherPortal) {
         onOpenTeacherPortal();
       } else {
@@ -141,7 +148,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // 4. Parent Portal handler with gatekeeping
   const handleLaunchParentPortal = () => {
+    setUserRole('PARENT');
     gatePortalAccess('PARENT', 'PARENT', 'SIGN_IN', () => {
+      setUserRole('PARENT');
       if (onOpenParentPortal) {
         onOpenParentPortal();
       } else {
@@ -152,7 +161,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // 5. 10-Yr WAEC Past Questions handler with gatekeeping
   const handleLaunchPastQuestions = () => {
+    setUserRole('STUDENT');
     gatePortalAccess('PAST_QUESTIONS', 'STUDENT', 'SIGN_IN', () => {
+      setUserRole('STUDENT');
       if (onOpenPastQuestions) {
         onOpenPastQuestions();
       } else {
@@ -163,7 +174,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // 6. Owner Portal: Login processing activated at the click of the portal
   const handleLaunchOwnerPortal = () => {
+    setUserRole('ADMIN');
     gatePortalAccess('OWNER', 'ADMIN', 'SIGN_IN', () => {
+      setUserRole('ADMIN');
       if (onOpenOwnerPortal) {
         onOpenOwnerPortal();
       } else {
@@ -178,6 +191,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     userDetails: { name: string; email: string; institution?: string; isEmailVerified?: boolean },
     targetPortal?: PortalTargetType
   ) => {
+    setUserRole(role);
     // 1. Authenticate user in subscription context
     authenticateUser({
       name: userDetails.name,
