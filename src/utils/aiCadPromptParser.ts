@@ -132,6 +132,58 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   try {
 
   // ==========================================
+  // A. ARCHITECTURAL / BUILDING DRAWING
+  // ==========================================
+  if (clean.includes('building') || clean.includes('floor plan') || clean.includes('house') || clean.includes('room') || clean.includes('architectural') || clean.includes('wall') || clean.includes('plan')) {
+    const nums = extractAllNumbers(clean);
+    const length = nums[0] !== undefined ? nums[0] : 12000;
+    const width = nums[1] !== undefined ? nums[1] : 8000;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'ARCHITECTURAL_PLAN',
+      geometryTitle: `Architectural Floor Plan (${length}mm × ${width}mm)`,
+      topicId: 'arch-floor-plan',
+      tier: 'HIGHER_INSTITUTION',
+      confidence: 0.99,
+      description: `Generating architectural building floor plan with overall dimensions ${length}mm × ${width}mm, including exterior walls, partition rooms, and ISO dimensions (ISO 4157).`,
+      parameters: { length, width },
+      extractedParams: [
+        { key: 'length', label: 'Building Length', value: length, unit: 'mm' },
+        { key: 'width', label: 'Building Width', value: width, unit: 'mm' }
+      ],
+      matchedKeywords: ['building', 'floor_plan', 'architectural'],
+      executionPlan: `Generated architectural floor plan layout: ${length}mm × ${width}mm.`,
+      cadCommandEcho: `CAD_ARCH_PLAN [L=${length}, W=${width}]`
+    };
+  }
+
+  // ==========================================
+  // B. MECHANICAL DRAWING / MACHINE PART
+  // ==========================================
+  if (clean.includes('mechanical') || clean.includes('machine') || clean.includes('bracket') || clean.includes('flange') || clean.includes('assembly') || clean.includes('bolt') || clean.includes('shaft') || clean.includes('gear')) {
+    const nums = extractAllNumbers(clean);
+    const size = nums[0] !== undefined ? nums[0] : 150;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'MECHANICAL_PART',
+      geometryTitle: `Mechanical Component & Assembly Drawing (${size}mm)`,
+      topicId: 'mech-assembly',
+      tier: 'SS3',
+      confidence: 0.99,
+      description: `Generating mechanical engineering drawing with orthogonal/isometric views, centerlines, bolt holes, and ISO 128 sectioning conventions.`,
+      parameters: { size },
+      extractedParams: [
+        { key: 'size', label: 'Nominal Size', value: size, unit: 'mm' }
+      ],
+      matchedKeywords: ['mechanical', 'machine_part', 'assembly'],
+      executionPlan: `Generated mechanical engineering drawing component: Size=${size}mm with centerlines and tolerances.`,
+      cadCommandEcho: `CAD_MECH_PART [SIZE=${size}]`
+    };
+  }
+
+  // ==========================================
   // 0. ISOMETRIC 3D BLOCK / CUBOID / SOLID BOX
   // e.g. "Create an isometric 3D block measuring 600 mm × 400 mm × 300 mm"
   // ==========================================

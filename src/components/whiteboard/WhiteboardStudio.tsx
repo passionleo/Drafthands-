@@ -1053,7 +1053,88 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const p = safeParams;
         const now = Date.now();
 
-        if (gType === 'ISOMETRIC_BLOCK' || gType === '3D_BLOCK' || gType === 'CUBOID') {
+        if (gType === 'ARCHITECTURAL_PLAN' || gType === 'BUILDING' || gType === 'FLOOR_PLAN') {
+          const l = p.length || 12000;
+          const w = p.width || 8000;
+          const scale = 0.035;
+          const bw = l * scale;
+          const bh = w * scale;
+          const bx = center.x - bw / 2;
+          const by = center.y - bh / 2;
+
+          newElements.push({
+            id: `ai-arch-wall-${now}`,
+            type: 'RECTANGLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: bx,
+            y1: by,
+            width: bw,
+            height: bh
+          });
+
+          newElements.push({
+            id: `ai-arch-partition-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#94a3b8',
+            x1: bx + bw * 0.4,
+            y1: by,
+            x2: bx + bw * 0.4,
+            y2: by + bh
+          });
+
+          newElements.push({
+            id: `ai-arch-dim-l-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: bx,
+            y1: by + bh + 30,
+            x2: bx + bw,
+            y2: by + bh + 30,
+            dimensionText: `Building Length: ${l} mm (ISO 4157)`
+          });
+        } else if (gType === 'MECHANICAL_PART' || gType === 'ASSEMBLY' || gType === 'BRACKET') {
+          const size = p.size || 200;
+          const s = size * 1.2;
+          newElements.push({
+            id: `ai-mech-rect-${now}`,
+            type: 'RECTANGLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x - s / 2,
+            y1: center.y - s / 2,
+            width: s,
+            height: s * 0.7
+          });
+          newElements.push({
+            id: `ai-mech-hole-${now}`,
+            type: 'CIRCLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            cx: center.x,
+            cy: center.y,
+            r: s * 0.2
+          });
+          newElements.push({
+            id: `ai-mech-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - s / 2,
+            y1: center.y + s * 0.35 + 25,
+            x2: center.x + s / 2,
+            y2: center.y + s * 0.35 + 25,
+            dimensionText: `Component Nominal Size: ${size} mm (ISO 128)`
+          });
+        } else if (gType === 'ISOMETRIC_BLOCK' || gType === '3D_BLOCK' || gType === 'CUBOID') {
           const l = p.length || p.l || 600;
           const w = p.width || p.w || 400;
           const h = p.height || p.h || 300;
