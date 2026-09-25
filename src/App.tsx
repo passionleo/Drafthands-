@@ -84,7 +84,17 @@ function GlobalPaywallWrapper() {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT' | 'PAST_QUESTIONS' | 'OWNER'>('LANDING');
+  const [currentView, setCurrentView] = useState<'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT' | 'PAST_QUESTIONS' | 'OWNER'>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('owner') || hash.includes('admin')) return 'OWNER';
+      if (hash.includes('teacher')) return 'TEACHER';
+      if (hash.includes('parent')) return 'PARENT';
+      if (hash.includes('past')) return 'PAST_QUESTIONS';
+      if (hash.includes('studio') || hash.includes('student')) return 'STUDIO';
+    }
+    return 'LANDING';
+  });
   
   const [selectedTier, setSelectedTier] = useState<CurriculumTier>('SS1');
   const [currentTopic, setCurrentTopic] = useState<DrawingTopic>(allCurriculumTopics[0]);
@@ -109,6 +119,7 @@ export default function App() {
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
+  // Preloader removal & Hash routing synchronization
   useEffect(() => {
     try {
       const loader = document.getElementById('dh-pre-loader');
@@ -119,7 +130,39 @@ export default function App() {
     } catch (e) {
       console.warn(e);
     }
+
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('owner') || hash.includes('admin')) {
+        setCurrentView('OWNER');
+      } else if (hash.includes('teacher')) {
+        setCurrentView('TEACHER');
+      } else if (hash.includes('parent')) {
+        setCurrentView('PARENT');
+      } else if (hash.includes('past')) {
+        setCurrentView('PAST_QUESTIONS');
+      } else if (hash.includes('studio') || hash.includes('student')) {
+        setCurrentView('STUDIO');
+      } else if (hash.includes('landing') || hash === '' || hash === '#') {
+        setCurrentView('LANDING');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  const changeView = (view: 'LANDING' | 'STUDIO' | 'TEACHER' | 'PARENT' | 'PAST_QUESTIONS' | 'OWNER') => {
+    setCurrentView(view);
+    if (typeof window !== 'undefined') {
+      if (view === 'OWNER') window.location.hash = '#owner';
+      else if (view === 'TEACHER') window.location.hash = '#teacher';
+      else if (view === 'PARENT') window.location.hash = '#parent';
+      else if (view === 'PAST_QUESTIONS') window.location.hash = '#past-questions';
+      else if (view === 'STUDIO') window.location.hash = '#studio';
+      else window.location.hash = '#landing';
+    }
+  };
 
   useEffect(() => {
     if (currentTopic && currentTopic.parameters) {
@@ -132,7 +175,7 @@ export default function App() {
     setCurrentStepIndex(0);
   }, [currentTopic]);
 
-  const handleReturnHome = () => setCurrentView('LANDING');
+  const handleReturnHome = () => changeView('LANDING');
 
   const tierTopics = getTopicsByTier(selectedTier);
   const steps: ProceduralStep[] = currentTopic && typeof currentTopic.generateSteps === 'function'
@@ -172,20 +215,20 @@ export default function App() {
                   if (t) setCurrentTopic(t);
                 }
                 if (options?.openTeacher || options?.portal === 'TEACHER') {
-                  setCurrentView('TEACHER');
+                  changeView('TEACHER');
                 } else if (options?.openParent || options?.portal === 'PARENT') {
-                  setCurrentView('PARENT');
+                  changeView('PARENT');
                 } else if (options?.openPastQuestions) {
-                  setCurrentView('PAST_QUESTIONS');
+                  changeView('PAST_QUESTIONS');
                 } else {
-                  setCurrentView('STUDIO');
+                  changeView('STUDIO');
                 }
               }}
-              onOpenTeacherPortal={() => setCurrentView('TEACHER')}
-              onOpenParentPortal={() => setCurrentView('PARENT')}
-              onOpenStudentPortal={() => setCurrentView('STUDIO')}
-              onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
-              onOpenOwnerPortal={() => setCurrentView('OWNER')}
+              onOpenTeacherPortal={() => changeView('TEACHER')}
+              onOpenParentPortal={() => changeView('PARENT')}
+              onOpenStudentPortal={() => changeView('STUDIO')}
+              onOpenPastQuestions={() => changeView('PAST_QUESTIONS')}
+              onOpenOwnerPortal={() => changeView('OWNER')}
             />
           )}
 
@@ -211,10 +254,10 @@ export default function App() {
                 onOpenSurfaceDevelopment={() => setIsSurfaceDevOpen(true)}
                 onOpenSectionalAssembly={() => setIsSectionalOpen(true)}
                 onOpenArchitecturalPlan={() => setIsArchPlanOpen(true)}
-                onOpenTeacherPortal={() => setCurrentView('TEACHER')}
-                onOpenParentPortal={() => setCurrentView('PARENT')}
+                onOpenTeacherPortal={() => changeView('TEACHER')}
+                onOpenParentPortal={() => changeView('PARENT')}
                 onOpenProjectionMode={() => setIsProjectionOpen(true)}
-                onOpenTeacherAssignments={() => setCurrentView('TEACHER')}
+                onOpenTeacherAssignments={() => changeView('TEACHER')}
                 onOpenStudentAssignments={() => setIsStudentAssignmentsOpen(true)}
                 onOpenAdminConsole={() => setIsAdminConsoleOpen(true)}
                 onOpenLiveClass={() => setIsProjectionOpen(true)}
@@ -238,8 +281,8 @@ export default function App() {
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 onReturnToLanding={handleReturnHome}
-                onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
-                onOpenOwnerPortal={() => setCurrentView('OWNER')}
+                onOpenPastQuestions={() => changeView('PAST_QUESTIONS')}
+                onOpenOwnerPortal={() => changeView('OWNER')}
               />
               <div className="flex flex-1 overflow-hidden relative">
                 {!isSidebarCollapsed && (
@@ -306,7 +349,7 @@ export default function App() {
                 if (t) setCurrentTopic(t);
               }}
               onReturnToHome={handleReturnHome}
-              onSwitchToStudentView={() => setCurrentView('STUDIO')}
+              onSwitchToStudentView={() => changeView('STUDIO')}
             />
           )}
 
@@ -314,12 +357,12 @@ export default function App() {
           {currentView === 'PARENT' && (
             <ParentPortalView
               onReturnToHome={handleReturnHome}
-              onSwitchToStudentView={() => setCurrentView('STUDIO')}
+              onSwitchToStudentView={() => changeView('STUDIO')}
               onSelectTopic={(topicId) => {
                 const t = getTopicById(topicId);
                 if (t) {
                   setCurrentTopic(t);
-                  setCurrentView('STUDIO');
+                  changeView('STUDIO');
                 }
               }}
             />
@@ -328,7 +371,7 @@ export default function App() {
           {/* 5. PAST QUESTIONS VIEW */}
           {currentView === 'PAST_QUESTIONS' && (
             <PastQuestionsHub
-              onBackToStudio={() => setCurrentView('STUDIO')}
+              onBackToStudio={() => changeView('STUDIO')}
               onReturnToLanding={handleReturnHome}
             />
           )}
@@ -343,11 +386,11 @@ export default function App() {
                   const t = getTopicById(topicId);
                   if (t) setCurrentTopic(t);
                 }
-                setCurrentView('STUDIO');
+                changeView('STUDIO');
               }}
-              onOpenTeacherPortal={() => setCurrentView('TEACHER')}
-              onOpenParentPortal={() => setCurrentView('PARENT')}
-              onOpenPastQuestions={() => setCurrentView('PAST_QUESTIONS')}
+              onOpenTeacherPortal={() => changeView('TEACHER')}
+              onOpenParentPortal={() => changeView('PARENT')}
+              onOpenPastQuestions={() => changeView('PAST_QUESTIONS')}
               onOpenAdminConsole={() => setIsAdminConsoleOpen(true)}
               topics={allCurriculumTopics}
             />
