@@ -15,6 +15,7 @@ interface DrawingCanvasProps {
   onSelectGridMode: (mode: GridMode) => void;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onOpenProjection?: () => void;
+  onOpenWhiteboard?: () => void;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
@@ -26,7 +27,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   gridMode,
   onSelectGridMode,
   svgRef,
-  onOpenProjection
+  onOpenProjection,
+  onOpenWhiteboard
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(1);
@@ -252,6 +254,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         onResetZoom={handleResetZoom}
         mouseCoords={mouseCoords}
         onOpenProjection={onOpenProjection}
+        onOpenWhiteboard={onOpenWhiteboard}
       />
 
       {/* Main SVG Vector Canvas */}

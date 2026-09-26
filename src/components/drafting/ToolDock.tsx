@@ -10,7 +10,8 @@ import {
   Layers, 
   Crosshair,
   FileSpreadsheet,
-  Tv
+  Tv,
+  PenTool
 } from 'lucide-react';
 
 export type GridMode = 'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'NONE' | 'ENGINEERING_5MM';
@@ -32,6 +33,7 @@ interface ToolDockProps {
   onResetZoom: () => void;
   mouseCoords: { x: number; y: number };
   onOpenProjection?: () => void;
+  onOpenWhiteboard?: () => void;
 }
 
 export const ToolDock: React.FC<ToolDockProps> = ({
@@ -50,7 +52,8 @@ export const ToolDock: React.FC<ToolDockProps> = ({
   onZoomOut,
   onResetZoom,
   mouseCoords,
-  onOpenProjection
+  onOpenProjection,
+  onOpenWhiteboard
 }) => {
   const nextGridMode = () => {
     if (gridMode === 'MILLIMETER') onSelectGridMode('ISOMETRIC');
@@ -148,6 +151,19 @@ export const ToolDock: React.FC<ToolDockProps> = ({
         >
           <Tv className="w-3.5 h-3.5 text-amber-400" />
           <span className="hidden md:inline">Smart Board</span>
+        </button>
+      )}
+
+      {/* Switch to Freehand Stylus Whiteboard */}
+      {onOpenWhiteboard && (
+        <button
+          id="btn-switch-to-stylus-whiteboard"
+          onClick={onOpenWhiteboard}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
+          title="Switch to Freehand Whiteboard Studio (Optimized for Stylus & Drawing Tablets)"
+        >
+          <PenTool className="w-3.5 h-3.5 text-emerald-200" />
+          <span className="hidden md:inline">Stylus Whiteboard</span>
         </button>
       )}
 

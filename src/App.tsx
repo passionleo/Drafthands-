@@ -324,6 +324,7 @@ export default function App() {
                     gridMode={gridMode}
                     onSelectGridMode={setGridMode}
                     svgRef={svgRef}
+                    onOpenWhiteboard={() => setIsWhiteboardOpen(true)}
                   />
                   {currentTopic && (
                     <ProcedurePanel
