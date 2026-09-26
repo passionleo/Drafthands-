@@ -737,7 +737,53 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   }
 
   // ==========================================
-  // 11. UNIVERSAL AI CAD PROMPT FALLBACK
+  // 11. MACHINE DRAWINGS & ASSEMBLIES PARSER
+  // e.g. "Draw a spur gear assembly with diameter 200mm", "Machine bracket orthographic projection"
+  // ==========================================
+  if (clean.includes('machine') || clean.includes('gear') || clean.includes('assembly') || clean.includes('bracket') || clean.includes('shaft') || clean.includes('pulley') || clean.includes('orthographic') || clean.includes('section')) {
+    const dim = extractNumberWithKeywords(clean, ['diameter', 'dia', 'd', 'size', 'length', 'l']) || 150;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'MACHINE_DRAWING',
+      geometryTitle: `Machine Drawing / Assembly: "${safePrompt.slice(0, 30)}"`,
+      topicId: 'machine-gear-assembly',
+      tier: 'SS3',
+      confidence: 0.98,
+      description: `Successfully generated machine drawing and assembly projection for: "${safePrompt}" with dimension parameter ${dim}mm.`,
+      parameters: { size: dim, diameter: dim },
+      extractedParams: [{ key: 'size', label: 'Machine Part Dimension', value: dim, unit: 'mm' }],
+      matchedKeywords: ['machine', 'drawing', 'assembly'],
+      executionPlan: `Machine drawing parser activated. Rendering orthographic and sectional views for "${safePrompt}" at ${dim}mm...`,
+      cadCommandEcho: `MACHINE_CAD_EXEC [PROMPT="${safePrompt.replace(/"/g, '')}", SIZE=${dim}]`
+    };
+  }
+
+  // ==========================================
+  // 12. BUILDING & ARCHITECTURAL DRAWINGS PARSER
+  // e.g. "Floor plan for a 3 bedroom bungalow span 15000mm", "Roof truss and foundation detail"
+  // ==========================================
+  if (clean.includes('building') || clean.includes('floor plan') || clean.includes('architectural') || clean.includes('elevation') || clean.includes('truss') || clean.includes('foundation') || clean.includes('staircase')) {
+    const span = extractNumberWithKeywords(clean, ['span', 'length', 'width', 'size']) || 12000;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'BUILDING_DRAWING',
+      geometryTitle: `Building / Architectural Plan: "${safePrompt.slice(0, 30)}"`,
+      topicId: 'building-floor-plan',
+      tier: 'SS3',
+      confidence: 0.98,
+      description: `Successfully generated architectural building plan and structural layout for: "${safePrompt}" with span parameter ${span}mm.`,
+      parameters: { span, scale: 50 },
+      extractedParams: [{ key: 'span', label: 'Building Span', value: span, unit: 'mm' }],
+      matchedKeywords: ['building', 'floor plan', 'architectural'],
+      executionPlan: `Building drawing parser activated. Rendering floor plan, wall sections, and structural dimensions for "${safePrompt}" at ${span}mm...`,
+      cadCommandEcho: `BUILDING_CAD_EXEC [PROMPT="${safePrompt.replace(/"/g, '')}", SPAN=${span}]`
+    };
+  }
+
+  // ==========================================
+  // 13. UNIVERSAL AI CAD PROMPT FALLBACK
   // Any technical drawing instruction is successfully initiated on canvas
   // ==========================================
   const allNums = extractAllNumbers(clean);
