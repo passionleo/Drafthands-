@@ -165,32 +165,38 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
 
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          const isMaster = isMasterSaved || (Boolean(parsed.isMasterAdmin) && isOwnerOrMasterEmail(parsed.userProfile?.email));
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            const isMaster = isMasterSaved || (Boolean(parsed.isMasterAdmin) && isOwnerOrMasterEmail(parsed.userProfile?.email));
 
-          // Role separation:
-          const effectiveRole: UserRoleType = isMaster
-            ? 'ADMIN'
-            : (parsed.userRole === 'TEACHER' || parsed.userRole === 'PARENT' || parsed.userRole === 'ADMIN' || parsed.userRole === 'STUDENT')
-              ? parsed.userRole
-              : 'STUDENT';
+            // Role separation:
+            const effectiveRole: UserRoleType = isMaster
+              ? 'ADMIN'
+              : (parsed.userRole === 'TEACHER' || parsed.userRole === 'PARENT' || parsed.userRole === 'ADMIN' || parsed.userRole === 'STUDENT')
+                ? parsed.userRole
+                : 'STUDENT';
 
-          return {
-            ...DEFAULT_STATE,
-            ...parsed,
-            isMasterAdmin: isMaster,
-            isSubscribed: isMaster ? true : Boolean(parsed.isSubscribed),
-            plan: isMaster ? 'INSTITUTION_PASS' : (parsed.plan || 'FREE'),
-            userRole: effectiveRole,
-            userProfile: parsed.userProfile ? {
-              ...parsed.userProfile,
-              role: effectiveRole
-            } : {
-              ...DEFAULT_STATE.userProfile!,
-              role: effectiveRole
-            }
-          };
+            return {
+              ...DEFAULT_STATE,
+              ...parsed,
+              isMasterAdmin: isMaster,
+              isSubscribed: isMaster ? true : Boolean(parsed.isSubscribed),
+              plan: isMaster ? 'INSTITUTION_PASS' : (parsed.plan || 'FREE'),
+              userRole: effectiveRole,
+              userProfile: parsed.userProfile ? {
+                ...parsed.userProfile,
+                role: effectiveRole
+              } : {
+                ...DEFAULT_STATE.userProfile!,
+                role: effectiveRole
+              }
+            };
+          }
+        } catch {
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch {}
         }
       }
 
