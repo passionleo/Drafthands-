@@ -166,91 +166,27 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   // Floating animated reactions
   const [activeReactions, setActiveReactions] = useState<LiveReactionEvent[]>([]);
 
-  // Participants roster (Teacher + Students)
+  // Participants roster (Strictly real-time connected participants starting with local user)
   const [participants, setParticipants] = useState<LiveParticipant[]>([
     {
-      id: initialRole === 'TEACHER' ? localParticipantId : 'teacher-instructor-1',
-      name: initialRole === 'TEACHER' ? initialUserName : 'Engr. D. Adebayo (Teacher)',
-      role: 'TEACHER',
-      avatarBg: '#7c3aed',
+      id: localParticipantId,
+      name: initialUserName || (initialRole === 'TEACHER' ? 'Instructor' : 'Student'),
+      role: initialRole === 'TEACHER' ? 'TEACHER' : 'STUDENT',
+      avatarBg: initialRole === 'TEACHER' ? '#7c3aed' : '#0891b2',
       isAudioMuted: false,
       isVideoOff: false,
       isHandRaised: false,
       isSpeaking: true,
-      audioLevel: 0.7,
-      hasDrawingPermission: true,
-      isSpotlighted: true,
-      joinedAt: Date.now() - 300000,
-      gradeOrClass: 'Technical Instructor'
-    },
-    {
-      id: initialRole === 'STUDENT' ? localParticipantId : 'student-demo-1',
-      name: initialRole === 'STUDENT' ? initialUserName : 'Sarah Adeyemi',
-      role: 'STUDENT',
-      avatarBg: '#0891b2',
-      isAudioMuted: true,
-      isVideoOff: false,
-      isHandRaised: false,
-      isSpeaking: false,
-      audioLevel: 0,
-      hasDrawingPermission: false,
-      isSpotlighted: false,
-      joinedAt: Date.now() - 250000,
-      gradeOrClass: 'SS2 Technical'
-    },
-    {
-      id: 'student-demo-2',
-      name: 'Emmanuel Eze',
-      role: 'STUDENT',
-      avatarBg: '#ea580c',
-      isAudioMuted: true,
-      isVideoOff: false,
-      isHandRaised: true,
-      isSpeaking: false,
-      audioLevel: 0,
-      hasDrawingPermission: false,
-      isSpotlighted: false,
-      joinedAt: Date.now() - 200000,
-      gradeOrClass: 'SS2 Technical'
-    },
-    {
-      id: 'student-demo-3',
-      name: 'Fatima Bello',
-      role: 'STUDENT',
-      avatarBg: '#16a34a',
-      isAudioMuted: false,
-      isVideoOff: true,
-      isHandRaised: false,
-      isSpeaking: false,
-      audioLevel: 0,
-      hasDrawingPermission: true,
-      isSpotlighted: false,
-      joinedAt: Date.now() - 150000,
-      gradeOrClass: 'SS2 Technical'
+      audioLevel: 0.6,
+      hasDrawingPermission: initialRole === 'TEACHER',
+      isSpotlighted: initialRole === 'TEACHER',
+      joinedAt: Date.now(),
+      gradeOrClass: initialRole === 'TEACHER' ? 'Technical Instructor' : 'Enrolled Student'
     }
   ]);
 
-  // Live in-class messages
-  const [messages, setMessages] = useState<LiveChatMessage[]>([
-    {
-      id: 'msg-1',
-      senderId: 'teacher-instructor-1',
-      senderName: 'Engr. D. Adebayo (Teacher)',
-      senderRole: 'TEACHER',
-      text: `Good day class! Today we are practicing ${activeTopic.title}. Pay close attention to the construction line weights (2H pencil vs HB outline).`,
-      timestamp: '10:00 AM'
-    },
-    {
-      id: 'msg-2',
-      senderId: 'student-demo-2',
-      senderName: 'Emmanuel Eze',
-      senderRole: 'STUDENT',
-      text: 'Sir, what scale ratio should we use on the triangular scale rule for this exercise?',
-      timestamp: '10:02 AM',
-      isQuestion: true,
-      upvotes: 3
-    }
-  ]);
+  // Live in-class messages (Real-time synchronization only)
+  const [messages, setMessages] = useState<LiveChatMessage[]>([]);
 
   // Remote interactive indicators
   const [remoteCursors, setRemoteCursors] = useState<Record<string, RemoteCursor>>({});

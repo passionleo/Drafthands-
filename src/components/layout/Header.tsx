@@ -637,7 +637,23 @@ export const Header: React.FC<HeaderProps> = ({
                 })}
               </div>
 
-              <div className="pt-2 mt-2 border-t border-slate-800">
+              <div className="pt-2 mt-2 border-t border-slate-800 space-y-1">
+                <button
+                  onClick={() => {
+                    setIsRoleDropdownOpen(false);
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('drafthands_visitor_session_id');
+                      sessionStorage.clear();
+                      window.location.hash = '#landing';
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full text-left p-2 rounded-xl text-xs text-cyan-300 hover:bg-cyan-950/40 hover:text-cyan-200 flex items-center gap-2 transition-colors font-semibold"
+                >
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span>Exit Demo / Real-Time Portal</span>
+                </button>
+
                 <button
                   onClick={() => {
                     setIsRoleDropdownOpen(false);
