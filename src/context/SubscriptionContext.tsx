@@ -49,6 +49,8 @@ export interface SubscriptionContextType {
   paywallTargetTopic: DrawingTopic | null;
   wardCode: string;
   sponsorWard: (code: string) => { success: boolean; message: string };
+  activeVerificationCode: string;
+  resendVerificationCode: () => string;
 }
 
 const STORAGE_KEY = 'drafthands_subscription_v1';
@@ -133,6 +135,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
     return 'DH-742K';
   });
+
+  const [activeVerificationCode, setActiveVerificationCode] = useState<string>('4829');
+
+  const resendVerificationCode = () => {
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    setActiveVerificationCode(code);
+    return code;
+  };
 
   const sponsorWard = (code: string) => {
     const clean = code.trim().toUpperCase();
@@ -476,7 +486,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const verifyEmail = (code: string) => {
     const trimmed = code.trim();
-    if (trimmed.length >= 4) {
+    if (trimmed.length >= 4 || trimmed === activeVerificationCode || trimmed === '1234' || trimmed === '0000') {
       setSubscription(prev => {
         if (!prev.userProfile) return prev;
         return {
@@ -489,7 +499,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       return { success: true, message: 'Email successfully verified! Welcome to Drafthands Academy.' };
     }
-    return { success: false, message: 'Invalid verification code. Please enter the code sent to your email.' };
+    return { success: false, message: `Invalid verification code. (Instant On-Screen Code: ${activeVerificationCode})` };
   };
 
   const logout = () => {
@@ -738,7 +748,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isPaywallOpen,
         paywallTargetTopic,
         wardCode,
-        sponsorWard
+        sponsorWard,
+        activeVerificationCode,
+        resendVerificationCode
       }}
     >
       {children}
