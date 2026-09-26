@@ -66,6 +66,7 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
   };
 
   const handlePaystackSponsorship = () => {
+    if (!activeProfile) return;
     setIsPayingSponsorship(true);
     sponsorWard(wardCodeInput);
     payForParentWardSponsorship({
@@ -138,13 +139,14 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Guardian of: <strong className="text-white">{activeProfile.studentName}</strong> ({activeProfile.classTier})
+                  Guardian of: <strong className="text-white">{activeProfile?.studentName || 'No Ward Linked'}</strong> {activeProfile?.classTier ? `(${activeProfile.classTier})` : ''}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs (Only rendered when ward is linked) */}
+          {activeProfile && (
           <nav className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
             <button
               onClick={() => setActiveTab('analytics')}
@@ -206,6 +208,7 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
               <span>Teacher Chat</span>
             </button>
           </nav>
+          )}
 
           {/* Quick Actions & Logout */}
           <div className="flex items-center gap-2">
@@ -258,9 +261,9 @@ export const ParentPortalView: React.FC<ParentPortalViewProps> = ({
           </form>
 
           <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span>School: <strong className="text-slate-200">{activeProfile.schoolName}</strong></span>
+            <span>School: <strong className="text-slate-200">{activeProfile?.schoolName || 'DraftHands Academy'}</strong></span>
             <span>•</span>
-            <span>Admission: <strong className="text-blue-400 font-mono">{activeProfile.admissionNo}</strong></span>
+            <span>Admission: <strong className="text-blue-400 font-mono">{activeProfile?.admissionNo || 'PENDING'}</strong></span>
           </div>
         </div>
       </div>
