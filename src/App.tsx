@@ -53,23 +53,25 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8 text-center">
-          <div className="max-w-md w-full bg-slate-900 border border-red-500/50 rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-bold text-red-400 mb-2">Application Notice</h2>
-            <p className="text-sm text-slate-300 mb-4">
-              An unexpected render interruption occurred. Please return to home to restore normal session state.
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8 text-center font-sans">
+          <div className="max-w-md w-full bg-slate-900 border border-cyan-500/50 rounded-2xl p-6 shadow-2xl space-y-4">
+            <h2 className="text-xl font-bold text-cyan-400">DraftHands Academy Recovery</h2>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Session state encountered a temporary interruption. Click below to reset and reload the academy landing page.
             </p>
-            <pre className="bg-black/50 p-3 rounded text-xs text-red-300 overflow-x-auto text-left font-mono mb-6 max-h-32">
-              {this.state.error?.toString()}
-            </pre>
             <button
               onClick={() => {
+                try {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                } catch {}
                 this.setState({ hasError: false, error: null });
-                this.props.onReset();
+                window.location.hash = '#landing';
+                window.location.reload();
               }}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-sm transition shadow-lg shadow-blue-500/25"
+              className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-sm text-white shadow-lg shadow-cyan-600/30 transition-all cursor-pointer"
             >
-              Return to Home
+              Reset & Reload Application
             </button>
           </div>
         </div>
