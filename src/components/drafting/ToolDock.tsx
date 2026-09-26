@@ -159,11 +159,11 @@ export const ToolDock: React.FC<ToolDockProps> = ({
         <button
           id="btn-switch-to-stylus-whiteboard"
           onClick={onOpenWhiteboard}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition-all cursor-pointer animate-pulse"
           title="Switch to Freehand Whiteboard Studio (Optimized for Stylus & Drawing Tablets)"
         >
-          <PenTool className="w-3.5 h-3.5 text-emerald-200" />
-          <span className="hidden md:inline">Stylus Whiteboard</span>
+          <PenTool className="w-4 h-4 text-emerald-200" />
+          <span className="inline font-bold text-white">Stylus Whiteboard</span>
         </button>
       )}
 

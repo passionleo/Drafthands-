@@ -393,7 +393,7 @@ export const Header: React.FC<HeaderProps> = ({
           title="Toggle Multi-Input Interactive Drawing Studio (Mouse, Stylus, Touch)"
         >
           <PenTool className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden lg:inline">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
+          <span className="inline font-bold">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
         </button>
 
         {/* Live Virtual Classroom Button */}
