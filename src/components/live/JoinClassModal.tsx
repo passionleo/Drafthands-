@@ -200,19 +200,17 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
 
         {/* Mode Selector: Host Class vs Join Class */}
         <div className="p-4 bg-slate-900 border-b border-slate-800 flex gap-2">
-          {!isStudent && (
-            <button
-              onClick={() => setActiveTab('HOST')}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-                activeTab === 'HOST'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-600/30'
-                  : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
-              }`}
-            >
-              <Crown className="w-4 h-4 text-amber-300" />
-              <span>Host Live Class (Teacher)</span>
-            </button>
-          )}
+          <button
+            onClick={() => setActiveTab('HOST')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
+              activeTab === 'HOST'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-600/30'
+                : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+            }`}
+          >
+            <Crown className="w-4 h-4 text-amber-300" />
+            <span>Host Live Class</span>
+          </button>
 
           <button
             onClick={() => setActiveTab('JOIN')}
@@ -223,7 +221,7 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
             }`}
           >
             <Users className="w-4 h-4 text-cyan-300" />
-            <span>Join with Code (Student)</span>
+            <span>Join with Code</span>
           </button>
         </div>
 
