@@ -41,6 +41,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [showInstruments, setShowInstruments] = useState<boolean>(true);
   const [showTitleBlock, setShowTitleBlock] = useState<boolean>(true);
   const [showGuideLines, setShowGuideLines] = useState<boolean>(true);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
   // Safe defaults for topic, elements, and instrument
   const safeTopic: DrawingTopic = topic || {
@@ -269,6 +270,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           ref={svgRef}
           viewBox={`0 0 ${viewBoxW} ${viewBoxH}`}
           className="w-[96%] h-[92%] max-w-[1200px] max-h-[850px] shadow-2xl rounded-lg bg-[#070d18] border border-slate-800"
+          onClick={() => setSelectedElementId(null)}
         >
           <defs>
             {/* Standard Dimension Arrow Markers */}
@@ -344,32 +346,50 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
               if (!el) return null;
               const style = getLineStyle(el.lineWeight, el.isNew, el.isFinalResult);
               const animClass = el.isNew ? 'vector-animated-element' : undefined;
+              const isActive = selectedElementId === el.id;
+              const activeStyle = isActive ? {
+                ...style,
+                stroke: '#38bdf8',
+                strokeWidth: (style.strokeWidth || 1.5) + 1.2,
+                filter: 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.9))'
+              } : style;
 
               switch (el.type) {
                 case 'SEGMENT':
                   return (
-                    <line
-                      key={el.id}
-                      x1={el.x1}
-                      y1={el.y1}
-                      x2={el.x2}
-                      y2={el.y2}
-                      style={style}
-                      className={animClass}
-                    />
+                    <g key={el.id} onClick={(e) => { e.stopPropagation(); setSelectedElementId(el.id); }} className="cursor-pointer">
+                      <line
+                        x1={el.x1}
+                        y1={el.y1}
+                        x2={el.x2}
+                        y2={el.y2}
+                        style={activeStyle}
+                        className={animClass}
+                      />
+                      {isActive && (
+                        <>
+                          <rect x={el.x1 - 3} y={el.y1 - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                          <rect x={el.x2 - 3} y={el.y2 - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                        </>
+                      )}
+                    </g>
                   );
 
                 case 'CIRCLE':
                   return (
-                    <circle
-                      key={el.id}
-                      cx={el.cx}
-                      cy={el.cy}
-                      r={el.r}
-                      fill="none"
-                      style={style}
-                      className={animClass}
-                    />
+                    <g key={el.id} onClick={(e) => { e.stopPropagation(); setSelectedElementId(el.id); }} className="cursor-pointer">
+                      <circle
+                        cx={el.cx}
+                        cy={el.cy}
+                        r={el.r}
+                        fill="none"
+                        style={activeStyle}
+                        className={animClass}
+                      />
+                      {isActive && (
+                        <rect x={(el.cx || 0) - 3} y={(el.cy || 0) - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                      )}
+                    </g>
                   );
 
                 case 'ARC': {
@@ -391,13 +411,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                   const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArcFlag} ${sweepFlag} ${x2} ${y2}`;
 
                   return (
-                    <path
-                      key={el.id}
-                      d={d}
-                      fill="none"
-                      style={style}
-                      className={animClass}
-                    />
+                    <g key={el.id} onClick={(e) => { e.stopPropagation(); setSelectedElementId(el.id); }} className="cursor-pointer">
+                      <path
+                        d={d}
+                        fill="none"
+                        style={activeStyle}
+                        className={animClass}
+                      />
+                      {isActive && (
+                        <rect x={x1 - 3} y={y1 - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                      )}
+                    </g>
                   );
                 }
 
@@ -405,27 +429,35 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                   if (!el.points || el.points.length < 2) return null;
                   const ptsStr = el.points.map(p => `${p[0]},${p[1]}`).join(' ');
                   return (
-                    <polygon
-                      key={el.id}
-                      points={ptsStr}
-                      fill={el.isFinalResult ? 'rgba(56, 189, 248, 0.04)' : 'none'}
-                      style={style}
-                      className={animClass}
-                    />
+                    <g key={el.id} onClick={(e) => { e.stopPropagation(); setSelectedElementId(el.id); }} className="cursor-pointer">
+                      <polygon
+                        points={ptsStr}
+                        fill={el.isFinalResult ? 'rgba(56, 189, 248, 0.04)' : 'none'}
+                        style={activeStyle}
+                        className={animClass}
+                      />
+                      {isActive && el.points[0] && (
+                        <rect x={el.points[0][0] - 3} y={el.points[0][1] - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                      )}
+                    </g>
                   );
 
                 case 'RECTANGLE':
                   return (
-                    <rect
-                      key={el.id}
-                      x={el.x ?? el.x1 ?? 0}
-                      y={el.y ?? el.y1 ?? 0}
-                      width={el.width ?? Math.abs((el.x2 ?? 0) - (el.x1 ?? 0))}
-                      height={el.height ?? Math.abs((el.y2 ?? 0) - (el.y1 ?? 0))}
-                      fill={el.isFinalResult ? 'rgba(56, 189, 248, 0.04)' : 'none'}
-                      style={style}
-                      className={animClass}
-                    />
+                    <g key={el.id} onClick={(e) => { e.stopPropagation(); setSelectedElementId(el.id); }} className="cursor-pointer">
+                      <rect
+                        x={el.x ?? el.x1 ?? 0}
+                        y={el.y ?? el.y1 ?? 0}
+                        width={el.width ?? Math.abs((el.x2 ?? 0) - (el.x1 ?? 0))}
+                        height={el.height ?? Math.abs((el.y2 ?? 0) - (el.y1 ?? 0))}
+                        fill={el.isFinalResult ? 'rgba(56, 189, 248, 0.04)' : 'none'}
+                        style={activeStyle}
+                        className={animClass}
+                      />
+                      {isActive && (
+                        <rect x={(el.x ?? el.x1 ?? 0) - 3} y={(el.y ?? el.y1 ?? 0) - 3} width={6} height={6} fill="#3b82f6" stroke="#ffffff" strokeWidth={1} />
+                      )}
+                    </g>
                   );
 
                 case 'POINT': {
