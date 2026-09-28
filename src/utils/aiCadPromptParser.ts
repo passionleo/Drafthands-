@@ -132,7 +132,38 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   try {
 
   // ==========================================
-  // 0. RECTANGLE / SQUARE / BOX / POLYGON
+  // 0. ISOMETRIC 3D BLOCK / CUBOID / BOX
+  // e.g. "Construct an isometric 3D block measuring 600mm x 400mm x 300mm"
+  // ==========================================
+  if (clean.includes('isometric') || clean.includes('3d block') || clean.includes('cuboid') || clean.includes('solid block')) {
+    const allNums = extractAllNumbers(clean);
+    const length = allNums[0] !== undefined ? allNums[0] : 600;
+    const width = allNums[1] !== undefined ? allNums[1] : 400;
+    const height = allNums[2] !== undefined ? allNums[2] : 300;
+
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'ISOMETRIC_BLOCK',
+      geometryTitle: `Isometric 3D Block (${length}mm × ${width}mm × ${height}mm)`,
+      topicId: 'ss2-isometric-projection',
+      tier: 'SS2',
+      confidence: 0.99,
+      description: `Constructing authentic isometric projection of a 3D rectangular solid block measuring ${length}mm long, ${width}mm wide, and ${height}mm high with 30° inclined axes and true dimensions.`,
+      parameters: { length, width, height, span: length, altitude: height },
+      extractedParams: [
+        { key: 'length', label: 'Length', value: length, unit: 'mm', symbol: 'L' },
+        { key: 'width', label: 'Width', value: width, unit: 'mm', symbol: 'W' },
+        { key: 'height', label: 'Height', value: height, unit: 'mm', symbol: 'H' }
+      ],
+      matchedKeywords: ['isometric', '3d', 'block', 'cuboid'],
+      executionPlan: `Switching to SS2 Isometric Projection. Generating 3D axes at 30°, top/front/right orthographic faces, and dimensioning for ${length}x${width}x${height}mm block...`,
+      cadCommandEcho: `ISO_BLOCK [L=${length}, W=${width}, H=${height}]`
+    };
+  }
+
+  // ==========================================
+  // 1. RECTANGLE / SQUARE / BOX / POLYGON
   // e.g. "Construction a rectangle length 500mm and breadth 300mm"
   // ==========================================
   if (clean.includes('rectangle') || clean.includes('rect') || clean.includes('square') || clean.includes('box')) {
