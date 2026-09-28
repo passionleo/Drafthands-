@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 export function InteractiveDraftingBoard() {
-  const [activeTool, setActiveTool] = useState<'t-square' | 'set-square' | 'pencil'>('t-square');
+  const [activeTool, setActiveTool] = useState<'t-square' | 'set-square' | 'pencil' | 'select'>('select');
   
   // Instrument Transformation States
   const [tSquarePos, setTSquarePos] = useState({ x: 50, y: 100, rotation: 0 });
@@ -123,10 +123,16 @@ export function InteractiveDraftingBoard() {
         
         <div className="flex flex-col gap-2">
           <button 
+            onClick={() => setActiveTool('select')}
+            className={`px-3 py-2 text-xs rounded font-medium text-left transition-colors ${activeTool === 'select' ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+          >
+            ✋ Select / Inspect Mode (Default)
+          </button>
+          <button 
             onClick={() => setActiveTool('pencil')}
             className={`px-3 py-2 text-xs rounded font-medium text-left transition-colors ${activeTool === 'pencil' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
           >
-            ✏️ Drafting Pencil / Pen
+            ✏️ Drafting Pencil / Pen (Draw Line)
           </button>
         </div>
 

@@ -1053,7 +1053,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const p = safeParams;
         const now = Date.now();
 
-        if (gType === 'ARCHITECTURAL_PLAN' || gType === 'BUILDING' || gType === 'FLOOR_PLAN') {
+        if (gType === 'ARCHITECTURAL_PLAN' || gType === 'BUILDING' || gType === 'FLOOR_PLAN' || gType === 'BUILDING_DRAWING') {
           const l = p.length || 12000;
           const w = p.width || 8000;
           const scale = 0.035;
@@ -1140,7 +1140,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             y2: by + bh,
             dimensionText: `Overall Width: ${w} mm`
           });
-        } else if (gType === 'MECHANICAL_PART' || gType === 'ASSEMBLY' || gType === 'BRACKET') {
+        } else if (gType === 'MECHANICAL_PART' || gType === 'ASSEMBLY' || gType === 'BRACKET' || gType === 'MACHINE_DRAWING') {
           const size = p.size || 200;
           const s = size * 1.2;
           
