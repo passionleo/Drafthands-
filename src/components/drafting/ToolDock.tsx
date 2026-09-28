@@ -11,7 +11,8 @@ import {
   Crosshair,
   FileSpreadsheet,
   Tv,
-  PenTool
+  PenTool,
+  History
 } from 'lucide-react';
 
 export type GridMode = 'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'NONE' | 'ENGINEERING_5MM';
@@ -34,6 +35,7 @@ interface ToolDockProps {
   mouseCoords: { x: number; y: number };
   onOpenProjection?: () => void;
   onOpenWhiteboard?: () => void;
+  onOpenPromptHistory?: () => void;
 }
 
 export const ToolDock: React.FC<ToolDockProps> = ({
@@ -53,7 +55,8 @@ export const ToolDock: React.FC<ToolDockProps> = ({
   onResetZoom,
   mouseCoords,
   onOpenProjection,
-  onOpenWhiteboard
+  onOpenWhiteboard,
+  onOpenPromptHistory
 }) => {
   const nextGridMode = () => {
     if (gridMode === 'MILLIMETER') onSelectGridMode('ISOMETRIC');
@@ -154,7 +157,18 @@ export const ToolDock: React.FC<ToolDockProps> = ({
         </button>
       )}
 
-      {/* Switch to Freehand Stylus Whiteboard */}
+      {/* Prompt History & Wireframe Preview Button */}
+      {onOpenPromptHistory && (
+        <button
+          id="btn-open-prompt-history"
+          onClick={onOpenPromptHistory}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 transition-colors shadow-sm"
+          title="Open Prompt History & Wireframe Preview Overlay"
+        >
+          <History className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden md:inline">Prompt History</span>
+        </button>
+      )}
       {onOpenWhiteboard && (
         <button
           id="btn-switch-to-stylus-whiteboard"

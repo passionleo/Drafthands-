@@ -4,6 +4,8 @@ import { InstrumentsOverlay } from './InstrumentsOverlay';
 import { SheetTitleBlock } from './SheetTitleBlock';
 import { GridMode, ToolDock } from './ToolDock';
 import { computeLabelPlacement, sanitizeOriginPlacement, LabelPosition } from '../../utils/svgGeometryUtils';
+import { PromptHistoryPreviewOverlay } from './PromptHistoryPreviewOverlay';
+import { parseNaturalLanguageCadPrompt } from '../../utils/aiCadPromptParser';
 
 interface DrawingCanvasProps {
   topic: DrawingTopic;
@@ -42,6 +44,27 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [showTitleBlock, setShowTitleBlock] = useState<boolean>(true);
   const [showGuideLines, setShowGuideLines] = useState<boolean>(true);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [isPromptHistoryOpen, setIsPromptHistoryOpen] = useState<boolean>(false);
+  const [promptHistory] = useState<Array<{ id: string; prompt: string; timestamp: number; result: any }>>([
+    {
+      id: 'h-1',
+      prompt: 'Construct an isometric 3D block measuring 600mm x 400mm x 300mm',
+      timestamp: Date.now() - 3600000,
+      result: parseNaturalLanguageCadPrompt('Construct an isometric 3D block measuring 600mm x 400mm x 300mm')
+    },
+    {
+      id: 'h-2',
+      prompt: 'Construct a parabola with span 120mm and rise 80mm',
+      timestamp: Date.now() - 7200000,
+      result: parseNaturalLanguageCadPrompt('Construct a parabola with span 120mm and rise 80mm')
+    },
+    {
+      id: 'h-3',
+      prompt: 'Construct an ellipse with major axis 180mm and minor axis 110mm',
+      timestamp: Date.now() - 14400000,
+      result: parseNaturalLanguageCadPrompt('Construct an ellipse with major axis 180mm and minor axis 110mm')
+    }
+  ]);
 
   // Safe defaults for topic, elements, and instrument
   const safeTopic: DrawingTopic = topic || {
@@ -256,6 +279,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         mouseCoords={mouseCoords}
         onOpenProjection={onOpenProjection}
         onOpenWhiteboard={onOpenWhiteboard}
+        onOpenPromptHistory={() => setIsPromptHistoryOpen(true)}
       />
 
       {/* Main SVG Vector Canvas */}
@@ -646,6 +670,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           </div>
         </div>
       )}
+
+      {/* Prompt History & Wireframe Preview Overlay */}
+      <PromptHistoryPreviewOverlay
+        isOpen={isPromptHistoryOpen}
+        onClose={() => setIsPromptHistoryOpen(false)}
+        history={promptHistory}
+        onApplyPrompt={(res, mode) => {
+          console.log('Applied prompt from history overlay:', res, mode);
+          setIsPromptHistoryOpen(false);
+        }}
+      />
     </div>
   );
 };
