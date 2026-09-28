@@ -1926,6 +1926,30 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       setHistory(prev => [...(Array.isArray(prev) ? prev : []), [...elements]]);
       setRedoStack([]);
 
+      if (activeTool === 'LINE' && isDrawing && startPoint && currentPoint) {
+        const length = Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y);
+        if (Number.isFinite(length) && length > 2) {
+          const newElementId = `elem-${Date.now()}`;
+          const color = getLayerColor(activeLayer);
+          const lineWeight: LineWeightType = activeLayer === 'OUTLINE_HB' ? 'THICK_CONTINUOUS' : activeLayer === 'HIDDEN_DASHED' ? 'THIN_DASHED' : activeLayer === 'CENTERLINE_CHAIN' ? 'THIN_CHAIN' : 'THIN_CONTINUOUS';
+          const newElement: WhiteboardElement = {
+            id: newElementId,
+            type: 'LINE',
+            layer: activeLayer,
+            lineWeight,
+            color,
+            x1: Math.round(startPoint.x),
+            y1: Math.round(startPoint.y),
+            x2: Math.round(currentPoint.x),
+            y2: Math.round(currentPoint.y)
+          };
+          setElements(prev => [...(Array.isArray(prev) ? prev : []), newElement]);
+        }
+        setStartPoint(currentPoint);
+        setCurrentPoint(coords);
+        return;
+      }
+
       setIsDrawing(true);
       setStartPoint(coords);
       setCurrentPoint(coords);
@@ -2470,12 +2494,23 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             : 'bg-[#0f172a]' // Engineering CAD Model Space Canvas
         }`}
       >
+        {activeTool === 'LINE' && isDrawing && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl bg-slate-900/95 border border-cyan-500/50 shadow-2xl backdrop-blur-md text-xs font-mono text-cyan-300 flex items-center gap-2 pointer-events-none animate-pulse">
+            <span>📐 Continuous Line Mode: Click to anchor segment & redirect endpoint. Double-click to finish.</span>
+          </div>
+        )}
+
         <svg
           ref={svgRef}
           className="w-full h-full cursor-crosshair select-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onDoubleClick={() => {
+            setIsDrawing(false);
+            setStartPoint(null);
+            setCurrentPoint(null);
+          }}
         >
           <defs>
             {/* Millimeter Grid Pattern */}
