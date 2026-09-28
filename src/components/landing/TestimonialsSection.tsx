@@ -4,27 +4,27 @@ import { Award, Star, Quote, CheckCircle2, Building, GraduationCap, ShieldCheck 
 export const TestimonialsSection: React.FC = () => {
   const testimonials = [
     {
-      quote: "Before Drafthands, explaining 3rd angle projection and sectional views on a traditional chalkboard was cumbersome. Now, our students visualize isometric slicing in 3D and manipulate the cutting plane directly. Our WAEC Technical Drawing distinction rate jumped from 45% to 89%.",
-      author: "Engr. T. O. Balogun",
+      quote: "Before adopting this digital drafting platform, explaining 3rd angle projection and sectional views on a traditional chalkboard was cumbersome. Now, our students visualize isometric slicing in 3D and manipulate the cutting plane directly. Our departmental distinction rate jumped significantly.",
+      author: "Senior Technical Instructor",
       role: "Lead Instructor & Head of Technical Education",
-      institution: "Federal Science & Technical College, Yaba",
-      badge: "Technical Instructor",
+      institution: "Federal Technical College",
+      badge: "Technical Educator",
       rating: 5
     },
     {
       quote: "The fidelity of the virtual T-Square, 30°/60° set squares, and compass line weights (2H vs HB) is unmatched. Our engineering freshmen transition into CAD drafting with extraordinary spatial confidence and true European/ISO drafting standards compliance.",
-      author: "Dr. O. A. Adeleke",
-      role: "Senior Lecturer in Mechanical Drafting",
-      institution: "Yaba College of Technology",
+      author: "Department Head of Mechanical Drafting",
+      role: "Senior Engineering Faculty",
+      institution: "State Polytechnic Department of Mechanical Engineering",
       badge: "Faculty Educator",
       rating: 5
     },
     {
-      quote: "I used to lose marks in WAEC Paper 2 because I kept erasing my compass bisection lines. Drafthands taught me the exact marking scheme and how to keep 2H construction lines crisp. I scored an A1 in Technical Drawing and won the National Olympiad!",
-      author: "Chukwuma Adebayo",
-      role: "SS3 Technical Student & Drafting Scholar",
-      institution: "King's College Lagos",
-      badge: "A1 Distinction Student",
+      quote: "Practicing with the virtual instruments and interactive marking schemes helped me master paper 2 construction steps without wasting eraser lines. I scored top marks in Technical Drawing and gained deep engineering insight.",
+      author: "Technical Drawing Scholar",
+      role: "Advanced Drafting Student",
+      institution: "National Technical Academy",
+      badge: "Distinction Student",
       rating: 5
     }
   ];
@@ -37,13 +37,13 @@ export const TestimonialsSection: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider">
             <Award className="w-3.5 h-3.5" />
-            <span>Endorsed Across West Africa</span>
+            <span>Endorsed Across Educational Institutions</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Trusted by Technical Colleges, Polytechnics & WAEC Examiners
+            Trusted by Technical Colleges & Engineering Educators
           </h2>
           <p className="text-sm sm:text-base text-slate-400">
-            Real stories of educational transformation from secondary classrooms to engineering lecture halls.
+            Professional feedback on educational transformation from secondary classrooms to engineering lecture halls.
           </p>
         </div>
 
