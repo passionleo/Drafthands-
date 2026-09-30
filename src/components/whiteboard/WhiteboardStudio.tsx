@@ -92,7 +92,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   const [startPan, setStartPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Tool & Layer State
-  const [activeTool, setActiveTool] = useState<WhiteboardTool>('LINE');
+  const [activeTool, setActiveTool] = useState<WhiteboardTool>('SELECT');
   const [activeLayer, setActiveLayer] = useState<WhiteboardLayer>('CONSTRUCTION_2H');
   const [gridMode, setGridMode] = useState<'MILLIMETER' | 'ISOMETRIC' | 'POLAR' | 'NONE'>('MILLIMETER');
   const [snapGrid, setSnapGrid] = useState<boolean>(true);
