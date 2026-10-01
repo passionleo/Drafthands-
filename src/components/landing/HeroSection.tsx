@@ -46,6 +46,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           
           {/* Left Column: Headline, Description & Dual CTAs */}
           <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
+            {/* Nigeria Independence Day Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-xl mx-auto lg:mx-0">
+              <div className="flex items-center gap-1 bg-emerald-900 px-2.5 py-1 rounded-xl text-white font-mono text-[11px] shadow-sm">
+                <span className="inline-block w-2.5 h-2 bg-emerald-500 rounded-xs"></span>
+                <span className="inline-block w-2.5 h-2 bg-white rounded-xs"></span>
+                <span className="inline-block w-2.5 h-2 bg-emerald-500 rounded-xs"></span>
+                <span className="font-extrabold text-emerald-300">🇳🇬 NIGERIA @ 66</span>
+              </div>
+              <span className="text-slate-300 font-medium">October 1st Independence Anniversary Special Edition</span>
+            </div>
+
             {/* Accreditation Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-semibold shadow-inner shadow-cyan-950">
               <span className="flex h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
