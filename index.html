@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Drafthands - Technical & Engineering Drawing Academy</title>
+    
+    <!-- SEO Primary Tags -->
+    <title>Drafthands – Technical Drawing & CAD Learning Academy | Secondary & Higher Education</title>
+    <meta name="title" content="Drafthands – Technical Drawing & CAD Learning Academy | Secondary & Higher Education" />
+    <meta name="description" content="Digital learning and drafting platform supporting Technical Drawing, CAD concepts, secondary school curricula (SS1, SS2, SS3), and engineering education across West Africa." />
+    <link rel="canonical" href="https://drafthands.com.ng/" />
+    
+    <!-- Brand & Theme Meta -->
     <meta name="theme-color" content="#020617" />
     <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -12,7 +19,63 @@
     <meta name="apple-mobile-web-app-title" content="DraftHands" />
     <meta name="application-name" content="DraftHands" />
 
-    <!-- React Fast Refresh Preamble Safety Net (prevents @vitejs/plugin-react preamble detection errors) -->
+    <!-- Open Graph / Social Sharing (WhatsApp, LinkedIn, Facebook) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://drafthands.com.ng/" />
+    <meta property="og:title" content="Drafthands – Technical Drawing & CAD Learning Academy" />
+    <meta property="og:description" content="Master Technical Drawing, CAD practice, and WAEC/NECO engineering drawing standards with interactive virtual drawing boards and step-by-step guidance." />
+    <meta property="og:image" content="https://drafthands.com.ng/pwa-512x512.png" />
+    <meta property="og:site_name" content="Drafthands Academy" />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://drafthands.com.ng/" />
+    <meta name="twitter:title" content="Drafthands – Technical Drawing & CAD Learning Academy" />
+    <meta name="twitter:description" content="Master Technical Drawing, CAD practice, and WAEC/NECO engineering drawing standards with interactive virtual drawing boards." />
+    <meta name="twitter:image" content="https://drafthands.com.ng/pwa-512x512.png" />
+
+    <!-- Schema.org Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://drafthands.com.ng/#organization",
+          "name": "Drafthands Technical Drawing Academy",
+          "url": "https://drafthands.com.ng/",
+          "logo": "https://drafthands.com.ng/icon.svg",
+          "description": "Digital learning and drafting platform supporting Technical Drawing, CAD concepts, and engineering education.",
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://drafthands.com.ng/#website",
+          "url": "https://drafthands.com.ng/",
+          "name": "Drafthands Academy",
+          "publisher": {
+            "@id": "https://drafthands.com.ng/#organization"
+          },
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://drafthands.com.ng/#application",
+          "name": "Drafthands Digital Drafting Studio",
+          "operatingSystem": "All",
+          "applicationCategory": "EducationalApplication",
+          "description": "Interactive virtual drafting board and CAD learning platform for secondary school and polytechnic engineering students.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "NGN"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- React Fast Refresh Preamble Safety Net -->
     <script>
       window.$RefreshReg$ = window.$RefreshReg$ || function() {};
       window.$RefreshSig$ = window.$RefreshSig$ || function() { return function(type) { return type; }; };
@@ -62,19 +125,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
 
-    <!-- Open Graph & Social Cards -->
-    <meta name="description" content="Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula." />
-    <meta property="og:title" content="Drafthands - Technical & Engineering Drawing Academy" />
-    <meta property="og:description" content="Technical and Engineering Drawing Academy covering SS1, SS2, SS3, and Higher Institution curricula." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-
-    <!-- Paystack Official Inline Checkout SDK (Loaded asynchronously so it never blocks page startup) -->
+    <!-- Paystack Official Inline Checkout SDK -->
     <script async src="https://js.paystack.co/v1/inline.js"></script>
 
     <!-- Early Error Catch & Progressive Web App (PWA) Global Capture -->
     <script>
-      // Capture beforeinstallprompt immediately at the window level
       window.__drafthandsInstallPrompt = null;
       window.addEventListener('beforeinstallprompt', function(e) {
         e.preventDefault();
@@ -87,7 +142,6 @@
         window.dispatchEvent(new CustomEvent('drafthands:pwa-app-installed'));
       });
 
-      // Global safety net for script parse or network errors
       window.__drafthandsMounted = false;
       window.addEventListener('error', function(e) {
         if (!window.__drafthandsMounted) {

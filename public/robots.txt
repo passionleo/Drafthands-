@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Allow: /#landing
+Allow: /#studio
+Allow: /#past-questions
+Allow: /#ss1-technical-drawing
+Allow: /#ss2-technical-drawing
+Allow: /#ss3-technical-drawing
+Allow: /#teacher-resources
+Allow: /#blog-resources
+Allow: /#contact
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /account
+Disallow: /login
+Disallow: /auth
+Disallow: /owner
+Disallow: /private
+Disallow: /api/
+
+Sitemap: https://drafthands.com.ng/sitemap.xml
