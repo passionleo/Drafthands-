@@ -11,6 +11,7 @@ export interface DraftingInstrumentsOverlayProps {
   onStrikeArc?: (cx: number, cy: number, r: number, startAngle: number, endAngle: number, label?: string) => void;
   onDrawStraightEdge?: (x1: number, y1: number, x2: number, y2: number, label?: string) => void;
   onDrawCurvePath?: (svgPath: string, points?: FreehandPoint[], label?: string) => void;
+  instrumentColor?: 'AMBER' | 'CYAN' | 'EMERALD' | 'SMOKE' | 'ROSE' | 'GOLD';
 }
 
 export const DraftingInstrumentsOverlay: React.FC<DraftingInstrumentsOverlayProps> = ({
@@ -22,7 +23,8 @@ export const DraftingInstrumentsOverlay: React.FC<DraftingInstrumentsOverlayProp
   onRemoveInstrument,
   onStrikeArc,
   onDrawStraightEdge,
-  onDrawCurvePath
+  onDrawCurvePath,
+  instrumentColor = 'AMBER'
 }) => {
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
