@@ -23,6 +23,7 @@ import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanVie
 import { LiveProjectionMode } from './components/projection/LiveProjectionMode';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { LiveClassroomModal } from './components/live/LiveClassroomModal';
+import { GoogleClassroomSyncModal } from './components/classroom/GoogleClassroomSyncModal';
 
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
@@ -120,6 +121,7 @@ export default function App() {
   const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
   const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState<boolean>(false);
+  const [isGoogleClassroomOpen, setIsGoogleClassroomOpen] = useState<boolean>(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -289,6 +291,7 @@ export default function App() {
                 onReturnToLanding={handleReturnHome}
                 onOpenPastQuestions={() => changeView('PAST_QUESTIONS')}
                 onOpenOwnerPortal={() => changeView('OWNER')}
+                onOpenGoogleClassroom={() => setIsGoogleClassroomOpen(true)}
               />
               <div className="flex flex-1 overflow-hidden relative">
                 {!isSidebarCollapsed && (
@@ -510,6 +513,11 @@ export default function App() {
               initialMode="TRADITIONAL_BOARD"
             />
           )}
+
+          <GoogleClassroomSyncModal
+            isOpen={isGoogleClassroomOpen}
+            onClose={() => setIsGoogleClassroomOpen(false)}
+          />
 
           {/* Global Paywall Modal */}
           <GlobalPaywallWrapper />

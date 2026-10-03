@@ -66,6 +66,7 @@ interface HeaderProps {
   onReturnToLanding?: () => void;
   onOpenPastQuestions?: () => void;
   onOpenOwnerPortal?: () => void;
+  onOpenGoogleClassroom?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -98,7 +99,8 @@ export const Header: React.FC<HeaderProps> = ({
   onReturnToLanding,
   onOpenPastQuestions,
   onOpenAdminConsole,
-  onOpenOwnerPortal
+  onOpenOwnerPortal,
+  onOpenGoogleClassroom
 }) => {
   const tiers: CurriculumTier[] = ['SS1', 'SS2', 'SS3', 'HIGHER_INSTITUTION'];
   const { 
@@ -340,6 +342,18 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Award className="w-3.5 h-3.5 text-purple-400" />
                 <span className="hidden lg:inline">Grading Desk</span>
+              </button>
+            )}
+
+            {onOpenGoogleClassroom && (
+              <button
+                id="btn-open-google-classroom"
+                onClick={onOpenGoogleClassroom}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 transition-colors shadow-sm"
+                title="Sync with Google Classroom"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden xl:inline">Google Classroom</span>
               </button>
             )}
 
