@@ -24,6 +24,7 @@ import { ArchitecturalPlanViewer } from './components/tools/ArchitecturalPlanVie
 import { LiveProjectionMode } from './components/projection/LiveProjectionMode';
 import { WhiteboardStudio } from './components/whiteboard/WhiteboardStudio';
 import { LiveClassroomModal } from './components/live/LiveClassroomModal';
+import { JoinClassModal } from './components/live/JoinClassModal';
 import { GoogleClassroomSyncModal } from './components/classroom/GoogleClassroomSyncModal';
 
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
@@ -119,6 +120,16 @@ export default function App() {
   const [isArchPlanOpen, setIsArchPlanOpen] = useState<boolean>(false);
   const [isProjectionOpen, setIsProjectionOpen] = useState<boolean>(false);
   const [isLiveClassOpen, setIsLiveClassOpen] = useState<boolean>(false);
+  const [isJoinClassModalOpen, setIsJoinClassModalOpen] = useState<boolean>(false);
+  const [liveSessionConfig, setLiveSessionConfig] = useState<{
+    roomCode: string;
+    topicId: string;
+    userName: string;
+    role: any;
+    gradeOrClass: string;
+    initialAudioMuted: boolean;
+    initialVideoOff: boolean;
+  } | null>(null);
   const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
   const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState<boolean>(false);
@@ -345,7 +356,7 @@ export default function App() {
                       onOpenTheory={() => setIsTheoryOpen(true)}
                       onOpenTraditionalBoard={() => setIsWhiteboardOpen(true)}
                       onOpenCadWorkstation={() => setIsWhiteboardOpen(true)}
-                      onOpenLiveClass={() => setIsLiveClassOpen(true)}
+                      onOpenLiveClass={() => setIsJoinClassModalOpen(true)}
                     />
                   )}
                 </main>
@@ -364,6 +375,7 @@ export default function App() {
               }}
               onReturnToHome={handleReturnHome}
               onSwitchToStudentView={() => changeView('STUDIO')}
+              onOpenLiveClass={() => setIsJoinClassModalOpen(true)}
             />
           )}
 
@@ -479,12 +491,32 @@ export default function App() {
             />
           )}
 
+          {isJoinClassModalOpen && currentTopic && (
+            <JoinClassModal
+              isOpen={isJoinClassModalOpen}
+              onClose={() => setIsJoinClassModalOpen(false)}
+              topics={allCurriculumTopics}
+              activeTopic={currentTopic}
+              onJoinSession={(config) => {
+                setLiveSessionConfig(config);
+                setIsJoinClassModalOpen(false);
+                setIsLiveClassOpen(true);
+              }}
+            />
+          )}
+
           {isLiveClassOpen && currentTopic && (
             <LiveClassroomModal
               isOpen={isLiveClassOpen}
-              onClose={() => setIsLiveClassOpen(false)}
-              topic={currentTopic}
-              initialRole="STUDENT"
+              onClose={() => {
+                setIsLiveClassOpen(false);
+                setLiveSessionConfig(null);
+              }}
+              topic={liveSessionConfig ? (getTopicById(liveSessionConfig.topicId) || currentTopic) : currentTopic}
+              initialRole={liveSessionConfig?.role || 'STUDENT'}
+              initialRoomCode={liveSessionConfig?.roomCode}
+              initialUserName={liveSessionConfig?.userName}
+              initialGradeClass={liveSessionConfig?.gradeOrClass}
             />
           )}
 
