@@ -98,7 +98,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   const [snapGrid, setSnapGrid] = useState<boolean>(true);
   const [orthoLock, setOrthoLock] = useState<boolean>(false);
   const [showTraceTemplate, setShowTraceTemplate] = useState<boolean>(true);
-  const [isAiPromptBarOpen, setIsAiPromptBarOpen] = useState<boolean>(true);
+  const [isAiPromptBarOpen, setIsAiPromptBarOpen] = useState<boolean>(false);
+  const [isWorkspaceFullscreen, setIsWorkspaceFullscreen] = useState<boolean>(false);
   const [boardTheme, setBoardTheme] = useState<'BLUE_GRID' | 'PURE_WHITE' | 'DARK_SLATE' | 'CLASSIC_WOOD'>('BLUE_GRID');
   const [instrumentColor, setInstrumentColor] = useState<'AMBER' | 'CYAN' | 'EMERALD' | 'SMOKE' | 'ROSE' | 'GOLD'>('AMBER');
   const [showThemeDrawer, setShowThemeDrawer] = useState<boolean>(false);
@@ -2523,6 +2524,20 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           </div>
         )}
 
+          {/* Maximize Board / Fullscreen Workspace Toggle */}
+          <button
+            onClick={() => setIsWorkspaceFullscreen(prev => !prev)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+              isWorkspaceFullscreen 
+                ? 'bg-amber-600 text-white border-amber-500' 
+                : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-cyan-500/40'
+            }`}
+            title={isWorkspaceFullscreen ? "Restore toolbars" : "Maximize drawing board (Hide toolbars & prompt bar)"}
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>{isWorkspaceFullscreen ? 'Restore Bars' : 'Maximize Board'}</span>
+          </button>
+
           {/* If opened for assignment, show Submit Button */}
           {assignment && (
             <button
@@ -2547,8 +2562,8 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         </div>
       </div>
 
-      {/* CAD Workstation Ribbon Bar (When in CAD Mode) */}
-      {workspaceMode === 'CAD_WORKSTATION' && (
+      {/* CAD Workstation Ribbon Bar (When in CAD Mode and not fullscreen) */}
+      {workspaceMode === 'CAD_WORKSTATION' && !isWorkspaceFullscreen && (
         <CadRibbon
           activeTool={activeTool}
           onSelectTool={setActiveTool}
@@ -2577,7 +2592,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       />
 
       {/* AI PROMPT-TO-CAD COMMAND BAR INTEGRATED DIRECTLY IN CAD STATION INTERFACE */}
-      {workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen && (
+      {workspaceMode === 'CAD_WORKSTATION' && !isWorkspaceFullscreen && isAiPromptBarOpen && (
         <CadErrorBoundary
           compact
           title="Interactive CAD Prompt Engine"
