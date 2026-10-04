@@ -185,6 +185,9 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
     }
   ]);
 
+  const participantsRef = useRef<LiveParticipant[]>(participants);
+  participantsRef.current = participants;
+
   // Live in-class messages (Real-time synchronization only)
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
 
@@ -304,6 +307,7 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
     // 2. Setup Real-time Sync safely
     let sync: LiveClassSyncService | null = null;
     let unsubscribe: (() => void) | null = null;
+    let rosterHeartbeat: NodeJS.Timeout | null = null;
     try {
       sync = new LiveClassSyncService(roomCode, localParticipantId, userName);
       syncServiceRef.current = sync;
@@ -509,29 +513,41 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
             sync?.broadcast('REQUEST_FULL_SYNC', { requestedBy: localParticipantId });
           }, 600);
         }
+
+        // Periodic roster sync heartbeat
+        rosterHeartbeat = setInterval(() => {
+          if (!isEffectActive || !sync) return;
+          sync.broadcast('PARTICIPANT_ROSTER_SYNC', {
+            participants: participantsRef.current
+          });
+        }, 2200);
       } catch (subErr) {
         console.warn('[LiveClassroom] sync.subscribe error:', subErr);
       }
-    }
 
-    return () => {
-      isEffectActive = false;
-      try {
-        if (media) media.cleanup();
-      } catch {}
-      mediaServiceRef.current = null;
-      try {
-        if (webRtc) webRtc.destroy();
-      } catch {}
-      webRtcServiceRef.current = null;
-      try {
-        if (unsubscribe) unsubscribe();
-      } catch {}
-      try {
-        if (sync) sync.destroy();
-      } catch {}
-      syncServiceRef.current = null;
-    };
+      return () => {
+        isEffectActive = false;
+        if (rosterHeartbeat) {
+          clearInterval(rosterHeartbeat);
+          rosterHeartbeat = null;
+        }
+          try {
+            if (media) media.cleanup();
+          } catch {}
+          mediaServiceRef.current = null;
+          try {
+            if (webRtc) webRtc.destroy();
+          } catch {}
+          webRtcServiceRef.current = null;
+          try {
+            if (unsubscribe) unsubscribe();
+          } catch {}
+          try {
+            if (sync) sync.destroy();
+          } catch {}
+          syncServiceRef.current = null;
+        }
+      };
   }, [isOpen, roomCode, localParticipantId, userName, role]);
 
   // Toggle local microphone
