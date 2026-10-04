@@ -22,7 +22,8 @@ import {
   X,
   Compass,
   FileCheck2,
-  Users
+  Users,
+  Award
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -326,7 +327,52 @@ const LandingPageInner: React.FC<LandingPageProps> = ({
         onOpenPastQuestionsHub={handleLaunchPastQuestions}
       />
 
-      {/* 6. Testimonials & Accreditations */}
+      {/* 6. Meet the Founder & Lead Educator */}
+      <section className="py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-y border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:40px_40px] opacity-15 pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950/40 to-slate-900 border border-blue-500/30 p-8 sm:p-12 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left: Avatar / Badge representation */}
+            <div className="lg:col-span-5 flex flex-col items-center text-center space-y-4">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl bg-gradient-to-tr from-blue-600 via-cyan-500 to-purple-600 p-1 shadow-2xl shadow-blue-500/30 flex items-center justify-center">
+                <div className="w-full h-full bg-slate-950 rounded-2xl flex flex-col items-center justify-center text-white p-4 space-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-cyan-400 mb-1">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-mono text-cyan-300 font-bold uppercase">ISL Educator</span>
+                  <span className="text-[11px] font-semibold text-slate-300">B.Tech Civil Engr.</span>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-white">Engr. Kolawole Olawale Kayode</h3>
+                <p className="text-xs font-medium text-cyan-400">Technical Drawing Department, ISL</p>
+                <p className="text-[11px] text-slate-400">International School, University of Lagos (ISL)</p>
+              </div>
+            </div>
+
+            {/* Right: Bio & Credentials */}
+            <div className="lg:col-span-7 space-y-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-mono font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Meet the Lead Educator & Architect</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Engineering Precision Meets Classroom Pedagogy
+              </h2>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                "Conceived and engineered by Engr. Kolawole Olawale Kayode, a Civil Engineer (B.Tech) and seasoned Technical Drawing tutor at the International School, University of Lagos (ISL). Combining civil engineering structural drafting precision with years of active classroom pedagogy preparing students for NERDC, WAEC, and NECO examinations, Engr. Kayode developed DraftHands to bridge manual board drafting with modern computer-aided design (CAD)."
+              </p>
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 font-mono">
+                <strong>Byline:</strong> Conceived & Directed by Engr. Kolawole Olawale Kayode, B.Tech Civil Engr. • Technical Drawing Department, International School, University of Lagos (ISL).
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Testimonials & Accreditations */}
       <TestimonialsSection />
 
       {/* 8. Footer */}

@@ -220,16 +220,21 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
         </div>
 
         {/* Bottom Legal & Copyright Notice */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
-          <div>
-            © {new Date().getFullYear()} Drafthands Academy. Aligned with NERDC, WAEC, NECO & NBTE standards.
+        <div className="pt-8 space-y-3 border-t border-slate-900 mt-8">
+          <div className="text-cyan-400 font-mono text-[11px] text-center sm:text-left">
+            Conceived & Directed by Engr. Kolawole Olawale Kayode, B.Tech Civil Engr. • Technical Drawing Department, International School, University of Lagos (ISL).
           </div>
-          <div className="flex items-center gap-4">
-            <span>Privacy Policy</span>
-            <span>•</span>
-            <span>Terms of Service</span>
-            <span>•</span>
-            <span>ISO 128 Engineering Compliance</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
+            <div>
+              © {new Date().getFullYear()} Drafthands Academy. Aligned with NERDC, WAEC, NECO & NBTE standards.
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Privacy Policy</span>
+              <span>•</span>
+              <span>Terms of Service</span>
+              <span>•</span>
+              <span>ISO 128 Engineering Compliance</span>
+            </div>
           </div>
         </div>
       </div>
