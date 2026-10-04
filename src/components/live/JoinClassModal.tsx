@@ -48,7 +48,14 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
   const isStudent = userRole === 'STUDENT';
 
   const [activeTab, setActiveTab] = useState<'HOST' | 'JOIN'>(isStudent ? 'JOIN' : 'HOST');
-  const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [roomCodeInput, setRoomCodeInput] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('drafthands_active_host_room') || '';
+      } catch {}
+    }
+    return '';
+  });
   const [selectedTopicId, setSelectedTopicId] = useState(activeTopic.id);
   const [userName, setUserName] = useState(userProfile?.name || 'Technical Instructor');
   const [studentName, setStudentName] = useState(userProfile?.name || 'Technical Student');
@@ -133,6 +140,12 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
   const handleStartHost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userName.trim()) return;
+
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('drafthands_active_host_room', generatedRoomCode);
+      }
+    } catch {}
 
     if (mediaServiceRef.current) {
       mediaServiceRef.current.cleanup();
@@ -353,15 +366,26 @@ export const JoinClassModal: React.FC<JoinClassModalProps> = ({
             /* TAB 2: STUDENT JOIN FORM */
             <form onSubmit={handleJoinStudent} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Enter 6-Digit Class Code
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-300">
+                    Enter Class Code
+                  </label>
+                  {typeof window !== 'undefined' && localStorage.getItem('drafthands_active_host_room') && (
+                    <button
+                      type="button"
+                      onClick={() => setRoomCodeInput(localStorage.getItem('drafthands_active_host_room') || '')}
+                      className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                    >
+                      Use Active Room ({localStorage.getItem('drafthands_active_host_room')})
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
                   value={roomCodeInput}
                   onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. TD-SS2-8821"
+                  placeholder="e.g. TD-K3ZF"
                   className="w-full bg-slate-950 text-cyan-300 font-mono text-sm px-3 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-cyan-500 uppercase tracking-wider"
                 />
               </div>
