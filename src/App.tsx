@@ -1,4 +1,5 @@
 import React, { useState, Component, ErrorInfo, ReactNode, useRef, useEffect } from 'react';
+// Version: Drafthands Production v2.5 - All features active & synchronized
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ProcedurePanel } from './components/curriculum/ProcedurePanel';
