@@ -102,6 +102,9 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   const [boardTheme, setBoardTheme] = useState<'BLUE_GRID' | 'PURE_WHITE' | 'DARK_SLATE' | 'CLASSIC_WOOD'>('BLUE_GRID');
   const [instrumentColor, setInstrumentColor] = useState<'AMBER' | 'CYAN' | 'EMERALD' | 'SMOKE' | 'ROSE' | 'GOLD'>('AMBER');
   const [showThemeDrawer, setShowThemeDrawer] = useState<boolean>(false);
+  const [viewingTeacherBoard, setViewingTeacherBoard] = useState<boolean>(false);
+  const [studentDrawingPermitted, setStudentDrawingPermitted] = useState<boolean>(true);
+  const [isTeacherHost, setIsTeacherHost] = useState<boolean>(false);
 
   // AutoCAD Dynamic Input State (DYN / F12)
   const [dynamicInputEnabled, setDynamicInputEnabled] = useState<boolean>(true);
@@ -1819,7 +1822,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
   // Pointer Handlers for Canvas Drawing with Null Safety & Boundary Checks
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (readOnly) return;
+    if (readOnly || viewingTeacherBoard || (!isTeacherHost && !studentDrawingPermitted)) return;
     try {
       // Check if user clicked on a drafting instrument or its controls - prevent canvas drawing
       const target = e.target as Element | null;
@@ -2335,6 +2338,42 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           {/* Traditional Instrument Drawer Toggle (Visible in Board Mode) */}
           {workspaceMode === 'TRADITIONAL_BOARD' && (
             <div className="flex items-center gap-2">
+              {/* Teacher / Student Board View & Permission Switcher */}
+              <div className="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700 gap-1">
+                <button
+                  onClick={() => setViewingTeacherBoard(false)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    !viewingTeacherBoard ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="View and draw on your own board"
+                >
+                  My Board
+                </button>
+                <button
+                  onClick={() => setViewingTeacherBoard(true)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    viewingTeacherBoard ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="View teacher's board live (Drawing tools locked unless permitted)"
+                >
+                  Teacher's Board
+                </button>
+              </div>
+
+              {isTeacherHost && (
+                <button
+                  onClick={() => setStudentDrawingPermitted(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    studentDrawingPermitted 
+                      ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/50' 
+                      : 'bg-rose-600/20 text-rose-300 border-rose-500/50'
+                  }`}
+                  title="Toggle student drawing permission"
+                >
+                  {studentDrawingPermitted ? '✓ Students Can Draw' : '🔒 Student Drawing Locked'}
+                </button>
+              )}
+
               {/* Board Theme & Instrument Colors Switcher */}
               <div className="relative">
                 <button
@@ -2563,6 +2602,17 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             : 'bg-[#0f172a]' // Engineering CAD Model Space Canvas
         }`}
       >
+        {(viewingTeacherBoard || (!isTeacherHost && !studentDrawingPermitted)) && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40 bg-purple-950/95 border border-purple-500/70 backdrop-blur px-5 py-2.5 rounded-2xl text-xs font-semibold text-purple-200 shadow-2xl flex items-center gap-2.5 pointer-events-none">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping"></span>
+            <span>
+              {viewingTeacherBoard 
+                ? "🔒 Viewing Teacher's Live Board (Drawing tools are locked)" 
+                : "🔒 Drawing tools are inactive until permitted by the teacher/host"}
+            </span>
+          </div>
+        )}
+
         {activeTool === 'LINE' && isDrawing && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl bg-slate-900/95 border border-cyan-500/50 shadow-2xl backdrop-blur-md text-xs font-mono text-cyan-300 flex items-center gap-2 pointer-events-none animate-pulse">
             <span>📐 Continuous Line Mode: Click to anchor segment & redirect endpoint. Double-click to finish.</span>
