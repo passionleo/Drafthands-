@@ -12,7 +12,8 @@ import {
   FileText,
   AlertTriangle,
   ChevronRight,
-  Send
+  Send,
+  KeyRound
 } from 'lucide-react';
 import { DrawingTopic } from '../../types/curriculum';
 import { TeacherAssignment, StudentSubmission } from '../../types/assignments';
@@ -24,19 +25,22 @@ interface StudentAssignmentsModalProps {
   onClose: () => void;
   topics: DrawingTopic[];
   onOpenWhiteboardForAssignment: (assignment: TeacherAssignment, mode: 'TRADITIONAL_BOARD' | 'CAD_WORKSTATION') => void;
+  onOpenLiveClassFromStudent?: (roomCode: string) => void;
 }
 
 export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = ({
   isOpen,
   onClose,
   topics,
-  onOpenWhiteboardForAssignment
+  onOpenWhiteboardForAssignment,
+  onOpenLiveClassFromStudent
 }) => {
   if (!isOpen) return null;
 
   const { userProfile, subscription } = useSubscription();
   const isAuthenticatedUser = !!userProfile?.isAuthenticated || !!subscription?.isAuthenticated;
   const [isSandboxMode, setIsSandboxMode] = useState<boolean>(!isAuthenticatedUser);
+  const [studentRoomCodeInput, setStudentRoomCodeInput] = useState<string>('');
 
   const [assignments] = useState<TeacherAssignment[]>(() => isSandboxMode ? INITIAL_TEACHER_ASSIGNMENTS : []);
   const [submissions] = useState<StudentSubmission[]>(() => isSandboxMode ? INITIAL_STUDENT_SUBMISSIONS : []);
@@ -75,7 +79,42 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
         {/* Content Body */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden bg-slate-900">
           {/* Assignment List (5 Cols) */}
-          <div className="md:col-span-5 border-r border-slate-800 p-4 overflow-y-auto custom-scrollbar space-y-3 bg-slate-950/60">
+          <div className="md:col-span-5 border-r border-slate-800 p-4 overflow-y-auto custom-scrollbar space-y-4 bg-slate-950/60">
+            {/* Join Live Classroom Card */}
+            <div className="p-4 bg-gradient-to-br from-purple-950/40 to-slate-900 border border-purple-500/30 rounded-xl space-y-2.5 shadow-lg">
+              <div className="flex items-center gap-2 text-purple-300 text-xs font-bold">
+                <KeyRound className="w-4 h-4" />
+                <span>Join Live Virtual Classroom</span>
+              </div>
+              <p className="text-[11px] text-slate-400">Enter teacher's room code or host ID to join live class:</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. TD-A4X9 or TCH-..."
+                  value={studentRoomCodeInput}
+                  onChange={(e) => setStudentRoomCodeInput(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-mono uppercase"
+                />
+                <button
+                  onClick={() => {
+                    if (!studentRoomCodeInput.trim()) {
+                      alert('Please enter a valid room code.');
+                      return;
+                    }
+                    if (onOpenLiveClassFromStudent) {
+                      onOpenLiveClassFromStudent(studentRoomCodeInput.trim());
+                    } else {
+                      alert(`Joining live session with room code: ${studentRoomCodeInput.trim()}`);
+                    }
+                  }}
+                  className="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Join</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
               Assigned Tasks ({assignments.length})
             </h3>

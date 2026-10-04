@@ -497,6 +497,10 @@ export default function App() {
                 setIsStudentAssignmentsOpen(false);
                 setIsWhiteboardOpen(true);
               }}
+              onOpenLiveClassFromStudent={(roomCode) => {
+                setIsStudentAssignmentsOpen(false);
+                setIsLiveClassOpen(true);
+              }}
             />
           )}
 

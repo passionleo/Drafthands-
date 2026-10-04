@@ -883,16 +883,25 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
               <p className="text-xs text-slate-300 leading-relaxed">
                 Start a 2-way live video and audio session with real-time synchronized CAD whiteboard. Students join with your unique room code.
               </p>
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 font-mono">
-                Teacher Host ID: <strong className="text-purple-300">TCH-{userProfile?.name?.slice(0, 4) || 'DAMI'}-772</strong>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 font-mono flex items-center justify-between">
+                <span>Teacher Host ID: <strong className="text-purple-300">TCH-{userProfile?.name?.slice(0, 4) || 'DAMI'}-772</strong></span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(`TCH-${userProfile?.name?.slice(0, 4) || 'DAMI'}-772`);
+                    alert('Teacher Host ID copied to clipboard!');
+                  }}
+                  className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded hover:bg-purple-500/30 transition-colors font-sans"
+                >
+                  Copy ID
+                </button>
               </div>
               {onOpenLiveClass && (
                 <button
                   onClick={onOpenLiveClass}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer animate-pulse"
                 >
-                  <Tv className="w-4 h-4" />
-                  <span>Launch Live Virtual Classroom</span>
+                  <Tv className="w-5 h-5" />
+                  <span>Start & Launch Live Virtual Classroom</span>
                 </button>
               )}
             </div>
