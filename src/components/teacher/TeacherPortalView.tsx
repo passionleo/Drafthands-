@@ -921,10 +921,10 @@ ${allMaterials.map(m => `- ${m}`).join('\n')}
               {onOpenProjectionMode && (
                 <button
                   onClick={onOpenProjectionMode}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-lg shadow-amber-600/30 flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-600 via-orange-600 to-yellow-600 hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-amber-600/30 flex items-center justify-center gap-2.5 transition-all cursor-pointer animate-pulse"
                 >
-                  <Tv className="w-4 h-4" />
-                  <span>Open Smart Board Projection</span>
+                  <Tv className="w-5 h-5" />
+                  <span>Start & Launch Smart Board Projector</span>
                 </button>
               )}
             </div>

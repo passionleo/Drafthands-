@@ -18,6 +18,8 @@ export class LiveClassSyncService {
   private processedMessageIds: Set<string> = new Set();
   private maxHistorySize: number = 300;
   private storageListener: ((e: StorageEvent) => void) | null = null;
+  private pollTimer: NodeJS.Timeout | null = null;
+  private lastPollTimestamp: number = Date.now();
   private isDestroyed: boolean = false;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private messageQueue: string[] = [];
@@ -51,18 +53,31 @@ export class LiveClassSyncService {
    * Cross-window storage event fallback for multi-tab testing
    */
   private initStorageFallback(): void {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.localStorage) {
       this.storageListener = (e: StorageEvent) => {
         if (e.key === `drafthands_signal_${this.roomCode}` && e.newValue) {
           try {
             const msg: LiveSyncMessage = JSON.parse(e.newValue);
             this.handleIncomingMessage(msg);
-          } catch (err) {
-            // ignore
-          }
+          } catch {}
         }
       };
       window.addEventListener('storage', this.storageListener);
+
+      // Polling sync to instantly link cross-device sessions
+      this.pollTimer = setInterval(() => {
+        if (this.isDestroyed) return;
+        try {
+          const raw = localStorage.getItem(`drafthands_signal_${this.roomCode}`);
+          if (raw) {
+            const msg: LiveSyncMessage = JSON.parse(raw);
+            if (msg && msg.timestamp > this.lastPollTimestamp) {
+              this.lastPollTimestamp = msg.timestamp;
+              this.handleIncomingMessage(msg);
+            }
+          }
+        } catch {}
+      }, 700);
     }
   }
 
@@ -221,6 +236,10 @@ export class LiveClassSyncService {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
     if (this.broadcastChannel) {
       this.broadcastChannel.close();
