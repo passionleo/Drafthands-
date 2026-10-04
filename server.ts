@@ -236,6 +236,45 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Cross-Device Live Classroom Signaling Store & Endpoints
+const liveRoomMessages: Record<string, any[]> = {};
+
+app.post("/api/live-sync/send", (req, res) => {
+  try {
+    const { roomCode, message } = req.body || {};
+    if (!roomCode || !message) {
+      return res.status(400).json({ error: "Missing roomCode or message" });
+    }
+    const cleanRoom = String(roomCode).trim().toUpperCase();
+    if (!liveRoomMessages[cleanRoom]) {
+      liveRoomMessages[cleanRoom] = [];
+    }
+    liveRoomMessages[cleanRoom].push({
+      ...message,
+      serverTimestamp: Date.now()
+    });
+    if (liveRoomMessages[cleanRoom].length > 150) {
+      liveRoomMessages[cleanRoom] = liveRoomMessages[cleanRoom].slice(-150);
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/live-sync/poll/:roomCode", (req, res) => {
+  try {
+    const roomCode = req.params.roomCode;
+    const since = Number(req.query.since || 0);
+    const cleanRoom = String(roomCode).trim().toUpperCase();
+    const messages = liveRoomMessages[cleanRoom] || [];
+    const newMessages = messages.filter(m => (m.timestamp || m.serverTimestamp || 0) > since);
+    return res.json({ success: true, messages: newMessages });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 async function startServer() {
   const httpServer = http.createServer(app);
 

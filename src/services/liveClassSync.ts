@@ -64,16 +64,20 @@ export class LiveClassSyncService {
       };
       window.addEventListener('storage', this.storageListener);
 
-      // Polling sync to instantly link cross-device sessions
-      this.pollTimer = setInterval(() => {
+      // Server-backed polling for cross-device linking between tablet and phone
+      this.pollTimer = setInterval(async () => {
         if (this.isDestroyed) return;
         try {
-          const raw = localStorage.getItem(`drafthands_signal_${this.roomCode}`);
-          if (raw) {
-            const msg: LiveSyncMessage = JSON.parse(raw);
-            if (msg && msg.timestamp > this.lastPollTimestamp) {
-              this.lastPollTimestamp = msg.timestamp;
-              this.handleIncomingMessage(msg);
+          const res = await fetch(`/api/live-sync/poll/${this.roomCode}?since=${this.lastPollTimestamp}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.messages)) {
+              for (const msg of data.messages) {
+                if (msg && msg.timestamp > this.lastPollTimestamp) {
+                  this.lastPollTimestamp = msg.timestamp;
+                  this.handleIncomingMessage(msg);
+                }
+              }
             }
           }
         } catch {}
@@ -194,13 +198,21 @@ export class LiveClassSyncService {
       }
     }
 
-    // 2. Post to StorageEvent fallback
+    // 2. Post to StorageEvent fallback & Server API
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         localStorage.setItem(`drafthands_signal_${this.roomCode}`, JSON.stringify(msg));
-      } catch (err) {
-        // ignore quota errors
-      }
+      } catch {}
+    }
+
+    if (typeof window !== 'undefined' && window.fetch) {
+      try {
+        fetch('/api/live-sync/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomCode: this.roomCode, message: msg })
+        }).catch(() => {});
+      } catch {}
     }
 
     // 3. Send over WebSocket if connected, otherwise buffer in queue

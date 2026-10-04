@@ -540,8 +540,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkFeatureAccess = (featureKey: '3D_VIEWPORT' | 'EXAM_ARCHIVE_DOWNLOAD' | 'PROJECTION_MODE' | 'TEACHER_TOOLS' | 'ADMIN_TOOLS') => {
-    // Master admin bypass or owner permit allows all features
-    if (isMasterAdmin || isPermittedByOwner) {
+    // Master admin bypass, owner email, or owner permit allows all features
+    if (isMasterAdmin || isOwnerOrMasterEmail(userProfile?.email) || isPermittedByOwner) {
       return { isAllowed: true };
     }
 
