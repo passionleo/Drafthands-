@@ -125,7 +125,9 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
   const [isHandRaised, setIsHandRaised] = useState<boolean>(false);
   const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
   const [isLaserActive, setIsLaserActive] = useState<boolean>(false);
-  const [isRecording] = useState<boolean>(true);
+  const [isRecording, setIsRecording] = useState<boolean>(true);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
   const [drawingPermissionMode, setDrawingPermissionMode] = useState<DrawingPermissionMode>('TEACHER_ONLY');
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
@@ -549,6 +551,68 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
         }
       };
   }, [isOpen, roomCode, localParticipantId, userName, role]);
+
+  // MediaRecorder automatic session recording and saving to device
+  useEffect(() => {
+    if (!isOpen) return;
+    recordedChunksRef.current = [];
+    try {
+      const canvasEl = document.querySelector('canvas');
+      let streamToRecord: MediaStream | null = null;
+      if (canvasEl && (canvasEl as any).captureStream) {
+        streamToRecord = (canvasEl as any).captureStream(30);
+      } else if (localStream) {
+        streamToRecord = localStream;
+      }
+
+      if (streamToRecord && typeof MediaRecorder !== 'undefined') {
+        const recorder = new MediaRecorder(streamToRecord, { mimeType: 'video/webm;codecs=vp9' });
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunksRef.current.push(e.data);
+          }
+        };
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          if (blob.size > 0) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `drafthands_live_class_${roomCode}_${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 1000);
+          }
+        };
+        recorder.start(1000);
+        mediaRecorderRef.current = recorder;
+        setIsRecording(true);
+      }
+    } catch (e) {
+      console.warn('[LiveClassroom] MediaRecorder start error:', e);
+    }
+
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {}
+      }
+    };
+  }, [isOpen, roomCode, localStream]);
+
+  const handleEndClass = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
+    }
+    onClose();
+  };
 
   // Toggle local microphone
   const handleToggleAudio = () => {
@@ -1299,7 +1363,7 @@ const LiveClassroomModalInner: React.FC<LiveClassroomModalProps> = ({
           setIsChatOpen(prev => !prev);
           setUnreadChatCount(0);
         }}
-        onEndOrLeaveClass={onClose}
+        onEndOrLeaveClass={handleEndClass}
         onToggleWhiteboardOverlay={() => {
           setLayoutMode(prev => prev === 'WHITEBOARD_OVERLAY' ? 'SPLIT_EQUAL' : 'WHITEBOARD_OVERLAY');
         }}
