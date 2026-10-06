@@ -13,8 +13,6 @@ import {
   Layers,
   GraduationCap
 } from 'lucide-react';
-import { useSubscription } from '../../context/SubscriptionContext';
-import { PastQuestionsPortal } from '../archive/PastQuestionsPortal';
 
 interface ExamArchiveSectionProps {
   onLaunchTopic: (topicId: string) => void;
@@ -27,8 +25,6 @@ export const ExamArchiveSection: React.FC<ExamArchiveSectionProps> = ({
   onOpenAuth,
   onOpenPastQuestionsHub
 }) => {
-  const { isSubscribed, openPaywall } = useSubscription();
-  const userTier: 'free' | 'pro' = isSubscribed ? 'pro' : 'free';
   const examCategories = [
     {
       title: 'WAEC WASSCE (May/June & Nov/Dec)',
@@ -232,12 +228,30 @@ export const ExamArchiveSection: React.FC<ExamArchiveSectionProps> = ({
           </button>
         </div>
 
-        {/* Tier-Gated Verified Examination Archive Portal */}
-        <div className="mt-12 sm:mt-16">
-          <PastQuestionsPortal 
-            userTier={userTier} 
-            onUpgradeRequest={() => openPaywall()}
-          />
+        {/* Tier-Gated Verified Examination Archive Portal Preview Card */}
+        <div className="mt-12 sm:mt-16 rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950/40 to-slate-900 border border-cyan-500/30 p-8 sm:p-12 shadow-2xl text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold border border-cyan-500/30">
+            <Award className="w-3.5 h-3.5" />
+            <span>Interactive Exam Workspace & CBT Practice</span>
+          </div>
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Access Complete 10-Year WAEC, NECO & NABTEB Papers (2014–2024)
+          </h3>
+          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Choose your exam body, year, and paper type. Take timed CBT practice exams, view step-by-step vector construction solutions, and earn authenticated Certificates of Proficiency signed by Engr. Kolawole O. Kayode (ISL).
+          </p>
+
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                if (onOpenPastQuestionsHub) onOpenPastQuestionsHub();
+              }}
+              className="px-8 py-4 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-cyan-600/30 flex items-center justify-center gap-3 mx-auto transition-all cursor-pointer"
+            >
+              <span>Launch 10-Year Exam Archive & CBT Hub</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
       </div>
