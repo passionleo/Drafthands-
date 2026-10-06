@@ -248,34 +248,71 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
             </div>
 
             {accuracyPct >= 50 ? (
-              <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 space-y-3">
-                <div className="flex items-center justify-center gap-2 font-bold font-mono text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span>Congratulations! Passed with Distinction</span>
+              isFullAccess ? (
+                <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 space-y-3">
+                  <div className="flex items-center justify-center gap-2 font-bold font-mono text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <span>Congratulations! Passed with Distinction</span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    You have successfully passed the {examBody} {year} {paperTitle} examination! Claim your official signed Certificate of Proficiency below.
+                  </p>
+                  <div className="pt-2">
+                    <label className="block text-xs font-semibold text-slate-300 mb-1 text-left">
+                      Your Full Name for Certificate:
+                    </label>
+                    <input
+                      type="text"
+                      value={studentNameInput}
+                      onChange={(e) => setStudentNameInput(e.target.value)}
+                      className="w-full bg-slate-950 text-white text-xs px-3 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-cyan-500 mb-3"
+                      placeholder="e.g. Adebayo Tunde"
+                    />
+                    <button
+                      onClick={() => setShowCertificate(true)}
+                      className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>View & Download Official Signed Certificate</span>
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-300">
-                  You have successfully passed the {examBody} {year} {paperTitle} examination! Claim your official Certificate of Proficiency below.
-                </p>
-                <div className="pt-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 text-left">
-                    Your Full Name for Certificate:
-                  </label>
-                  <input
-                    type="text"
-                    value={studentNameInput}
-                    onChange={(e) => setStudentNameInput(e.target.value)}
-                    className="w-full bg-slate-950 text-white text-xs px-3 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-cyan-500 mb-3"
-                    placeholder="e.g. Adebayo Tunde"
-                  />
+              ) : (
+                <div className="p-5 rounded-2xl bg-amber-950/50 border border-amber-500/50 text-amber-300 space-y-3">
+                  <div className="flex items-center justify-center gap-2 font-bold font-mono text-sm">
+                    <Lock className="w-5 h-5 text-amber-400" />
+                    <span>Exam Passed! Pro Pass Required to Claim Certificate</span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    You scored {accuracyPct}% and passed! Official signed Certificates of Proficiency endorsed by Engr. Kolawole O. Kayode (B.Tech ISL) are exclusively available for Pro registered students.
+                  </p>
                   <button
-                    onClick={() => setShowCertificate(true)}
+                    onClick={() => {
+                      if (onOpenPaywall) onOpenPaywall();
+                      else {
+                        const plan = SUBSCRIPTION_PLANS['STUDENT_SESSION'];
+                        payWithPaystack({
+                          email: 'student@drafthands.edu.ng',
+                          amount: plan.priceNGN,
+                          planType: 'STUDENT_SESSION',
+                          planName: 'WASSCE & NECO 10-Year Full Archive Pass',
+                          userRole: 'STUDENT',
+                          customerName: 'Drafthands Scholar',
+                          onSuccess: (res) => {
+                            subscribeToPlan('STUDENT_SESSION', res.reference);
+                          },
+                          onClose: () => {},
+                          onError: () => {}
+                        });
+                      }
+                    }}
                     className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
-                    <Award className="w-4 h-4" />
-                    <span>View & Download Certificate of Proficiency</span>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Unlock Pro Pass to Claim Certificate</span>
                   </button>
                 </div>
-              </div>
+              )
             ) : (
               <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/50 text-amber-300 space-y-2">
                 <p className="text-xs">

@@ -28,6 +28,7 @@ import { Paper23DrawingEngine } from './Paper23DrawingEngine';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payWithPaystack, formatNaira } from '../../utils/paystack';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { CertificationPromoBanner } from '../archive/CertificationPromoBanner';
 
 interface PastQuestionsHubProps {
   onBackToStudio?: () => void;
@@ -172,6 +173,14 @@ export const PastQuestionsHub: React.FC<PastQuestionsHubProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Certification Promo Banner for online clients */}
+      <div className="p-4 bg-slate-950 shrink-0">
+        <CertificationPromoBanner
+          isPro={isFullAccess}
+          onUnlockPro={handlePaystackQuickUpgrade}
+        />
+      </div>
 
       {/* 2. FILTERS & NAVIGATION CONTROL BAR */}
       <div className="px-4 py-3 bg-slate-900/80 border-b border-slate-800/80 flex flex-col gap-3 shrink-0">
