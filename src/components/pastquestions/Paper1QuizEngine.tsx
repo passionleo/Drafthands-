@@ -19,6 +19,7 @@ import { MCQuestion } from '../../types/pastQuestions';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { payWithPaystack, formatNaira } from '../../utils/paystack';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { CertificateModal } from '../archive/CertificateModal';
 
 interface Paper1QuizEngineProps {
   questions: MCQuestion[];
@@ -47,6 +48,8 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
+  const [showCertificate, setShowCertificate] = useState<boolean>(false);
+  const [studentNameInput, setStudentNameInput] = useState<string>('Drafthands Scholar');
 
   // Timer countdown
   useEffect(() => {
@@ -209,6 +212,16 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
             <span className="text-cyan-400 font-semibold">{accuracyPct}%</span>
           </div>
 
+          {/* Submit Exam Button */}
+          <button
+            onClick={() => setIsCompleted(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Submit Exam & Get Grade / Certificate"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Submit Exam</span>
+          </button>
+
           {/* Reset Button */}
           <button
             onClick={handleResetQuiz}
@@ -220,9 +233,75 @@ export const Paper1QuizEngine: React.FC<Paper1QuizEngineProps> = ({
         </div>
       </div>
 
-      {/* Main Body: Question Display or Locked Paywall Card */}
+      {/* Main Body: Question Display or Locked Paywall Card or Completed Screen */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
-        {isLocked ? (
+        {isCompleted ? (
+          <div className="max-w-2xl mx-auto p-8 bg-slate-900 border border-slate-800 rounded-2xl text-center space-y-6 my-auto shadow-2xl animate-in fade-in duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 mx-auto flex items-center justify-center text-slate-950 shadow-xl">
+              <Award className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-white">Exam Attempt Completed!</h3>
+              <p className="text-sm text-slate-300">
+                You scored <strong className="text-cyan-400 font-mono text-lg">{accuracyPct}%</strong> ({correctCount} out of {questions.length} correct).
+              </p>
+            </div>
+
+            {accuracyPct >= 50 ? (
+              <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 space-y-3">
+                <div className="flex items-center justify-center gap-2 font-bold font-mono text-sm">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <span>Congratulations! Passed with Distinction</span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  You have successfully passed the {examBody} {year} {paperTitle} examination! Claim your official Certificate of Proficiency below.
+                </p>
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1 text-left">
+                    Your Full Name for Certificate:
+                  </label>
+                  <input
+                    type="text"
+                    value={studentNameInput}
+                    onChange={(e) => setStudentNameInput(e.target.value)}
+                    className="w-full bg-slate-950 text-white text-xs px-3 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-cyan-500 mb-3"
+                    placeholder="e.g. Adebayo Tunde"
+                  />
+                  <button
+                    onClick={() => setShowCertificate(true)}
+                    className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>View & Download Certificate of Proficiency</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/50 text-amber-300 space-y-2">
+                <p className="text-xs">
+                  You scored below 50%. Review the official marking schemes and practice again to earn your Certificate of Proficiency!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleResetQuiz}
+              className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer"
+            >
+              Retake Practice Exam
+            </button>
+
+            <CertificateModal
+              isOpen={showCertificate}
+              onClose={() => setShowCertificate(false)}
+              studentName={studentNameInput || 'Drafthands Scholar'}
+              examTitle={paperTitle}
+              scorePercentage={accuracyPct}
+              examBody={examBody}
+              year={year}
+            />
+          </div>
+        ) : isLocked ? (
           /* PAYWALL GATING CARD FOR QUESTIONS 3+ */
           <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-b from-slate-950 to-slate-900 border border-amber-500/40 text-center space-y-6 shadow-2xl animate-in fade-in duration-300">
             <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
