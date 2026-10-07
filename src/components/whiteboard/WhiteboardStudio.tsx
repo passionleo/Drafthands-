@@ -413,6 +413,40 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [instruments, activeInstrumentId]);
 
+  // AutoCAD God Mode Global Keyboard Shortcuts (Undo, Redo, Escape)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || (activeEl as any).isContentEditable)) {
+        return;
+      }
+
+      // Ctrl+Z or Cmd+Z -> Undo
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      }
+
+      // Ctrl+Y -> Redo
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+
+      // Escape -> Select Tool
+      if (e.key === 'Escape') {
+        setActiveTool('SELECT');
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [history, redoStack, elements]);
+
   // Helper to project point to line segment
   const projectToSegment = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
     const dx = x2 - x1;
