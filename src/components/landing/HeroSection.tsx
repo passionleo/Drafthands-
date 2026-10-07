@@ -46,20 +46,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           
           {/* Left Column: Headline, Description & Dual CTAs */}
           <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
-            {/* Nigeria Badge & World Teachers' Day Banner */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-xl">
-                <div className="flex items-center gap-1 bg-emerald-900 px-2.5 py-1 rounded-xl text-white font-mono text-[11px] shadow-sm">
-                  <span className="inline-block w-2.5 h-2 bg-emerald-500 rounded-xs"></span>
-                  <span className="inline-block w-2.5 h-2 bg-white rounded-xs"></span>
-                  <span className="inline-block w-2.5 h-2 bg-emerald-500 rounded-xs"></span>
-                  <span className="font-extrabold text-emerald-300">🇳🇬 NIGERIA @ 66</span>
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border border-blue-500/50 text-blue-200 text-xs font-bold shadow-xl">
-                <span className="px-2 py-0.5 rounded-lg bg-blue-600 text-white font-mono text-[10px] uppercase">Oct 5</span>
-                <span>World Teachers' Day • Theme: <strong className="text-cyan-300">Standing by the teacher</strong></span>
+            {/* Proudly Nigerian Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border border-emerald-500/50 text-emerald-200 text-xs font-bold shadow-xl mx-auto lg:mx-0">
+              <div className="flex items-center gap-1.5 bg-emerald-900 px-3 py-1 rounded-xl text-white font-mono text-xs shadow-sm">
+                <span className="inline-block w-3 h-2.5 bg-emerald-500 rounded-xs"></span>
+                <span className="inline-block w-3 h-2.5 bg-white rounded-xs"></span>
+                <span className="inline-block w-3 h-2.5 bg-emerald-500 rounded-xs"></span>
+                <span className="font-extrabold text-emerald-300 ml-1">🇳🇬 PROUDLY NIGERIAN</span>
               </div>
             </div>
 
