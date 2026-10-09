@@ -29,6 +29,8 @@ import { GoogleClassroomSyncModal } from './components/classroom/GoogleClassroom
 
 import { allCurriculumTopics, getTopicById, getTopicsByTier } from './data/curriculumData';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
+import { AppThemeProvider } from './context/AppThemeContext';
+import { GlobalThemeSwitcher } from './components/common/GlobalThemeSwitcher';
 import { CurriculumTier, DrawingTopic, InstrumentState, ProceduralStep } from './types/curriculum';
 import { GridMode } from './components/drafting/ToolDock';
 
@@ -220,9 +222,10 @@ export default function App() {
   };
 
   return (
-    <SubscriptionProvider>
-      <ErrorBoundary onReset={handleReturnHome}>
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
+    <AppThemeProvider>
+      <SubscriptionProvider>
+        <ErrorBoundary onReset={handleReturnHome}>
+          <div className="min-h-screen flex flex-col font-sans select-none">
           {/* 1. LANDING VIEW */}
           {currentView === 'LANDING' && (
             <LandingPage
@@ -558,8 +561,10 @@ export default function App() {
 
           {/* Global Paywall Modal */}
           <GlobalPaywallWrapper />
+          <GlobalThemeSwitcher />
         </div>
       </ErrorBoundary>
     </SubscriptionProvider>
+    </AppThemeProvider>
   );
 }
