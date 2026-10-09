@@ -2792,27 +2792,62 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
               if (el.type === 'DIMENSION') {
                 if (!Number.isFinite(el.x1) || !Number.isFinite(el.y1) || !Number.isFinite(el.x2) || !Number.isFinite(el.y2)) return null;
+                const x1 = el.x1;
+                const y1 = el.y1;
+                const x2 = el.x2;
+                const y2 = el.y2;
+                
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+                if (len === 0) return null;
+                const ux = dx / len;
+                const uy = dy / len;
+                const nx = -uy;
+                const ny = ux;
+                
+                // ISO / AutoCAD standard offset allowance (24px away from object line)
+                const offset = 24;
+                const ox1 = x1 + nx * offset;
+                const oy1 = y1 + ny * offset;
+                const ox2 = x2 + nx * offset;
+                const oy2 = y2 + ny * offset;
+
+                // Extension line overshoot
+                const overshoot = 6;
+                const ex1 = x1 + nx * (offset + overshoot);
+                const ey1 = y1 + ny * (offset + overshoot);
+                const ex2 = x2 + nx * (offset + overshoot);
+                const ey2 = y2 + ny * (offset + overshoot);
+
                 return (
-                  <g key={el.id}>
+                  <g key={el.id} className="cad-dimension">
+                    {/* Extension Line 1 */}
+                    <line x1={x1} y1={y1} x2={ex1} y2={ey1} stroke="#10b981" strokeWidth="0.8" opacity="0.85" />
+                    {/* Extension Line 2 */}
+                    <line x1={x2} y1={y2} x2={ex2} y2={ey2} stroke="#10b981" strokeWidth="0.8" opacity="0.85" />
+                    {/* Dimension Line with Arrowheads */}
                     <line
-                      x1={el.x1}
-                      y1={el.y1}
-                      x2={el.x2}
-                      y2={el.y2}
+                      x1={ox1}
+                      y1={oy1}
+                      x2={ox2}
+                      y2={oy2}
                       stroke="#10b981"
                       strokeWidth="1.2"
                       markerStart="url(#wb-arrow-start)"
                       markerEnd="url(#wb-arrow-end)"
                     />
+                    {/* Dimension Text */}
                     <text
-                      x={((el.x1 || 0) + (el.x2 || 0)) / 2}
-                      y={((el.y1 || 0) + (el.y2 || 0)) / 2 - 6}
+                      x={(ox1 + ox2) / 2}
+                      y={(oy1 + oy2) / 2 - 6}
                       fill="#10b981"
                       fontSize="11"
                       fontFamily="monospace"
                       textAnchor="middle"
+                      fontWeight="bold"
                     >
-                      {el.dimensionText || ''}
+                      {el.dimensionText || `${Math.round(len)} mm`}
                     </text>
                   </g>
                 );

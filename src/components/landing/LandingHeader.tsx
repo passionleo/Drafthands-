@@ -51,15 +51,10 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 transition-all">
-      {/* Nigeria Independence Day Banner (Nigeria at 66) */}
-      <div className="w-full bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-950 border-b border-emerald-600/40 text-emerald-100 py-2 px-4 text-center text-xs font-semibold flex flex-wrap items-center justify-center gap-2 shadow-sm">
-        <span className="flex items-center gap-1.5 bg-emerald-900/70 px-2.5 py-0.5 rounded-full border border-emerald-400/50 text-white font-mono text-[11px] shadow-sm">
-          <span className="inline-block w-3 h-2.5 bg-emerald-600 rounded-xs"></span>
-          <span className="inline-block w-3 h-2.5 bg-white rounded-xs"></span>
-          <span className="inline-block w-3 h-2.5 bg-emerald-600 rounded-xs"></span>
-          <span className="font-extrabold text-emerald-300">NIGERIA @ 66</span>
-        </span>
-        <span>🇳🇬 Happy Independence Day Nigeria! Celebrating 66 Years of Nationhood, Technology, & Engineering Excellence (1960–2026).</span>
+      {/* Academic Accreditation Banner */}
+      <div className="w-full bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border-b border-cyan-500/30 text-cyan-200 py-1.5 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>NERDC & NBTE Accredited Technical Drawing Academy • SS1 to Higher Institution</span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
