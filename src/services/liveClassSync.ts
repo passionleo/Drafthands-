@@ -68,15 +68,28 @@ export class LiveClassSyncService {
       this.pollTimer = setInterval(async () => {
         if (this.isDestroyed) return;
         try {
-          const res = await fetch(`/api/live-sync/poll/${this.roomCode}?since=${this.lastPollTimestamp}`);
+          const res = await fetch(`/api/live-sync/poll/${this.roomCode}?since=${this.lastPollTimestamp}&userId=${this.userId}&userName=${encodeURIComponent(this.userName)}`);
           if (res.ok) {
             const data = await res.json();
-            if (data && data.success && Array.isArray(data.messages)) {
-              for (const msg of data.messages) {
-                if (msg && msg.timestamp > this.lastPollTimestamp) {
-                  this.lastPollTimestamp = msg.timestamp;
-                  this.handleIncomingMessage(msg);
+            if (data && data.success) {
+              if (Array.isArray(data.messages)) {
+                for (const msg of data.messages) {
+                  if (msg && msg.timestamp > this.lastPollTimestamp) {
+                    this.lastPollTimestamp = msg.timestamp;
+                    this.handleIncomingMessage(msg);
+                  }
                 }
+              }
+              if (Array.isArray(data.participants) && data.participants.length > 0) {
+                this.handleIncomingMessage({
+                  id: `server-roster-${Date.now()}`,
+                  roomCode: this.roomCode,
+                  type: 'PARTICIPANT_ROSTER_SYNC',
+                  senderId: 'server',
+                  senderName: 'Server',
+                  timestamp: Date.now(),
+                  payload: { participants: data.participants }
+                });
               }
             }
           }

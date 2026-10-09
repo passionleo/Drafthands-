@@ -238,6 +238,7 @@ app.get("/api/health", (_req, res) => {
 
 // Cross-Device Live Classroom Signaling Store & Endpoints
 const liveRoomMessages: Record<string, any[]> = {};
+const liveRoomParticipants: Record<string, Record<string, { userId: string; userName: string; lastSeen: number }>> = {};
 
 app.post("/api/live-sync/send", (req, res) => {
   try {
@@ -253,9 +254,23 @@ app.post("/api/live-sync/send", (req, res) => {
       ...message,
       serverTimestamp: Date.now()
     });
-    if (liveRoomMessages[cleanRoom].length > 150) {
-      liveRoomMessages[cleanRoom] = liveRoomMessages[cleanRoom].slice(-150);
+    if (liveRoomMessages[cleanRoom].length > 200) {
+      liveRoomMessages[cleanRoom] = liveRoomMessages[cleanRoom].slice(-200);
     }
+
+    if (message.senderId || message.userId || message.payload?.userId) {
+      const uid = message.senderId || message.userId || message.payload?.userId;
+      const uname = message.senderName || message.userName || message.payload?.userName || 'Participant';
+      if (!liveRoomParticipants[cleanRoom]) {
+        liveRoomParticipants[cleanRoom] = {};
+      }
+      liveRoomParticipants[cleanRoom][uid] = {
+        userId: uid,
+        userName: uname,
+        lastSeen: Date.now()
+      };
+    }
+
     return res.json({ success: true });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
@@ -266,10 +281,35 @@ app.get("/api/live-sync/poll/:roomCode", (req, res) => {
   try {
     const roomCode = req.params.roomCode;
     const since = Number(req.query.since || 0);
+    const userId = String(req.query.userId || '');
+    const userName = String(req.query.userName || '');
     const cleanRoom = String(roomCode).trim().toUpperCase();
+
+    if (userId) {
+      if (!liveRoomParticipants[cleanRoom]) {
+        liveRoomParticipants[cleanRoom] = {};
+      }
+      liveRoomParticipants[cleanRoom][userId] = {
+        userId,
+        userName: userName || 'Participant',
+        lastSeen: Date.now()
+      };
+    }
+
     const messages = liveRoomMessages[cleanRoom] || [];
     const newMessages = messages.filter(m => (m.timestamp || m.serverTimestamp || 0) > since);
-    return res.json({ success: true, messages: newMessages });
+
+    const now = Date.now();
+    const participantsList: any[] = [];
+    if (liveRoomParticipants[cleanRoom]) {
+      for (const [uid, p] of Object.entries(liveRoomParticipants[cleanRoom])) {
+        if (now - p.lastSeen < 45000) {
+          participantsList.push(p);
+        }
+      }
+    }
+
+    return res.json({ success: true, messages: newMessages, participants: participantsList });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
   }
