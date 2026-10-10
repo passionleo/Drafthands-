@@ -124,22 +124,45 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
     }
   }, [promptInput]);
 
-  const handleExecute = (mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
+  const handleExecute = async (mode: 'RENDER_FINAL' | 'SIMULATE_STEPS' = 'RENDER_FINAL') => {
     try {
       const query = (typeof promptInput === 'string' ? promptInput : '').trim();
       if (!query) return;
 
       const startTime = performance.now();
-      const result = parseNaturalLanguageCadPrompt(query);
+      let result = parseNaturalLanguageCadPrompt(query);
+
+      // Try server-side Gemini AI generation
+      try {
+        const res = await fetch('/api/gemini/prompt-to-cad', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: query })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.result) {
+            result = {
+              ...result,
+              geometryTitle: data.result.title || result.geometryTitle,
+              description: data.result.description || result.description,
+              geometryType: 'AI_GENERATED_VECTOR_MODEL',
+              aiElements: data.result.elements || []
+            };
+          }
+        }
+      } catch (aiErr) {
+        console.warn('Gemini AI prompt fallback to parser:', aiErr);
+      }
+
       const durationMs = Math.max(1, Math.round(performance.now() - startTime));
 
-      if (result && result.matched) {
+      if (result) {
         setLastExecution({
           result,
           timestamp: Date.now(),
           durationMs
         });
-        // Add to recent history (avoid duplicates)
         setRecentHistory(prev => [query, ...(Array.isArray(prev) ? prev : []).filter(p => p && p.toLowerCase() !== query.toLowerCase())].slice(0, 8));
         if (typeof onExecuteCadCommand === 'function') {
           try {
@@ -148,12 +171,6 @@ export const AiPromptToCadBar: React.FC<AiPromptToCadBarProps> = ({
             console.error('[AI CAD Execution Callback Failed]', cmdErr);
           }
         }
-      } else if (result) {
-        setLastExecution({
-          result,
-          timestamp: Date.now(),
-          durationMs
-        });
       }
     } catch (err) {
       console.warn('Execution error in CAD Prompt bar:', err);

@@ -1110,7 +1110,26 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const p = safeParams;
         const now = Date.now();
 
-        if (gType === 'CONE_DEVELOPMENT' || gType === 'CYLINDER_DEVELOPMENT') {
+        if (gType === 'AI_GENERATED_VECTOR_MODEL' && Array.isArray((result as any).aiElements)) {
+          const aiEls = (result as any).aiElements;
+          newElements = aiEls.map((el: any, i: number) => ({
+            id: `ai-gemini-vec-${now}-${i}`,
+            type: el.type || 'LINE',
+            layer: el.layer || 'OUTLINE_HB',
+            lineWeight: el.layer === 'DIMENSIONS' ? 'DIMENSION_LINE' : 'THICK_CONTINUOUS',
+            color: el.layer === 'DIMENSIONS' ? '#10b981' : '#f8fafc',
+            x1: el.x1 !== undefined ? Number(el.x1) : undefined,
+            y1: el.y1 !== undefined ? Number(el.y1) : undefined,
+            x2: el.x2 !== undefined ? Number(el.x2) : undefined,
+            y2: el.y2 !== undefined ? Number(el.y2) : undefined,
+            cx: el.cx !== undefined ? Number(el.cx) : undefined,
+            cy: el.cy !== undefined ? Number(el.cy) : undefined,
+            r: el.r !== undefined ? Number(el.r) : undefined,
+            width: el.width !== undefined ? Number(el.width) : undefined,
+            height: el.height !== undefined ? Number(el.height) : undefined,
+            dimensionText: el.dimensionText || ''
+          })).filter(Boolean);
+        } else if (gType === 'CONE_DEVELOPMENT' || gType === 'CYLINDER_DEVELOPMENT') {
           const d = p.baseDiameter || p.diameter || 100;
           const r = d / 2;
           const h = p.height || 120;
@@ -2547,26 +2566,6 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               <Tv className="w-3.5 h-3.5" />
               CAD Workstation
             </button>
-
-            <button
-              onClick={() => {
-                if (workspaceMode !== 'CAD_WORKSTATION') {
-                  setWorkspaceMode('CAD_WORKSTATION');
-                  setIsAiPromptBarOpen(true);
-                } else {
-                  setIsAiPromptBarOpen(prev => !prev);
-                }
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen
-                  ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="AI Prompt-to-CAD (Generate technical drawings with natural language)"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Prompt-to-CAD</span>
-            </button>
           </div>
         </div>
 
@@ -2826,23 +2825,6 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         onClose={() => setIsAudioVoiceBarOpen(false)}
         onExecuteInstruction={handleExecuteVoiceInstruction}
       />
-
-      {/* AI PROMPT-TO-CAD COMMAND BAR INTEGRATED DIRECTLY IN CAD STATION INTERFACE */}
-      {workspaceMode === 'CAD_WORKSTATION' && !isWorkspaceFullscreen && isAiPromptBarOpen && (
-        <CadErrorBoundary
-          compact
-          title="Interactive CAD Prompt Engine"
-          fallbackMessage="CAD prompt parsing encountered an issue. Recovering input field."
-        >
-          <div className="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20 shadow-md">
-            <AiPromptToCadBar
-              onExecuteCadCommand={handleAiCadCommandInStudio}
-              activeTopic={topic}
-              currentParameters={{}}
-            />
-          </div>
-        </CadErrorBoundary>
-      )}
 
       {/* Main Vector Drawing Canvas Viewport */}
       <div 

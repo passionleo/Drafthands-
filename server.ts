@@ -315,6 +315,60 @@ app.get("/api/live-sync/poll/:roomCode", (req, res) => {
   }
 });
 
+// Server-side Gemini Prompt-to-CAD endpoint using @google/genai (gemini-3.8-flash)
+app.post("/api/gemini/prompt-to-cad", async (req, res) => {
+  try {
+    const { prompt } = req.body || {};
+    if (!prompt) {
+      return res.status(400).json({ error: "Missing prompt" });
+    }
+
+    const ai = getAI();
+    if (!ai) {
+      return res.status(500).json({ error: "Gemini API key not configured in server secrets." });
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `You are an expert AutoCAD and ISO 128 technical drawing engineering AI. The user has given this drafting instruction: "${prompt}".
+Generate a precise array of vector drawing elements in JSON format. Return ONLY a JSON object with this exact structure:
+{
+  "title": "Engineering title of construction",
+  "description": "Technical summary",
+  "elements": [
+    { "type": "LINE", "x1": number, "y1": number, "x2": number, "y2": number, "layer": "OUTLINE_HB" },
+    { "type": "CIRCLE", "cx": number, "cy": number, "r": number, "layer": "OUTLINE_HB" },
+    { "type": "RECTANGLE", "x1": number, "y1": number, "width": number, "height": number, "layer": "OUTLINE_HB" },
+    { "type": "ARC", "cx": number, "cy": number, "r": number, "layer": "OUTLINE_HB" },
+    { "type": "DIMENSION", "x1": number, "y1": number, "x2": number, "y2": number, "dimensionText": "100 mm" }
+  ]
+}
+Coordinates should be centered around x: 500, y: 350 with scale appropriate for millimeter units (e.g. 50mm to 300mm sizes). Return valid JSON only.`
+            }
+          ]
+        }
+      ]
+    });
+
+    const textOutput = response.text || '';
+    const jsonMatch = textOutput.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return res.json({ success: true, result: parsed });
+    } else {
+      return res.status(500).json({ error: "Failed to parse JSON vector model from Gemini response." });
+    }
+  } catch (err: any) {
+    console.error("Gemini Prompt-to-CAD error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 async function startServer() {
   const httpServer = http.createServer(app);
 
