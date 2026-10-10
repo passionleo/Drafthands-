@@ -2112,6 +2112,64 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         }
       }
 
+      // Modify Tools: EXTEND, FILLET, ROTATE, SCALE
+      if (['CAD_EXTEND', 'CAD_FILLET', 'CAD_ROTATE', 'CAD_SCALE'].includes(activeTool)) {
+        setHistory(prev => [...(Array.isArray(prev) ? prev : []), [...elements]]);
+        setElements(prev => {
+          if (!Array.isArray(prev)) return [];
+          const threshold = 30;
+          return prev.map(el => {
+            if (!el || el.locked) return el;
+            let isNear = false;
+            if (el.type === 'LINE' && el.x1 !== undefined && el.y1 !== undefined && el.x2 !== undefined && el.y2 !== undefined) {
+              const seg = projectToSegment(coords.x, coords.y, el.x1, el.y1, el.x2, el.y2);
+              if (seg.dist < threshold) isNear = true;
+            } else if (el.type === 'RECTANGLE' && el.x1 !== undefined && el.y1 !== undefined && el.width !== undefined && el.height !== undefined) {
+              if (coords.x >= el.x1 && coords.x <= el.x1 + el.width && coords.y >= el.y1 && coords.y <= el.y1 + el.height) isNear = true;
+            } else if (el.type === 'CIRCLE' && el.cx !== undefined && el.cy !== undefined && el.r !== undefined) {
+              if (Math.abs(Math.hypot(coords.x - el.cx, coords.y - el.cy) - el.r) < threshold) isNear = true;
+            }
+
+            if (!isNear) return el;
+
+            if (activeTool === 'CAD_EXTEND' && el.type === 'LINE') {
+              const dx = el.x2! - el.x1!;
+              const dy = el.y2! - el.y1!;
+              const len = Math.hypot(dx, dy);
+              if (len > 0) {
+                const ux = dx / len;
+                const uy = dy / len;
+                return { ...el, x2: Math.round(el.x2! + ux * 35), y2: Math.round(el.y2! + uy * 35) };
+              }
+            } else if (activeTool === 'CAD_FILLET' && el.type === 'RECTANGLE') {
+              return { ...el, width: Math.round((el.width || 100) * 0.92), height: Math.round((el.height || 100) * 0.92) };
+            } else if (activeTool === 'CAD_ROTATE' && el.type === 'LINE') {
+              const cx = (el.x1! + el.x2!) / 2;
+              const cy = (el.y1! + el.y2!) / 2;
+              const rad = (15 * Math.PI) / 180;
+              const cos = Math.cos(rad); const sin = Math.sin(rad);
+              const x1_ = el.x1! - cx; const y1_ = el.y1! - cy;
+              const x2_ = el.x2! - cx; const y2_ = el.y2! - cy;
+              return {
+                ...el,
+                x1: Math.round(cx + (x1_ * cos - y1_ * sin)),
+                y1: Math.round(cy + (x1_ * sin + y1_ * cos)),
+                x2: Math.round(cx + (x2_ * cos - y2_ * sin)),
+                y2: Math.round(cy + (x2_ * sin + y2_ * cos))
+              };
+            } else if (activeTool === 'CAD_SCALE') {
+              if (el.type === 'CIRCLE') {
+                return { ...el, r: Math.round((el.r || 50) * 1.3) };
+              } else if (el.type === 'RECTANGLE') {
+                return { ...el, width: Math.round((el.width || 100) * 1.3), height: Math.round((el.height || 100) * 1.3) };
+              }
+            }
+            return el;
+          });
+        });
+        return;
+      }
+
       // Eraser / Trim mode
       if (activeTool === 'ERASER' || activeTool === 'CAD_TRIM') {
         setElements(prev => {
