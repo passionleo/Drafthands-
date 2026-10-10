@@ -1110,7 +1110,193 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
         const p = safeParams;
         const now = Date.now();
 
-        if (gType === 'ARCHITECTURAL_PLAN' || gType === 'BUILDING' || gType === 'FLOOR_PLAN' || gType === 'BUILDING_DRAWING') {
+        if (gType === 'CONE_DEVELOPMENT' || gType === 'CYLINDER_DEVELOPMENT') {
+          const d = p.baseDiameter || p.diameter || 100;
+          const r = d / 2;
+          const h = p.height || 120;
+          const slantH = Math.hypot(r, h);
+          const thetaDeg = Math.round((r / slantH) * 360);
+
+          // Base Circle / Plan
+          newElements.push({
+            id: `ai-cone-base-${now}`,
+            type: 'CIRCLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            cx: center.x - 160,
+            cy: center.y,
+            r: r * 0.9
+          });
+          newElements.push({
+            id: `ai-cone-base-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - 160 - r * 0.9,
+            y1: center.y,
+            x2: center.x - 160 + r * 0.9,
+            y2: center.y,
+            dimensionText: `Base Diameter Ø ${d} mm`
+          });
+
+          // Radial Development Sector
+          const secRadius = slantH * 1.1;
+          newElements.push({
+            id: `ai-cone-dev-arc-${now}`,
+            type: 'ARC',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            cx: center.x + 100,
+            cy: center.y + 100,
+            r: secRadius
+          });
+          newElements.push({
+            id: `ai-cone-dev-line1-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x + 100,
+            y1: center.y + 100,
+            x2: center.x + 100,
+            y2: center.y + 100 - secRadius
+          });
+          newElements.push({
+            id: `ai-cone-dev-line2-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x + 100,
+            y1: center.y + 100,
+            x2: center.x + 100 + secRadius * Math.sin((thetaDeg * Math.PI) / 180),
+            y2: center.y + 100 - secRadius * Math.cos((thetaDeg * Math.PI) / 180)
+          });
+          newElements.push({
+            id: `ai-cone-dev-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x + 100,
+            y1: center.y + 115,
+            x2: center.x + 220,
+            y2: center.y + 115,
+            dimensionText: `Cone Development: Slant Height R = ${Math.round(slantH)} mm, θ = ${thetaDeg}° (ISO 128)`
+          });
+        } else if (gType === 'PYRAMID_DEVELOPMENT') {
+          const sz = p.baseSide || 60;
+          const h = p.height || 90;
+          newElements.push({
+            id: `ai-pyr-base-${now}`,
+            type: 'RECTANGLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x - 150,
+            y1: center.y - sz / 2,
+            width: sz,
+            height: sz
+          });
+          newElements.push({
+            id: `ai-pyr-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - 150,
+            y1: center.y + sz / 2 + 25,
+            x2: center.x - 150 + sz,
+            y2: center.y + sz / 2 + 25,
+            dimensionText: `Square Base Side = ${sz} mm`
+          });
+          const triH = Math.hypot(sz / 2, h);
+          newElements.push({
+            id: `ai-pyr-dev-line1-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x + 80,
+            y1: center.y,
+            x2: center.x + 80 + sz,
+            y2: center.y
+          });
+          newElements.push({
+            id: `ai-pyr-dev-apex-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x + 80 + sz / 2,
+            y1: center.y - triH,
+            x2: center.x + 80,
+            y2: center.y
+          });
+          newElements.push({
+            id: `ai-pyr-dev-apex2-${now}`,
+            type: 'LINE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x + 80 + sz / 2,
+            y1: center.y - triH,
+            x2: center.x + 80 + sz,
+            y2: center.y
+          });
+          newElements.push({
+            id: `ai-pyr-dev-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x + 80,
+            y1: center.y + 25,
+            x2: center.x + 80 + sz,
+            y2: center.y + 25,
+            dimensionText: `Pyramid Surface Development: Base Side ${sz}mm, Slant Height = ${Math.round(triH)}mm (ISO 128)`
+          });
+        } else if (gType === 'HELIX_THREAD') {
+          const dia = p.diameter || 50;
+          const pitch = p.pitch || 25;
+          newElements.push({
+            id: `ai-helix-box-${now}`,
+            type: 'RECTANGLE',
+            layer: 'OUTLINE_HB',
+            lineWeight: 'THICK_CONTINUOUS',
+            color: '#f8fafc',
+            x1: center.x - dia / 2,
+            y1: center.y - pitch * 2,
+            width: dia,
+            height: pitch * 4
+          });
+          newElements.push({
+            id: `ai-helix-cline-${now}`,
+            type: 'LINE',
+            layer: 'CONSTRUCTION_2H',
+            lineWeight: 'THIN_CONTINUOUS',
+            color: '#f59e0b',
+            x1: center.x,
+            y1: center.y - pitch * 2.5,
+            x2: center.x,
+            y2: center.y + pitch * 2.5
+          });
+          newElements.push({
+            id: `ai-helix-dim-${now}`,
+            type: 'DIMENSION',
+            layer: 'DIMENSIONS',
+            lineWeight: 'DIMENSION_LINE',
+            color: '#10b981',
+            x1: center.x - dia / 2,
+            y1: center.y + pitch * 2 + 25,
+            x2: center.x + dia / 2,
+            y2: center.y + pitch * 2 + 25,
+            dimensionText: `Helix & Screw Thread: Nominal Ø ${dia}mm, Pitch = ${pitch}mm (ISO Metric)`
+          });
+        } else if (gType === 'ARCHITECTURAL_PLAN' || gType === 'BUILDING' || gType === 'FLOOR_PLAN' || gType === 'BUILDING_DRAWING') {
           const l = p.length || 12000;
           const w = p.width || 8000;
           const scale = 0.035;

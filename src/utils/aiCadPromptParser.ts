@@ -768,6 +768,87 @@ export function parseNaturalLanguageCadPrompt(rawPrompt: string | null | undefin
   }
 
   // ==========================================
+  // CONE / CYLINDER SURFACE DEVELOPMENT PARSER
+  // e.g. "Construct the development of a cone with base 100mm"
+  // ==========================================
+  if (clean.includes('cone') || clean.includes('cylinder') || clean.includes('development') || clean.includes('frustum')) {
+    const baseVal = extractNumberWithKeywords(clean, ['base', 'diameter', 'dia', 'radius', 'd', 'r', 'size']) || 100;
+    const heightVal = extractNumberWithKeywords(clean, ['height', 'altitude', 'h']) || 120;
+    const isCylinder = clean.includes('cylinder');
+    
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: isCylinder ? 'CYLINDER_DEVELOPMENT' : 'CONE_DEVELOPMENT',
+      geometryTitle: isCylinder ? `Cylinder Surface Development (Base Ø ${baseVal}mm)` : `Cone Surface Development (Base Ø ${baseVal}mm)`,
+      topicId: 'ss3-development-cone',
+      tier: 'SS3',
+      confidence: 0.99,
+      description: `Constructing true radial surface development of a ${isCylinder ? 'cylinder' : 'cone'} with base diameter ${baseVal}mm and height ${heightVal}mm according to ISO 128 and WAEC technical standards.`,
+      parameters: { baseDiameter: baseVal, height: heightVal, radius: baseVal / 2 },
+      extractedParams: [
+        { key: 'baseDiameter', label: 'Base Diameter', value: baseVal, unit: 'mm', symbol: 'Ø' },
+        { key: 'height', label: 'Vertical Height', value: heightVal, unit: 'mm', symbol: 'H' }
+      ],
+      matchedKeywords: ['development', isCylinder ? 'cylinder' : 'cone', 'base'],
+      executionPlan: `Switching to SS3 Surface Developments. Constructing ${isCylinder ? 'rectangular development sheet' : 'radial sector development'} for Ø${baseVal}mm base...`,
+      cadCommandEcho: `DEVELOPMENT_EXEC [TYPE=${isCylinder ? 'CYLINDER' : 'CONE'}, BASE=${baseVal}, H=${heightVal}]`
+    };
+  }
+
+  // ==========================================
+  // PYRAMID / FRUSTUM DEVELOPMENT PARSER
+  // ==========================================
+  if (clean.includes('pyramid') || clean.includes('frustum') || clean.includes('prism')) {
+    const side = extractNumberWithKeywords(clean, ['side', 'base', 'width', 'sz']) || 60;
+    const h = extractNumberWithKeywords(clean, ['height', 'altitude', 'h']) || 90;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'PYRAMID_DEVELOPMENT',
+      geometryTitle: `Pyramid / Frustum Surface Development (Base Side ${side}mm)`,
+      topicId: 'ss3-development-pyramid',
+      tier: 'SS3',
+      confidence: 0.98,
+      description: `Constructing true surface development of a square pyramid/frustum with side ${side}mm and altitude ${h}mm.`,
+      parameters: { baseSide: side, height: h },
+      extractedParams: [
+        { key: 'baseSide', label: 'Base Side', value: side, unit: 'mm' },
+        { key: 'height', label: 'Height', value: h, unit: 'mm' }
+      ],
+      matchedKeywords: ['pyramid', 'frustum', 'prism', 'development'],
+      executionPlan: `Switching to SS3 Pyramid Development. Constructing 4 triangular lateral faces and square base layout...`,
+      cadCommandEcho: `PYRAMID_DEV [SIDE=${side}, H=${h}]`
+    };
+  }
+
+  // ==========================================
+  // HELIX & SCREW THREAD PARSER
+  // ==========================================
+  if (clean.includes('helix') || clean.includes('thread') || clean.includes('spring') || clean.includes('coil')) {
+    const dia = extractNumberWithKeywords(clean, ['diameter', 'dia', 'd']) || 50;
+    const pitch = extractNumberWithKeywords(clean, ['pitch', 'lead', 'p']) || 25;
+    return {
+      matched: true,
+      rawPrompt,
+      geometryType: 'HELIX_THREAD',
+      geometryTitle: `Helix & Screw Thread Construction (Ø ${dia}mm, Pitch ${pitch}mm)`,
+      topicId: 'ss2-helix-construction',
+      tier: 'SS2',
+      confidence: 0.98,
+      description: `Constructing true helical curve and metric screw thread profile for diameter ${dia}mm and pitch ${pitch}mm.`,
+      parameters: { diameter: dia, pitch: pitch },
+      extractedParams: [
+        { key: 'diameter', label: 'Nominal Diameter', value: dia, unit: 'mm' },
+        { key: 'pitch', label: 'Thread Pitch', value: pitch, unit: 'mm' }
+      ],
+      matchedKeywords: ['helix', 'thread', 'spring', 'screw'],
+      executionPlan: `Constructing helical curve coordinates and sectional V-thread profile for Ø${dia}mm...`,
+      cadCommandEcho: `HELIX_EXEC [DIA=${dia}, PITCH=${pitch}]`
+    };
+  }
+
+  // ==========================================
   // 11. MACHINE DRAWINGS & ASSEMBLIES PARSER
   // e.g. "Draw a spur gear assembly with diameter 200mm", "Machine bracket orthographic projection"
   // ==========================================
