@@ -441,11 +441,27 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       if (e.key === 'Escape') {
         setActiveTool('SELECT');
       }
+
+      // Shift + Trim -> Extend
+      if (e.key === 'Shift' && activeTool === 'CAD_TRIM') {
+        setActiveTool('CAD_EXTEND');
+      }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [history, redoStack, elements]);
+    const handleGlobalKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        if (activeTool === 'CAD_EXTEND') {
+          setActiveTool('CAD_TRIM');
+        }
+      }
+    };
+    window.addEventListener('keyup', handleGlobalKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('keyup', handleGlobalKeyUp);
+    };
+  }, [history, redoStack, elements, activeTool]);
 
   // Helper to project point to line segment
   const projectToSegment = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {

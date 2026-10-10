@@ -254,10 +254,36 @@ export const CadRibbon: React.FC<CadRibbonProps> = ({
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
-            title="TRIM [TR]: Trim object to cutting edges"
+            title="TRIM [TR]: Trim object (Hold Shift for Extend)"
           >
             <Scissors className="w-4 h-4" />
             <span className="text-[9px] mt-0.5 font-mono">Trim</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTool('CAD_EXTEND')}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-lg w-12 h-12 transition-all ${
+              activeTool === 'CAD_EXTEND'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title="EXTEND [EX]: Extend line to boundary"
+          >
+            <Maximize2 className="w-4 h-4" />
+            <span className="text-[9px] mt-0.5 font-mono">Extend</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTool('CAD_FILLET')}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-lg w-12 h-12 transition-all ${
+              activeTool === 'CAD_FILLET'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title="FILLET [F]: Round sharp corner with radius arc"
+          >
+            <Circle className="w-4 h-4" />
+            <span className="text-[9px] mt-0.5 font-mono">Fillet</span>
           </button>
 
           <button
@@ -284,6 +310,32 @@ export const CadRibbon: React.FC<CadRibbonProps> = ({
           >
             <Move className="w-4 h-4" />
             <span className="text-[9px] mt-0.5 font-mono">Mirror</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTool('CAD_ROTATE')}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-lg w-12 h-12 transition-all ${
+              activeTool === 'CAD_ROTATE'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title="ROTATE [RO]: Rotate selected object around base point"
+          >
+            <RotateCw className="w-4 h-4" />
+            <span className="text-[9px] mt-0.5 font-mono">Rotate</span>
+          </button>
+
+          <button
+            onClick={() => onSelectTool('CAD_SCALE')}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-lg w-12 h-12 transition-all ${
+              activeTool === 'CAD_SCALE'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title="SCALE [SC]: Scale object by factor"
+          >
+            <ScaleIcon className="w-4 h-4" />
+            <span className="text-[9px] mt-0.5 font-mono">Scale</span>
           </button>
 
           <button

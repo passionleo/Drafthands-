@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type AppThemeMode = 'MIDNIGHT_NAVY' | 'PURE_WHITE' | 'EMERALD_DARK' | 'WARM_OBSIDIAN' | 'CYBER_CYAN';
 
@@ -10,6 +10,8 @@ interface AppThemeConfig {
   textClass: string;
   borderClass: string;
   accentColor: string;
+  bgColorHex: string;
+  textColorHex: string;
 }
 
 export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
@@ -20,7 +22,9 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
     cardBgClass: 'bg-slate-900',
     textClass: 'text-slate-100',
     borderClass: 'border-slate-800',
-    accentColor: '#06b6d4'
+    accentColor: '#06b6d4',
+    bgColorHex: '#020617',
+    textColorHex: '#f8fafc'
   },
   PURE_WHITE: {
     id: 'PURE_WHITE',
@@ -29,7 +33,9 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
     cardBgClass: 'bg-white',
     textClass: 'text-slate-900',
     borderClass: 'border-slate-200',
-    accentColor: '#0284c7'
+    accentColor: '#0284c7',
+    bgColorHex: '#f1f5f9',
+    textColorHex: '#0f172a'
   },
   EMERALD_DARK: {
     id: 'EMERALD_DARK',
@@ -38,7 +44,9 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
     cardBgClass: 'bg-zinc-900',
     textClass: 'text-zinc-100',
     borderClass: 'border-zinc-800',
-    accentColor: '#10b981'
+    accentColor: '#10b981',
+    bgColorHex: '#09090b',
+    textColorHex: '#f4f4f5'
   },
   WARM_OBSIDIAN: {
     id: 'WARM_OBSIDIAN',
@@ -47,7 +55,9 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
     cardBgClass: 'bg-neutral-900',
     textClass: 'text-neutral-100',
     borderClass: 'border-neutral-800',
-    accentColor: '#f59e0b'
+    accentColor: '#f59e0b',
+    bgColorHex: '#0a0a0a',
+    textColorHex: '#f5f5f5'
   },
   CYBER_CYAN: {
     id: 'CYBER_CYAN',
@@ -56,7 +66,9 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
     cardBgClass: 'bg-sky-900/60',
     textClass: 'text-sky-100',
     borderClass: 'border-sky-800',
-    accentColor: '#38bdf8'
+    accentColor: '#38bdf8',
+    bgColorHex: '#082f49',
+    textColorHex: '#e0f2fe'
   }
 };
 
@@ -94,9 +106,16 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const config = APP_THEMES[theme] || APP_THEMES.MIDNIGHT_NAVY;
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.style.backgroundColor = config.bgColorHex;
+      document.body.style.color = config.textColorHex;
+    }
+  }, [theme, config]);
+
   return (
     <AppThemeContext.Provider value={{ theme, setTheme, config }}>
-      <div className={`min-h-screen w-full transition-colors duration-300 ${config.bgClass}`}>
+      <div className={`min-h-screen w-full transition-colors duration-300 ${config.bgClass}`} style={{ backgroundColor: config.bgColorHex, color: config.textColorHex }}>
         {children}
       </div>
     </AppThemeContext.Provider>
