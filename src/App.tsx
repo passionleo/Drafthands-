@@ -380,6 +380,7 @@ export default function App() {
               onReturnToHome={handleReturnHome}
               onSwitchToStudentView={() => changeView('STUDIO')}
               onOpenLiveClass={() => setIsJoinClassModalOpen(true)}
+              onOpenProjectionMode={() => setIsProjectionOpen(true)}
             />
           )}
 
