@@ -68,6 +68,7 @@ interface WhiteboardStudioProps {
   syncElements?: WhiteboardElement[];
   onElementsChange?: (elements: WhiteboardElement[]) => void;
   readOnly?: boolean;
+  initialOpenAiPrompt?: boolean;
 }
 
 export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
@@ -80,10 +81,12 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   isEmbedded = false,
   syncElements,
   onElementsChange,
-  readOnly = false
+  readOnly = false,
+  initialOpenAiPrompt = false
 }) => {
   // Dual Workspace Mode State
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(initialMode);
+  const [isAiPromptBarOpen, setIsAiPromptBarOpen] = useState<boolean>(initialOpenAiPrompt);
 
   // Canvas Transform State
   const [zoom, setZoom] = useState<number>(1);
@@ -98,7 +101,6 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
   const [snapGrid, setSnapGrid] = useState<boolean>(true);
   const [orthoLock, setOrthoLock] = useState<boolean>(false);
   const [showTraceTemplate, setShowTraceTemplate] = useState<boolean>(true);
-  const [isAiPromptBarOpen, setIsAiPromptBarOpen] = useState<boolean>(false);
   const [isWorkspaceFullscreen, setIsWorkspaceFullscreen] = useState<boolean>(false);
   const [boardTheme, setBoardTheme] = useState<'BLUE_GRID' | 'PURE_WHITE' | 'DARK_SLATE' | 'CLASSIC_WOOD'>('BLUE_GRID');
   const [instrumentColor, setInstrumentColor] = useState<'AMBER' | 'CYAN' | 'EMERALD' | 'SMOKE' | 'ROSE' | 'GOLD'>('AMBER');
@@ -2624,6 +2626,26 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
               <Tv className="w-3.5 h-3.5" />
               CAD Workstation
             </button>
+
+            <button
+              onClick={() => {
+                if (workspaceMode !== 'CAD_WORKSTATION') {
+                  setWorkspaceMode('CAD_WORKSTATION');
+                  setIsAiPromptBarOpen(true);
+                } else {
+                  setIsAiPromptBarOpen(prev => !prev);
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                workspaceMode === 'CAD_WORKSTATION' && isAiPromptBarOpen
+                  ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="AI Prompt-to-CAD (Generate technical drawings with natural language)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Prompt-to-CAD</span>
+            </button>
           </div>
         </div>
 
@@ -2875,6 +2897,23 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
           onClearCanvas={handleClear}
           onOpenVoiceAssistant={() => setIsAudioVoiceBarOpen(true)}
         />
+      )}
+
+      {/* AI PROMPT-TO-CAD COMMAND BAR INTEGRATED DIRECTLY IN CAD STATION INTERFACE */}
+      {workspaceMode === 'CAD_WORKSTATION' && !isWorkspaceFullscreen && isAiPromptBarOpen && (
+        <CadErrorBoundary
+          compact
+          title="Interactive CAD Prompt Engine"
+          fallbackMessage="CAD prompt parsing encountered an issue. Recovering input field."
+        >
+          <div className="border-b border-slate-800 bg-slate-900/95 backdrop-blur z-20 shadow-md">
+            <AiPromptToCadBar
+              onExecuteCadCommand={handleAiCadCommandInStudio}
+              activeTopic={topic}
+              currentParameters={{}}
+            />
+          </div>
+        </CadErrorBoundary>
       )}
 
       {/* AI Voice Transcription & Google Search Grounding Assistant */}

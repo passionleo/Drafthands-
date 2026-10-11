@@ -12,10 +12,13 @@ import {
   FileCheck2, 
   Video, 
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Palette,
+  Check
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { PWAInstallButton } from '../pwa/PWAInstallButton';
+import { useAppTheme, APP_THEMES, AppThemeMode } from '../../context/AppThemeContext';
 
 interface LandingHeaderProps {
   onOpenAuth: (mode?: 'SIGN_IN' | 'REGISTER') => void;
@@ -42,6 +45,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isCurriculumDropdownOpen, setIsCurriculumDropdownOpen] = useState<boolean>(false);
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState<boolean>(false);
+  const { theme, setTheme } = useAppTheme();
 
   const handleNavClick = (sectionId: string) => {
     onNavigateSection(sectionId);
@@ -187,6 +192,47 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
 
           {/* PWA Home Screen Install Button */}
           <PWAInstallButton variant="landing" className="hidden sm:flex" />
+
+          {/* Theme Switcher Button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsThemeDropdownOpen(prev => !prev)}
+              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-cyan-300 hover:text-white transition-all shadow-sm flex items-center gap-1.5"
+              title="Customize App Background Color Theme"
+            >
+              <Palette className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden xl:inline">Theme</span>
+            </button>
+
+            {isThemeDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 p-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 px-3 py-1.5 border-b border-slate-800 mb-1">
+                  Background Color Theme
+                </div>
+                {(Object.keys(APP_THEMES) as AppThemeMode[]).map((mode) => {
+                  const t = APP_THEMES[mode];
+                  const isSelected = theme === mode;
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => {
+                        setTheme(mode);
+                        setIsThemeDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'bg-cyan-600 text-white shadow' 
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span>{t.label}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Sign In / Register */}
           <button

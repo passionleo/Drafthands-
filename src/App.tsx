@@ -135,6 +135,7 @@ export default function App() {
   const [isStudentAssignmentsOpen, setIsStudentAssignmentsOpen] = useState<boolean>(false);
   const [isAdminConsoleOpen, setIsAdminConsoleOpen] = useState<boolean>(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState<boolean>(false);
+  const [isAiPromptOpen, setIsAiPromptOpen] = useState<boolean>(false);
   const [isGoogleClassroomOpen, setIsGoogleClassroomOpen] = useState<boolean>(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);

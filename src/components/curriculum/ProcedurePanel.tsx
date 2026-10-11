@@ -42,6 +42,7 @@ interface ProcedurePanelProps {
   onOpenArchitecturalPlan?: () => void;
   onOpenPastQuestions?: () => void;
   onOpenPractice?: () => void;
+  onOpenAiPromptCad?: () => void;
 }
 
 export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
@@ -61,7 +62,8 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
   onOpenSectionalAssembly,
   onOpenArchitecturalPlan,
   onOpenPastQuestions,
-  onOpenPractice
+  onOpenPractice,
+  onOpenAiPromptCad
 }) => {
   return (
     <div className="w-full md:w-80 lg:w-[400px] xl:w-[420px] bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col h-auto md:h-full max-h-[38vh] md:max-h-none shrink-0 select-none overflow-hidden">
@@ -176,19 +178,17 @@ export const ProcedurePanel: React.FC<ProcedurePanelProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  if (onOpenCadWorkstation) {
+                  if (onOpenAiPromptCad) {
+                    onOpenAiPromptCad();
+                  } else if (onOpenCadWorkstation) {
                     onOpenCadWorkstation();
-                  } else {
-                    const input = document.getElementById('ai-cad-prompt-input') as HTMLInputElement;
-                    input?.focus();
-                    input?.select();
                   }
                 }}
                 className="text-[10px] font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900 px-2 py-0.5 rounded border border-cyan-500/40 transition-all cursor-pointer flex items-center gap-1"
-                title="Launch in CAD Practice Station"
+                title="Launch in CAD Practice Station with AI Prompt"
               >
                 <span>Launch in CAD Station</span>
-                <span className="text-[9px] bg-cyan-800/60 px-1 rounded text-cyan-200">/</span>
+                <span className="text-[9px] bg-cyan-800/60 px-1 rounded text-cyan-200">⚡</span>
               </button>
             </div>
           </div>
