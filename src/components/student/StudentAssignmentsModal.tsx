@@ -26,6 +26,7 @@ interface StudentAssignmentsModalProps {
   topics: DrawingTopic[];
   onOpenWhiteboardForAssignment: (assignment: TeacherAssignment, mode: 'TRADITIONAL_BOARD' | 'CAD_WORKSTATION') => void;
   onOpenLiveClassFromStudent?: (roomCode: string) => void;
+  onOpenPastQuestions?: () => void;
 }
 
 export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = ({
@@ -33,7 +34,8 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
   onClose,
   topics,
   onOpenWhiteboardForAssignment,
-  onOpenLiveClassFromStudent
+  onOpenLiveClassFromStudent,
+  onOpenPastQuestions
 }) => {
   if (!isOpen) return null;
 
@@ -113,6 +115,31 @@ export const StudentAssignmentsModal: React.FC<StudentAssignmentsModalProps> = (
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+
+            {/* WAEC & NECO Past Questions Hub Card */}
+            <div className="p-4 bg-gradient-to-br from-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-xl space-y-2.5 shadow-lg">
+              <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
+                <span className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-emerald-400" />
+                  <span>10-Yr WAEC & NECO Past Questions</span>
+                </span>
+                <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  2016–2026
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Practice 10 years of authentic WAEC, NECO & NABTEB technical drawing exam papers with complete step-by-step vector construction solutions.
+              </p>
+              {onOpenPastQuestions && (
+                <button
+                  onClick={onOpenPastQuestions}
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Open Past Questions Hub</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">

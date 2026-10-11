@@ -538,6 +538,10 @@ export default function App() {
                 setIsStudentAssignmentsOpen(false);
                 setIsLiveClassOpen(true);
               }}
+              onOpenPastQuestions={() => {
+                setIsStudentAssignmentsOpen(false);
+                changeView('PAST_QUESTIONS');
+              }}
             />
           )}
 
