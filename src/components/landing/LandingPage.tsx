@@ -11,6 +11,7 @@ import { AuthModal, UserRoleType, PortalTargetType } from './AuthModal';
 import { LandingPWAInstallModal } from '../pwa/LandingPWAInstallModal';
 import { CurriculumTier } from '../../types/curriculum';
 import { useSubscription } from '../../context/SubscriptionContext';
+import { useAppTheme } from '../../context/AppThemeContext';
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -284,8 +285,10 @@ const LandingPageInner: React.FC<LandingPageProps> = ({
     }
   };
 
+  const { config } = useAppTheme();
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950" style={{ backgroundColor: config.bgColorHex, color: config.textColorHex }}>
       {/* 1. Header with gated portals and direct owner portal */}
       <LandingHeader
         onOpenAuth={handleOpenAuth}
