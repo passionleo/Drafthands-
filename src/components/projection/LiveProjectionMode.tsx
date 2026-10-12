@@ -27,7 +27,7 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
-import { DrawingTopic, StepDefinition } from '../../types/curriculum';
+import { DrawingTopic, StepDefinition, InstrumentState } from '../../types/curriculum';
 import { InstrumentsOverlay } from '../drafting/InstrumentsOverlay';
 import { useSubscription } from '../../context/SubscriptionContext';
 
@@ -64,6 +64,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [annotationTool, setAnnotationTool] = useState<'none' | 'pen' | 'highlighter'>('none');
   const [splitScreenOpen, setSplitScreenOpen] = useState<boolean>(true);
+  const [activeManualInstrument, setActiveManualInstrument] = useState<InstrumentState | null>(null);
 
   // Generate steps
   const steps = useMemo<StepDefinition[]>(() => {
@@ -365,6 +366,48 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
           </div>
         </div>
 
+        {/* Traditional Board Instruments Quick Toolbox */}
+        <div className="absolute top-24 left-6 z-20 flex items-center gap-1.5 bg-slate-950/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-2xl pointer-events-auto">
+          <span className="text-[10px] font-mono text-cyan-400 font-bold px-2">Instruments:</span>
+          {[
+            { label: 'T-Square', type: 'TEE_SQUARE' as const },
+            { label: '30°/60°', type: 'SET_SQUARE_30_60' as const },
+            { label: '45°', type: 'SET_SQUARE_45' as const },
+            { label: 'Compass', type: 'COMPASS' as const },
+            { label: 'Ruler', type: 'RULER' as const },
+            { label: 'Protractor', type: 'PROTRACTOR' as const },
+            { label: 'Hide', type: 'NONE' as const },
+          ].map(inst => (
+            <button
+              key={inst.label}
+              onClick={() => {
+                if (inst.type === 'NONE') {
+                  setActiveManualInstrument(null);
+                } else {
+                  setActiveManualInstrument({
+                    toolType: inst.type,
+                    x: 250,
+                    y: 250,
+                    targetX: 450,
+                    targetY: 250,
+                    radius: 80,
+                    angleDeg: 30,
+                    visible: true,
+                    actionText: `Manual ${inst.label} Demo`
+                  });
+                }
+              }}
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                (activeManualInstrument?.toolType === inst.type)
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              {inst.label}
+            </button>
+          ))}
+        </div>
+
         {/* SVG Drawing Area */}
         <div className="w-full h-full max-w-6xl max-h-[85vh] p-4 flex items-center justify-center">
           <svg
@@ -534,9 +577,9 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
             )}
 
             {/* Virtual Instrument Animation Overlay */}
-            {showInstruments && currentStep.activeInstrument && (
+            {showInstruments && (activeManualInstrument || currentStep.activeInstrument) && (
               <InstrumentsOverlay
-                instrument={currentStep.activeInstrument}
+                instrument={activeManualInstrument || currentStep.activeInstrument!}
                 scale={1}
               />
             )}
