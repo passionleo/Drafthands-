@@ -460,46 +460,101 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
           </div>
         </div>
 
-        {/* Traditional Board Instruments Quick Toolbox */}
-        <div className="absolute top-24 left-6 z-20 flex items-center gap-1.5 bg-slate-950/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-2xl pointer-events-auto">
-          <span className="text-[10px] font-mono text-cyan-400 font-bold px-2">Instruments:</span>
-          {[
-            { label: 'T-Square', type: 'TEE_SQUARE' as const },
-            { label: '30°/60°', type: 'SET_SQUARE_30_60' as const },
-            { label: '45°', type: 'SET_SQUARE_45' as const },
-            { label: 'Compass', type: 'COMPASS' as const },
-            { label: 'Ruler', type: 'RULER' as const },
-            { label: 'Protractor', type: 'PROTRACTOR' as const },
-            { label: 'Hide', type: 'NONE' as const },
-          ].map(inst => (
+        {/* Traditional Board Instruments & Drawing/Modifying Toolbox */}
+        <div className="absolute top-20 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 bg-slate-950/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700/80 shadow-2xl pointer-events-auto">
+          {/* Instruments */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+            <span className="text-[10px] font-mono text-cyan-400 font-bold px-1.5 shrink-0">Instruments:</span>
+            {[
+              { label: 'T-Square', type: 'TEE_SQUARE' as const },
+              { label: '30°/60°', type: 'SET_SQUARE_30_60' as const },
+              { label: '45°', type: 'SET_SQUARE_45' as const },
+              { label: 'Compass', type: 'COMPASS' as const },
+              { label: 'Ruler', type: 'RULER' as const },
+              { label: 'Protractor', type: 'PROTRACTOR' as const },
+              { label: '2H Pencil', type: 'PENCIL_2H' as const },
+              { label: 'HB Pencil', type: 'PENCIL_HB' as const },
+              { label: 'Hide', type: 'NONE' as const },
+            ].map(inst => (
+              <button
+                key={inst.label}
+                onClick={() => {
+                  if (inst.type === 'NONE') {
+                    setActiveManualInstrument(null);
+                  } else {
+                    setActiveManualInstrument({
+                      toolType: inst.type,
+                      x: 400,
+                      y: 300,
+                      targetX: 550,
+                      targetY: 300,
+                      radius: 70,
+                      angleDeg: 0,
+                      visible: true,
+                      actionText: `Active ${inst.label} - Ready to Draw`
+                    });
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+                  (activeManualInstrument?.toolType === inst.type)
+                    ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30 ring-1 ring-cyan-400'
+                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                {inst.label}
+              </button>
+            ))}
+
+            {/* Instrument Rotation Controls */}
+            {activeManualInstrument && activeManualInstrument.toolType !== 'NONE' && (
+              <div className="flex items-center gap-1 ml-2 pl-2 border-l border-slate-800">
+                <button
+                  onClick={() => setActiveManualInstrument(prev => prev ? ({ ...prev, angleDeg: (prev.angleDeg || 0) - 15 }) : null)}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg text-[11px] font-mono font-bold cursor-pointer"
+                  title="Rotate -15°"
+                >
+                  ↺ -15°
+                </button>
+                <button
+                  onClick={() => setActiveManualInstrument(prev => prev ? ({ ...prev, angleDeg: (prev.angleDeg || 0) + 15 }) : null)}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg text-[11px] font-mono font-bold cursor-pointer"
+                  title="Rotate +15°"
+                >
+                  ↻ +15°
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Draw & Modify Tools */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] font-mono text-amber-400 font-bold px-1 hidden lg:inline">Tools:</span>
             <button
-              key={inst.label}
-              onClick={() => {
-                if (inst.type === 'NONE') {
-                  setActiveManualInstrument(null);
-                } else {
-                  setActiveManualInstrument({
-                    toolType: inst.type,
-                    x: 250,
-                    y: 250,
-                    targetX: 450,
-                    targetY: 250,
-                    radius: 80,
-                    angleDeg: 30,
-                    visible: true,
-                    actionText: `Manual ${inst.label} Demo`
-                  });
-                }
-              }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                (activeManualInstrument?.toolType === inst.type)
-                  ? 'bg-cyan-600 text-white shadow'
-                  : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white'
+              onClick={() => setAnnotationTool(annotationTool === 'pen' ? 'none' : 'pen')}
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                annotationTool === 'pen' ? 'bg-amber-600 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
               }`}
             >
-              {inst.label}
+              <PenTool className="w-3.5 h-3.5" />
+              <span>Chalk Pen</span>
             </button>
-          ))}
+            <button
+              onClick={() => setAnnotationTool(annotationTool === 'highlighter' ? 'none' : 'highlighter')}
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                annotationTool === 'highlighter' ? 'bg-amber-600 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              <Highlighter className="w-3.5 h-3.5" />
+              <span>Spotlight Marker</span>
+            </button>
+            <button
+              onClick={() => setAnnotations([])}
+              className="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+              title="Clear Board Annotations"
+            >
+              Erase Notes
+            </button>
+          </div>
         </div>
 
         {/* SVG Drawing Area */}
