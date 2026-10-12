@@ -64,14 +64,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="text-slate-300">SS1 to Higher Institution</span>
             </div>
 
-            {/* High-Impact Headline as requested */}
-            <div className="space-y-2">
+            {/* High-Impact Headline & Subtitle */}
+            <div className="space-y-4">
               <h1 className="text-3xl sm:text-5xl xl:text-6xl font-black text-white tracking-tight leading-[1.12]">
-                Master Technical Drawing & Engineering Design — <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">Digitally.</span>
+                Master Technical Drawing & CAD <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">Without the Stress</span>
               </h1>
               <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                The definitive interactive drafting academy for West African secondary schools, technical colleges, and polytechnics. Learn plane and solid geometry, 1st & 3rd angle orthographics, isometric projections, and CAD with live virtual instruments and 10-year WAEC past questions.
+                Construct geometric problems, 3D views, and ace WAEC/NECO practicals directly from your phone, tablet, or laptop.
               </p>
+
+              {/* Quick Visual Highlight Tags */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
+                <span className="px-3.5 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-200 text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                  🎯 No Drawing Board Needed
+                </span>
+                <span className="px-3.5 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                  📱 Works on Any Device
+                </span>
+                <span className="px-3.5 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                  ⚡ Instant Step-by-Step Solutions
+                </span>
+              </div>
             </div>
 
             {/* Dual CTAs & Video Tour Button */}

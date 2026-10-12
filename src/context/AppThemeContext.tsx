@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type AppThemeMode = 'MIDNIGHT_NAVY' | 'PURE_WHITE' | 'EMERALD_DARK' | 'WARM_OBSIDIAN' | 'CYBER_CYAN';
+export type AppThemeMode = 'DARK_STUDIO' | 'PAPER_BOARD' | 'BLUEPRINT';
 
 interface AppThemeConfig {
   id: AppThemeMode;
@@ -15,54 +15,32 @@ interface AppThemeConfig {
 }
 
 export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
-  MIDNIGHT_NAVY: {
-    id: 'MIDNIGHT_NAVY',
-    label: 'Midnight Navy (Default)',
-    bgClass: 'bg-slate-950 text-slate-100',
+  DARK_STUDIO: {
+    id: 'DARK_STUDIO',
+    label: 'Dark Studio (Deep Navy)',
+    bgClass: 'bg-[#0B1120] text-slate-100',
     cardBgClass: 'bg-slate-900',
     textClass: 'text-slate-100',
     borderClass: 'border-slate-800',
     accentColor: '#06b6d4',
-    bgColorHex: '#020617',
+    bgColorHex: '#0B1120',
     textColorHex: '#f8fafc'
   },
-  PURE_WHITE: {
-    id: 'PURE_WHITE',
-    label: 'Pure Light / White',
-    bgClass: 'bg-slate-100 text-slate-900',
-    cardBgClass: 'bg-white',
+  PAPER_BOARD: {
+    id: 'PAPER_BOARD',
+    label: 'Paper Board (Clean White)',
+    bgClass: 'bg-white text-slate-900',
+    cardBgClass: 'bg-slate-50',
     textClass: 'text-slate-900',
-    borderClass: 'border-slate-200',
+    borderClass: 'border-slate-300',
     accentColor: '#0284c7',
-    bgColorHex: '#f1f5f9',
+    bgColorHex: '#ffffff',
     textColorHex: '#0f172a'
   },
-  EMERALD_DARK: {
-    id: 'EMERALD_DARK',
-    label: 'Emerald Technical Dark',
-    bgClass: 'bg-zinc-950 text-zinc-100',
-    cardBgClass: 'bg-zinc-900',
-    textClass: 'text-zinc-100',
-    borderClass: 'border-zinc-800',
-    accentColor: '#10b981',
-    bgColorHex: '#09090b',
-    textColorHex: '#f4f4f5'
-  },
-  WARM_OBSIDIAN: {
-    id: 'WARM_OBSIDIAN',
-    label: 'Warm Obsidian',
-    bgClass: 'bg-neutral-950 text-neutral-100',
-    cardBgClass: 'bg-neutral-900',
-    textClass: 'text-neutral-100',
-    borderClass: 'border-neutral-800',
-    accentColor: '#f59e0b',
-    bgColorHex: '#0a0a0a',
-    textColorHex: '#f5f5f5'
-  },
-  CYBER_CYAN: {
-    id: 'CYBER_CYAN',
-    label: 'Cyber Cyan Dark',
-    bgClass: 'bg-sky-950 text-sky-100',
+  BLUEPRINT: {
+    id: 'BLUEPRINT',
+    label: 'Blueprint (Classic Engineering)',
+    bgClass: 'bg-[#082f49] text-sky-100',
     cardBgClass: 'bg-sky-900/60',
     textClass: 'text-sky-100',
     borderClass: 'border-sky-800',
@@ -79,9 +57,9 @@ interface AppThemeContextType {
 }
 
 const AppThemeContext = createContext<AppThemeContextType>({
-  theme: 'MIDNIGHT_NAVY',
+  theme: 'DARK_STUDIO',
   setTheme: () => {},
-  config: APP_THEMES.MIDNIGHT_NAVY
+  config: APP_THEMES.DARK_STUDIO
 });
 
 export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -92,7 +70,7 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (saved && APP_THEMES[saved]) return saved;
       } catch {}
     }
-    return 'MIDNIGHT_NAVY';
+    return 'DARK_STUDIO';
   });
 
   const setTheme = (newTheme: AppThemeMode) => {
@@ -104,7 +82,7 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const config = APP_THEMES[theme] || APP_THEMES.MIDNIGHT_NAVY;
+  const config = APP_THEMES[theme] || APP_THEMES.DARK_STUDIO;
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
