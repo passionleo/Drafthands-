@@ -60,7 +60,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0); // 0.5x, 1x, 2x
-  const [showInstruments, setShowInstruments] = useState<boolean>(true);
+  const [showInstruments, setShowInstruments] = useState<boolean>(false);
   const [spotlightActive, setSpotlightActive] = useState<boolean>(false);
   const [laserPointerActive, setLaserPointerActive] = useState<boolean>(true);
   const [laserColor, setLaserColor] = useState<'red' | 'green'>('red');
@@ -464,7 +464,23 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
         <div className="absolute top-20 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 bg-slate-950/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700/80 shadow-2xl pointer-events-auto">
           {/* Instruments */}
           <div className="flex items-center gap-1.5 overflow-x-auto py-1">
-            <span className="text-[10px] font-mono text-cyan-400 font-bold px-1.5 shrink-0">Instruments:</span>
+            {/* Master Instrument On/Off Toggle */}
+            <button
+              onClick={() => setShowInstruments(!showInstruments)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
+                showInstruments
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
+                  : 'bg-slate-900 text-rose-400 border-rose-900/60 hover:bg-slate-800'
+              }`}
+              title={showInstruments ? "Instruments ON (Click to Hide/Disable so they don't block canvas)" : "Instruments OFF (Click to Enable instruments when needed)"}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>{showInstruments ? 'Instruments: ON' : 'Instruments: OFF'}</span>
+            </button>
+
+            <div className="h-5 w-[1px] bg-slate-800 mx-1 shrink-0" />
+
+            <span className="text-[10px] font-mono text-cyan-400 font-bold px-1.5 shrink-0">Tools:</span>
             {[
               { label: 'T-Square', type: 'TEE_SQUARE' as const },
               { label: '30°/60°', type: 'SET_SQUARE_30_60' as const },
@@ -479,8 +495,10 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
               <button
                 key={inst.label}
                 onClick={() => {
+                  setShowInstruments(true);
                   if (inst.type === 'NONE') {
                     setActiveManualInstrument(null);
+                    setShowInstruments(false);
                   } else {
                     setActiveManualInstrument({
                       toolType: inst.type,
@@ -496,7 +514,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
                   }
                 }}
                 className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-                  (activeManualInstrument?.toolType === inst.type)
+                  (activeManualInstrument?.toolType === inst.type && showInstruments)
                     ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30 ring-1 ring-cyan-400'
                     : 'bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
