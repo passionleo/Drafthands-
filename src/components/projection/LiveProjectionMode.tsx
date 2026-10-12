@@ -40,7 +40,7 @@ interface LiveProjectionModeProps {
   parameters: Record<string, number>;
 }
 
-export type ProjectionTheme = 'BLACKBOARD' | 'CHALKBOARD_GREEN' | 'DAYLIGHT_WHITE' | 'HIGH_LUMINANCE';
+export type ProjectionTheme = 'BLACKBOARD' | 'CHALKBOARD_GREEN' | 'DAYLIGHT_WHITE' | 'HIGH_LUMINANCE' | 'PROJECTOR_DAY';
 
 export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   isOpen,
@@ -53,7 +53,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const { isSubscribed, openPaywall } = useSubscription();
 
   // Projection display settings
-  const [theme, setTheme] = useState<ProjectionTheme>('BLACKBOARD');
+  const [theme, setTheme] = useState<ProjectionTheme>('PROJECTOR_DAY');
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0); // 0.5x, 1x, 2x
@@ -63,6 +63,31 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const [laserColor, setLaserColor] = useState<'red' | 'green'>('red');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [annotationTool, setAnnotationTool] = useState<'none' | 'pen' | 'highlighter'>('none');
+  const [splitScreenOpen, setSplitScreenOpen] = useState<boolean>(true);
+
+  // Generate steps
+  const steps = useMemo<StepDefinition[]>(() => {
+    return topic.generateSteps(parameters);
+  }, [topic, parameters]);
+
+  const totalSteps = steps.length;
+  const currentStep = steps[currentStepIndex - 1] || steps[0];
+
+  // Keyboard navigation & remote support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        onStepChange(currentStepIndex < totalSteps ? currentStepIndex + 1 : totalSteps);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        onStepChange(currentStepIndex > 1 ? currentStepIndex - 1 : 1);
+      } else if (e.key === ' ') {
+        setIsPlaying(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, currentStepIndex, totalSteps, onStepChange]);
 
   // Laser pointer position state
   const [laserPos, setLaserPos] = useState<{ x: number; y: number } | null>(null);
@@ -72,14 +97,6 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const [annotations, setAnnotations] = useState<{ path: string; color: string; width: number }[]>([]);
   const [currentStroke, setCurrentStroke] = useState<{ x: number; y: number }[]>([]);
   const isDrawingAnnotationRef = useRef<boolean>(false);
-
-  // Generate steps
-  const steps = useMemo<StepDefinition[]>(() => {
-    return topic.generateSteps(parameters);
-  }, [topic, parameters]);
-
-  const totalSteps = steps.length;
-  const currentStep = steps[currentStepIndex - 1] || steps[0];
 
   // Auto-play timer
   useEffect(() => {
@@ -192,6 +209,15 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
       thinLine: '#64748b',
       textClass: 'text-black font-black',
       label: 'High-Lumen Projector'
+    },
+    PROJECTOR_DAY: {
+      bgClass: 'bg-white',
+      svgBg: '#ffffff',
+      gridColor: '#e2e8f0',
+      thickLine: '#000000',
+      thinLine: '#db2777',
+      textClass: 'text-slate-900 font-extrabold',
+      label: 'Projector High-Contrast Day'
     }
   }[theme];
 
@@ -221,7 +247,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
         <div className="flex items-center gap-2">
           {/* Theme Selector */}
           <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-            {(['BLACKBOARD', 'CHALKBOARD_GREEN', 'DAYLIGHT_WHITE', 'HIGH_LUMINANCE'] as ProjectionTheme[]).map((t) => (
+            {(['PROJECTOR_DAY', 'BLACKBOARD', 'CHALKBOARD_GREEN', 'DAYLIGHT_WHITE', 'HIGH_LUMINANCE'] as ProjectionTheme[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTheme(t)}
@@ -229,7 +255,7 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
                   theme === t ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {t === 'BLACKBOARD' ? 'Dark' : t === 'CHALKBOARD_GREEN' ? 'Green' : t === 'DAYLIGHT_WHITE' ? 'Daylight' : 'High-Lumen'}
+                {t === 'PROJECTOR_DAY' ? 'Day' : t === 'BLACKBOARD' ? 'Dark' : t === 'CHALKBOARD_GREEN' ? 'Green' : t === 'DAYLIGHT_WHITE' ? 'White' : 'Lumen'}
               </button>
             ))}
           </div>

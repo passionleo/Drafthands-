@@ -427,12 +427,17 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenProjectionMode && (
           <button
             id="btn-open-smart-board-projection"
-            onClick={onOpenProjectionMode}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+            onClick={() => {
+              if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+              }
+              onOpenProjectionMode();
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white shadow-md shadow-blue-600/30 transition-all cursor-pointer"
             title="Open Smart Board & Projector Mode (Classroom Big Screen Display)"
           >
-            <Tv className="w-3.5 h-3.5 text-blue-200 animate-pulse" />
-            <span className="hidden sm:inline">Smart Board</span>
+            <Tv className="w-4 h-4 text-blue-200 animate-pulse" />
+            <span className="hidden sm:inline">🖥️ Smart Board Mode</span>
           </button>
         )}
 
