@@ -490,6 +490,7 @@ export default function App() {
               isOpen={isProjectionOpen}
               onClose={() => setIsProjectionOpen(false)}
               topic={currentTopic}
+              onSelectTopic={setCurrentTopic}
               currentStepIndex={currentStepIndex}
               onStepChange={setCurrentStepIndex}
               parameters={paramValues}

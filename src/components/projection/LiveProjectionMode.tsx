@@ -27,7 +27,8 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
-import { DrawingTopic, StepDefinition, InstrumentState } from '../../types/curriculum';
+import { DrawingTopic, StepDefinition, InstrumentState, CurriculumTier, CurriculumTerm } from '../../types/curriculum';
+import { allCurriculumTopics } from '../../data/curriculumData';
 import { InstrumentsOverlay } from '../drafting/InstrumentsOverlay';
 import { useSubscription } from '../../context/SubscriptionContext';
 
@@ -38,6 +39,7 @@ interface LiveProjectionModeProps {
   currentStepIndex: number;
   onStepChange: (stepIndex: number) => void;
   parameters: Record<string, number>;
+  onSelectTopic?: (topic: DrawingTopic) => void;
 }
 
 export type ProjectionTheme = 'BLACKBOARD' | 'CHALKBOARD_GREEN' | 'DAYLIGHT_WHITE' | 'HIGH_LUMINANCE' | 'PROJECTOR_DAY';
@@ -48,7 +50,8 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   topic,
   currentStepIndex,
   onStepChange,
-  parameters
+  parameters,
+  onSelectTopic
 }) => {
   const { isSubscribed, openPaywall } = useSubscription();
 
@@ -65,6 +68,20 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
   const [annotationTool, setAnnotationTool] = useState<'none' | 'pen' | 'highlighter'>('none');
   const [splitScreenOpen, setSplitScreenOpen] = useState<boolean>(true);
   const [activeManualInstrument, setActiveManualInstrument] = useState<InstrumentState | null>(null);
+
+  // 3-Tier Cascade Selector State
+  const [selectedClass, setSelectedClass] = useState<CurriculumTier>(topic.tier || 'SS1');
+  const [selectedTerm, setSelectedTerm] = useState<CurriculumTerm>(topic.term || 'TERM_1');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const filteredTopics = useMemo(() => {
+    let list = allCurriculumTopics;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return list.filter(t => t.title.toLowerCase().includes(q) || t.moduleCode.toLowerCase().includes(q) || t.shortDescription.toLowerCase().includes(q));
+    }
+    return list.filter(t => t.tier === selectedClass && (!selectedTerm || t.term === selectedTerm));
+  }, [selectedClass, selectedTerm, searchQuery]);
 
   // Generate steps
   const steps = useMemo<StepDefinition[]>(() => {
@@ -243,6 +260,83 @@ export const LiveProjectionMode: React.FC<LiveProjectionModeProps> = ({
             </p>
           </div>
         </div>
+
+      {/* 3-Tier Curriculum Selector & Quick Search Bar */}
+      <div className="h-14 px-6 bg-slate-950 border-b border-slate-800/80 flex items-center justify-between shrink-0 gap-4">
+        <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar py-1">
+          {/* Class Level Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+            <span className="text-slate-400 font-medium">Class:</span>
+            {(['SS1', 'SS2', 'SS3', 'HIGHER_INSTITUTION'] as CurriculumTier[]).map(tier => (
+              <button
+                key={tier}
+                onClick={() => setSelectedClass(tier)}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  selectedClass === tier ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tier}
+              </button>
+            ))}
+          </div>
+
+          {/* Term Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+            <span className="text-slate-400 font-medium">Term:</span>
+            {([
+              { id: 'TERM_1', label: '1st Term' },
+              { id: 'TERM_2', label: '2nd Term' },
+              { id: 'TERM_3', label: '3rd Term' }
+            ] as { id: CurriculumTerm; label: string }[]).map(term => (
+              <button
+                key={term.id}
+                onClick={() => setSelectedTerm(term.id)}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  selectedTerm === term.id ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {term.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Topic Dropdown Selector */}
+          <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+            <span className="text-slate-400 font-medium">Topic:</span>
+            <select
+              value={topic.id}
+              onChange={(e) => {
+                const found = allCurriculumTopics.find(t => t.id === e.target.value);
+                if (found && onSelectTopic) {
+                  onSelectTopic(found);
+                  onStepChange(1);
+                }
+              }}
+              className="bg-slate-950 text-cyan-300 font-bold px-3 py-1 rounded-lg border border-slate-700 focus:outline-none focus:border-cyan-500 max-w-xs truncate cursor-pointer"
+            >
+              {filteredTopics.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.moduleCode}: {t.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Quick Search Box */}
+        <div className="hidden lg:flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-xs w-64">
+          <input
+            type="text"
+            placeholder="Search topic (e.g. Ellipse)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-white placeholder-slate-500 focus:outline-none text-xs"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="text-slate-400 hover:text-white text-xs">×</button>
+          )}
+        </div>
+      </div>
 
         {/* Theme & Display Controls */}
         <div className="flex items-center gap-2">
