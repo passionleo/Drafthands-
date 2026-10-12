@@ -70,7 +70,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 Master Technical Drawing & CAD <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">Without the Stress</span>
               </h1>
               <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                Construct geometric problems, 3D views, and ace WAEC/NECO practicals directly from your phone, tablet, or laptop.
+                Interactive step-by-step drafting for SS1–SS3, WAEC & NECO candidates. Practice on your phone, tablet, or laptop.
               </p>
 
               {/* Quick Visual Highlight Tags */}
@@ -87,35 +87,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </div>
 
-            {/* Dual CTAs & Video Tour Button */}
+            {/* Primary Action Buttons: Launch Studio & Quick Practice Demo */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
-              {/* CTA 1: Get Started Free */}
               <button
-                onClick={() => onOpenAuth('REGISTER')}
-                className="w-full sm:w-auto px-7 py-4 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-cyan-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                onClick={() => onLaunchStudio()}
+                className="w-full sm:w-auto px-7 py-4 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-cyan-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-cyan-200" />
-                <span>Get Started Free</span>
+                <span>Launch Studio</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {/* CTA 2: Sign In / Register */}
-              <button
-                onClick={() => onOpenAuth('SIGN_IN')}
-                className="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/90 text-white font-bold text-sm sm:text-base transition-all shadow-md flex items-center justify-center gap-2"
-              >
-                <span>Sign In / Register</span>
-              </button>
-
-              {/* Video Tour Preview Button */}
               <button
                 onClick={onOpenVideoTour}
-                className="w-full sm:w-auto px-4 py-3.5 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-cyan-500/30 text-cyan-300 hover:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all group"
+                className="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/90 text-white font-bold text-sm sm:text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
-                <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
-                  <Play className="w-3 h-3 ml-0.5 fill-current" />
-                </div>
-                <span>Watch Tour (3 min)</span>
+                <Play className="w-4 h-4 text-cyan-400 fill-current" />
+                <span>Quick Practice Demo</span>
               </button>
             </div>
 

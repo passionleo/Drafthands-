@@ -14,7 +14,14 @@ import {
   ShieldCheck,
   ChevronDown,
   Palette,
-  Check
+  Check,
+  MoreVertical,
+  Layers,
+  Award,
+  GraduationCap,
+  UserCheck,
+  School,
+  Users
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { PWAInstallButton } from '../pwa/PWAInstallButton';
@@ -46,6 +53,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isCurriculumDropdownOpen, setIsCurriculumDropdownOpen] = useState<boolean>(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState<boolean>(false);
+  const [isOverflowDrawerOpen, setIsOverflowDrawerOpen] = useState<boolean>(false);
   const { theme, setTheme } = useAppTheme();
 
   const handleNavClick = (sectionId: string) => {
@@ -234,6 +242,15 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             )}
           </div>
 
+          {/* Three-Dot Overflow Menu Button */}
+          <button
+            onClick={() => setIsOverflowDrawerOpen(true)}
+            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-cyan-300 hover:text-white transition-all shadow-sm cursor-pointer"
+            title="Open Overflow Syllabus & Resources Menu"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
           {/* Sign In / Register */}
           <button
             onClick={() => onOpenAuth('SIGN_IN')}
@@ -356,6 +373,137 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             >
               <span>Get Started Free</span>
             </button>
+          </div>
+        </div>
+      )}
+      {/* Three-Dot Overflow Menu Slide-Out Drawer */}
+      {isOverflowDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-950 border-l border-slate-800 w-full max-w-md h-full flex flex-col shadow-2xl overflow-y-auto custom-scrollbar">
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-950/95 backdrop-blur z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+                  <MoreVertical className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Syllabus & Academy Directory</h3>
+                  <p className="text-[10px] text-slate-400">Organized technical drawing resources & portals</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOverflowDrawerOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content Body */}
+            <div className="p-6 space-y-6 text-left">
+              
+              {/* Subtitle 1: NERDC Curriculum & Syllabus */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2 border-b border-slate-800 pb-1.5">
+                  <BookOpen className="w-3.5 h-3.5" /> 📚 NERDC Curriculum & Syllabus
+                </h4>
+                <div className="space-y-1.5 pl-2">
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); onLaunchStudio('SS1'); }}>
+                    <div className="text-xs font-bold text-white">SS1 Plane Geometry</div>
+                    <div className="text-[11px] text-slate-400">Bisections, Polygons, Tangency Loci, Angles & Triangles</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); onLaunchStudio('SS2'); }}>
+                    <div className="text-xs font-bold text-white">SS2 Solid Geometry</div>
+                    <div className="text-[11px] text-slate-400">1st/3rd Angle Orthographic Projection, Isometric & Oblique Drawings</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); onLaunchStudio('SS3'); }}>
+                    <div className="text-xs font-bold text-white">SS3 Advanced Projections</div>
+                    <div className="text-[11px] text-slate-400">Sectional Views, Roof Trusses, Building Plans & Site Layouts</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); onLaunchStudio('HIGHER_INSTITUTION'); }}>
+                    <div className="text-xs font-bold text-white">Higher Institution CAD Assemblies</div>
+                    <div className="text-[11px] text-slate-400">Engineering machine castings, gear pitch circles & sub-assemblies</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtitle 2: 10-Year Past Questions & Marking Keys */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2 border-b border-slate-800 pb-1.5">
+                  <FileCheck2 className="w-3.5 h-3.5" /> 📝 10-Year Past Questions & Marking Keys
+                </h4>
+                <div className="space-y-1.5 pl-2">
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); if (onOpenPastQuestions) onOpenPastQuestions(); else handleNavClick('past-questions'); }}>
+                    <div className="text-xs font-bold text-white">WAEC WASSCE Practical Solutions (2014–2024)</div>
+                    <div className="text-[11px] text-slate-400">Complete vector solutions with dimensioning and layout steps</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); if (onOpenPastQuestions) onOpenPastQuestions(); else handleNavClick('past-questions'); }}>
+                    <div className="text-xs font-bold text-white">NECO SSCE & NABTEB Modular Archives</div>
+                    <div className="text-[11px] text-slate-400">Objective CBT quizzes and paper 2 drawing construction plates</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); if (onOpenPastQuestions) onOpenPastQuestions(); else handleNavClick('past-questions'); }}>
+                    <div className="text-xs font-bold text-white">Chief Examiner Marking Rubrics & Pitfalls</div>
+                    <div className="text-[11px] text-slate-400">Avoid common student loss of marks for line weight and construction arcs</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtitle 3: Drafting Instruments & Modes */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-2 border-b border-slate-800 pb-1.5">
+                  <Compass className="w-3.5 h-3.5" /> 📐 Drafting Instruments & Modes
+                </h4>
+                <div className="space-y-1.5 pl-2">
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="text-xs font-bold text-white">Digital T-Square, Set Squares & Micrometer Compass</div>
+                    <div className="text-[11px] text-slate-400">Interactive virtual drafting tools with angle locks and snap grids</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="text-xs font-bold text-white">ISO 128 Line Weight Engine</div>
+                    <div className="text-[11px] text-slate-400">Automatic switching between 2H construction lines and HB outlines</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="text-xs font-bold text-white">Generative Prompt-to-CAD Engine</div>
+                    <div className="text-[11px] text-slate-400">Type natural language prompts to auto-compile technical drawings</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtitle 4: Portals & Collaborative Classrooms */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-2 border-b border-slate-800 pb-1.5">
+                  <Users className="w-3.5 h-3.5" /> 🏫 Portals & Collaborative Classrooms
+                </h4>
+                <div className="space-y-1.5 pl-2">
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); if (onOpenTeacherPortal) onOpenTeacherPortal(); }}>
+                    <div className="text-xs font-bold text-white">Teacher Management Desk & Smart Board Projection</div>
+                    <div className="text-[11px] text-slate-400">Host live classes, generate lesson notes, and project to classroom HDMI screens</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); if (onOpenParentPortal) onOpenParentPortal(); }}>
+                    <div className="text-xs font-bold text-white">Parent / Guardian Oversight Portal</div>
+                    <div className="text-[11px] text-slate-400">Track student CA scores, drawing assignments, and term subscriptions</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/40 transition-all cursor-pointer" onClick={() => { setIsOverflowDrawerOpen(false); onLaunchStudio(); }}>
+                    <div className="text-xs font-bold text-white">Live 2-Way Synchronized Vector Canvas</div>
+                    <div className="text-[11px] text-slate-400">Real-time multiplayer drawing session across student and teacher devices</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subtitle 5: About the Lead Instructor */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2 border-b border-slate-800 pb-1.5">
+                  <GraduationCap className="w-3.5 h-3.5" /> 👨‍🏫 About the Lead Instructor
+                </h4>
+                <div className="p-3.5 rounded-xl bg-gradient-to-br from-amber-950/40 to-slate-900 border border-amber-500/30 space-y-1.5">
+                  <div className="text-xs font-extrabold text-white">Engr. Kolawole Olawale Kayode (B.Tech Civil Engineering)</div>
+                  <div className="text-[11px] text-amber-200/90 leading-relaxed">
+                    Technical Drawing Department, International School, University of Lagos (ISL). Expert structural engineer and master technical drafting educator with over 15 years of student WAEC distinction records.
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       )}

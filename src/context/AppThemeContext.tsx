@@ -40,12 +40,12 @@ export const APP_THEMES: Record<AppThemeMode, AppThemeConfig> = {
   BLUEPRINT: {
     id: 'BLUEPRINT',
     label: 'Blueprint (Classic Engineering)',
-    bgClass: 'bg-[#082f49] text-sky-100',
+    bgClass: 'bg-[#0F3460] text-sky-100',
     cardBgClass: 'bg-sky-900/60',
     textClass: 'text-sky-100',
     borderClass: 'border-sky-800',
     accentColor: '#38bdf8',
-    bgColorHex: '#082f49',
+    bgColorHex: '#0F3460',
     textColorHex: '#e0f2fe'
   }
 };
