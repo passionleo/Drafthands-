@@ -318,17 +318,6 @@ const LandingPageInner: React.FC<LandingPageProps> = ({
         onOpenAuth={handleOpenAuth}
       />
 
-      {/* 4. Interactive Curriculum Catalog */}
-      <CurriculumPreviewSection
-        onSelectTopicToLaunch={handleLaunchTopic}
-      />
-
-      {/* 5. WAEC/NECO/NABTEB 10-Year Exam Archive */}
-      <ExamArchiveSection
-        onLaunchTopic={handleLaunchTopic}
-        onOpenAuth={handleOpenAuth}
-        onOpenPastQuestionsHub={handleLaunchPastQuestions}
-      />
 
       {/* 6. Meet the Founder & Lead Educator */}
       <section className="py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-y border-slate-800 relative overflow-hidden">
