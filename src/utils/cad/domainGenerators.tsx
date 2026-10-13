@@ -36,7 +36,7 @@ export function generateDomainVectorSVG({
             </marker>
           </defs>
           <rect x="20" y="20" width="760" height="460" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.4"/>
-          <text x="40" y="50" fill="#38bdf8" fontSize="14" style={{ fontWeight: 700 }}>ISO 128-20: RIGHT-ANGLED TRIANGLE CONSTRUCTION</text>
+          <text x="40" y="50" fill="#38bdf8" fontSize="14" fontWeight="700">ISO 128-20: RIGHT-ANGLED TRIANGLE CONSTRUCTION</text>
           <text x="40" y="70" fill="#94a3b8" fontSize="11">Base AB = 90mm | Perpendicular BC = 60mm | Hypotenuse AC = 108.2mm</text>
 
           <line x1="200" y1="360" x2="520" y2="360" stroke="#334155" strokeWidth="1" strokeDasharray="4,4"/>
@@ -48,11 +48,11 @@ export function generateDomainVectorSVG({
           <polygon points="200,180 200,344 380,344" fill="none" stroke="#f8fafc" strokeWidth="2.5"/>
 
           <circle cx="200" cy="180" r="4" fill="#38bdf8"/>
-          <text x="185" y="165" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>A (Apex)</text>
+          <text x="185" y="165" fill="#38bdf8" fontSize="12" fontWeight="700">A (Apex)</text>
           <circle cx="200" cy="344" r="4" fill="#38bdf8"/>
-          <text x="175" y="360" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>B (90 deg)</text>
+          <text x="175" y="360" fill="#38bdf8" fontSize="12" fontWeight="700">B (90 deg)</text>
           <circle cx="380" cy="344" r="4" fill="#38bdf8"/>
-          <text x="385" y="360" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>C</text>
+          <text x="385" y="360" fill="#38bdf8" fontSize="12" fontWeight="700">C</text>
 
           <line x1="200" y1="380" x2="380" y2="380" stroke="#10b981" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)"/>
           <text x="270" y="398" fill="#10b981" fontSize="12">Base = 90 mm</text>
@@ -62,7 +62,7 @@ export function generateDomainVectorSVG({
 
           <g transform="translate(440, 100)">
             <rect x="0" y="0" width="300" height="280" fill="#0f172a" stroke="#334155" rx="8"/>
-            <text x="15" y="30" fill="#38bdf8" fontSize="13" style={{ fontWeight: 700 }}>Pythagorean Protocol:</text>
+            <text x="15" y="30" fill="#38bdf8" fontSize="13" fontWeight="700">Pythagorean Protocol:</text>
             <text x="15" y="65" fill="#cbd5e1" fontSize="11">1. Erect perpendicular at B (90 deg).</text>
             <text x="15" y="95" fill="#cbd5e1" fontSize="11">2. Mark off Base AB = 90mm.</text>
             <text x="15" y="125" fill="#cbd5e1" fontSize="11">3. Mark off Height BC = 60mm.</text>
@@ -82,7 +82,7 @@ export function generateDomainVectorSVG({
           </marker>
         </defs>
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#38bdf8" fontSize="14" style={{ fontWeight: 700 }}>ISO 128-20: EQUILATERAL TRIANGLE CONSTRUCTION</text>
+        <text x="40" y="50" fill="#38bdf8" fontSize="14" fontWeight="700">ISO 128-20: EQUILATERAL TRIANGLE CONSTRUCTION</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Base AB = 80mm | Compass Arc Radius R = 80mm | Included Angles = 60 deg</text>
 
         <circle cx="280" cy="350" r="160" fill="none" stroke="#dc2626" strokeWidth="1.2" strokeDasharray="5,5" opacity="0.8"/>
@@ -91,18 +91,18 @@ export function generateDomainVectorSVG({
         <polygon points="400,111.44 280,350 520,350" fill="none" stroke="#f8fafc" strokeWidth="2.5"/>
 
         <circle cx="400" cy="111.44" r="5" fill="#38bdf8"/>
-        <text x="385" y="95" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>C (Apex)</text>
+        <text x="385" y="95" fill="#38bdf8" fontSize="12" fontWeight="700">C (Apex)</text>
         <circle cx="280" cy="350" r="5" fill="#38bdf8"/>
-        <text x="265" y="375" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>A</text>
+        <text x="265" y="375" fill="#38bdf8" fontSize="12" fontWeight="700">A</text>
         <circle cx="520" cy="350" r="5" fill="#38bdf8"/>
-        <text x="515" y="375" fill="#38bdf8" fontSize="12" style={{ fontWeight: 700 }}>B</text>
+        <text x="515" y="375" fill="#38bdf8" fontSize="12" fontWeight="700">B</text>
 
         <line x1="280" y1="390" x2="520" y2="390" stroke="#10b981" strokeWidth="1" markerStart="url(#arrow)" markerEnd="url(#arrow)"/>
         <text x="380" y="412" fill="#10b981" fontSize="12">80 mm</text>
 
         <g transform="translate(540, 100)">
           <rect x="0" y="0" width="220" height="260" fill="#0f172a" stroke="#334155" rx="8"/>
-          <text x="15" y="30" fill="#38bdf8" fontSize="13" style={{ fontWeight: 700 }}>Construction Steps:</text>
+          <text x="15" y="30" fill="#38bdf8" fontSize="13" fontWeight="700">Construction Steps:</text>
           <text x="15" y="65" fill="#cbd5e1" fontSize="11">1. Draw base AB = 80mm.</text>
           <text x="15" y="95" fill="#cbd5e1" fontSize="11">2. Center A, radius 80mm, arc.</text>
           <text x="15" y="125" fill="#cbd5e1" fontSize="11">3. Center B, radius 80mm, arc.</text>
@@ -118,7 +118,7 @@ export function generateDomainVectorSVG({
     return (
       <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-blue-500/30 font-mono">
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#38bdf8" fontSize="14" style={{ fontWeight: 700 }}>ISO REGULAR HEXAGON - CONCENTRIC CIRCLE METHOD</text>
+        <text x="40" y="50" fill="#38bdf8" fontSize="14" fontWeight="700">ISO REGULAR HEXAGON - CONCENTRIC CIRCLE METHOD</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Circumscribed Diameter = 120mm | 60/30 Set-Square Radials & Inscribed Circle</text>
 
         <circle cx="320" cy="270" r="120" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="6,4"/>
@@ -138,7 +138,7 @@ export function generateDomainVectorSVG({
 
         <g transform="translate(500, 100)">
           <rect x="0" y="0" width="260" height="280" fill="#0f172a" stroke="#334155" rx="8"/>
-          <text x="15" y="30" fill="#38bdf8" fontSize="13" style={{ fontWeight: 700 }}>Polygon Specifications:</text>
+          <text x="15" y="30" fill="#38bdf8" fontSize="13" fontWeight="700">Polygon Specifications:</text>
           <text x="15" y="65" fill="#cbd5e1" fontSize="11">- Sides (N): 6</text>
           <text x="15" y="95" fill="#cbd5e1" fontSize="11">- Internal Angle: 120 deg</text>
           <text x="15" y="125" fill="#cbd5e1" fontSize="11">- Circumradius R: 60mm</text>
@@ -155,7 +155,7 @@ export function generateDomainVectorSVG({
     return (
       <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-blue-500/30 font-mono">
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#38bdf8" fontSize="14" style={{ fontWeight: 700 }}>DIRECT COMMON TANGENT & CONCENTRIC CIRCLE ELLIPSE</text>
+        <text x="40" y="50" fill="#38bdf8" fontSize="14" fontWeight="700">DIRECT COMMON TANGENT & CONCENTRIC CIRCLE ELLIPSE</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Circle 1 (R=70mm) at O1 & Circle 2 (R=40mm) at O2 | True Tangent Contact Points T1 & T2</text>
 
         <circle cx="260" cy="280" r="70" fill="none" stroke="#f8fafc" strokeWidth="2.5"/>
@@ -178,7 +178,7 @@ export function generateDomainVectorSVG({
 
         <g transform="translate(480, 240)">
           <rect x="0" y="0" width="280" height="200" fill="#0f172a" stroke="#334155" rx="8"/>
-          <text x="15" y="30" fill="#38bdf8" fontSize="13" style={{ fontWeight: 700 }}>Tangent Principles:</text>
+          <text x="15" y="30" fill="#38bdf8" fontSize="13" fontWeight="700">Tangent Principles:</text>
           <text x="15" y="65" fill="#cbd5e1" fontSize="11">- Radius at contact is perpendicular</text>
           <text x="15" y="95" fill="#cbd5e1" fontSize="11">- Draw line parallel to O1-O2 offset</text>
           <text x="15" y="125" fill="#cbd5e1" fontSize="11">- Intersect with circle to find T1, T2</text>
@@ -193,14 +193,14 @@ export function generateDomainVectorSVG({
     return (
       <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-amber-500/30 font-mono">
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#fbbf24" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#fbbf24" fontSize="14" style={{ fontWeight: 700 }}>PROFESSIONAL CIVIL ARCHITECTURAL: SECTIONAL STRIP FOUNDATION</text>
+        <text x="40" y="50" fill="#fbbf24" fontSize="14" fontWeight="700">PROFESSIONAL CIVIL ARCHITECTURAL: SECTIONAL STRIP FOUNDATION</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Scale 1:20 | Concrete Footing (675x225) | Sandcrete Block Wall (225mm) | Hardcore & DPC</text>
 
         <line x1="60" y1="150" x2="740" y2="150" stroke="#ef4444" strokeWidth="2.5"/>
-        <text x="560" y="142" fill="#ef4444" fontSize="12" style={{ fontWeight: 700 }}>GROUND LEVEL (GL)</text>
+        <text x="560" y="142" fill="#ef4444" fontSize="12" fontWeight="700">GROUND LEVEL (GL)</text>
 
         <line x1="60" y1="210" x2="740" y2="210" stroke="#22c55e" strokeWidth="2.5" strokeDasharray="8,4"/>
-        <text x="530" y="202" fill="#22c55e" fontSize="12" style={{ fontWeight: 700 }}>FINISHED FLOOR LEVEL (FFL)</text>
+        <text x="530" y="202" fill="#22c55e" fontSize="12" fontWeight="700">FINISHED FLOOR LEVEL (FFL)</text>
 
         <line x1="310" y1="210" x2="490" y2="210" stroke="#38bdf8" strokeWidth="4"/>
         <text x="505" y="214" fill="#38bdf8" fontSize="10">DPC Membrane</text>
@@ -217,7 +217,7 @@ export function generateDomainVectorSVG({
         <line x1="310" y1="280" x2="490" y2="280" stroke="#64748b" strokeWidth="1"/>
         <line x1="310" y1="320" x2="490" y2="320" stroke="#64748b" strokeWidth="1"/>
         <line x1="310" y1="360" x2="490" y2="360" stroke="#64748b" strokeWidth="1"/>
-        <text x="330" y="305" fill="#f8fafc" fontSize="12" style={{ fontWeight: 700 }}>225mm Block Wall</text>
+        <text x="330" y="305" fill="#f8fafc" fontSize="12" fontWeight="700">225mm Block Wall</text>
 
         <rect x="140" y="225" width="170" height="75" fill="#475569" stroke="#cbd5e1" strokeWidth="1"/>
         <text x="165" y="265" fill="#f8fafc" fontSize="11">Hardcore Fill (300mm)</text>
@@ -236,7 +236,7 @@ export function generateDomainVectorSVG({
     return (
       <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-amber-500/30 font-mono">
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#fbbf24" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#fbbf24" fontSize="14" style={{ fontWeight: 700 }}>PROFESSIONAL ARCHITECTURAL FLOOR PLAN & ROOF TRUSS ASSEMBLY</text>
+        <text x="40" y="50" fill="#fbbf24" fontSize="14" fontWeight="700">PROFESSIONAL ARCHITECTURAL FLOOR PLAN & ROOF TRUSS ASSEMBLY</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Double-Line Walls | 900mm Door Openings & Swing Arcs | Timber King-Post Truss</text>
 
         <g transform="translate(60, 100)">
@@ -247,15 +247,15 @@ export function generateDomainVectorSVG({
           <path d="M 150,120 A 40 40 0 0 1 110,160" fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="3,3"/>
           <line x1="150" y1="120" x2="110" y2="160" stroke="#22d3ee" strokeWidth="1.5"/>
 
-          <text x="45" y="80" fill="#38bdf8" fontSize="11" style={{ fontWeight: 700 }}>LIVING ROOM</text>
-          <text x="45" y="240" fill="#38bdf8" fontSize="11" style={{ fontWeight: 700 }}>BEDROOM 1</text>
-          <text x="185" y="160" fill="#38bdf8" fontSize="11" style={{ fontWeight: 700 }}>KITCHEN / DINING</text>
+          <text x="45" y="80" fill="#38bdf8" fontSize="11" fontWeight="700">LIVING ROOM</text>
+          <text x="45" y="240" fill="#38bdf8" fontSize="11" fontWeight="700">BEDROOM 1</text>
+          <text x="185" y="160" fill="#38bdf8" fontSize="11" fontWeight="700">KITCHEN / DINING</text>
           <text x="90" y="-15" fill="#f8fafc" fontSize="12">Architectural Floor Plan (Ground Floor)</text>
         </g>
 
         <g transform="translate(420, 100)">
           <rect x="0" y="0" width="320" height="320" fill="#0f172a" stroke="#334155" rx="8"/>
-          <text x="20" y="30" fill="#fbbf24" fontSize="12" style={{ fontWeight: 700 }}>Timber King-Post Truss Structure</text>
+          <text x="20" y="30" fill="#fbbf24" fontSize="12" fontWeight="700">Timber King-Post Truss Structure</text>
 
           <polygon points="40,260 280,260 160,110" fill="none" stroke="#f8fafc" strokeWidth="2.5"/>
           <line x1="160" y1="110" x2="160" y2="260" stroke="#f8fafc" strokeWidth="2"/>
@@ -276,7 +276,7 @@ export function generateDomainVectorSVG({
     return (
       <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-emerald-500/30 font-mono">
         <rect x="20" y="20" width="760" height="460" fill="none" stroke="#34d399" strokeWidth="1.5" strokeOpacity="0.4"/>
-        <text x="40" y="50" fill="#34d399" fontSize="14" style={{ fontWeight: 700 }}>ISO MECHANICAL STEPPED SHAFT & ORTHOGRAPHIC ALIGNMENT</text>
+        <text x="40" y="50" fill="#34d399" fontSize="14" fontWeight="700">ISO MECHANICAL STEPPED SHAFT & ORTHOGRAPHIC ALIGNMENT</text>
         <text x="40" y="70" fill="#94a3b8" fontSize="11">Coaxial Cylindrical Sections | Blue Centerlines | 45 deg Chamfers & Section Hatching</text>
 
         <line x1="60" y1="260" x2="740" y2="260" stroke="#38bdf8" strokeWidth="1" strokeDasharray="12,4,4,4"/>
@@ -307,7 +307,7 @@ export function generateDomainVectorSVG({
   return (
     <svg viewBox="0 0 800 500" className="w-full h-auto bg-slate-950 rounded-xl border border-slate-700 font-mono">
       <rect x="20" y="20" width="760" height="460" fill="none" stroke="#64748b" strokeWidth="1"/>
-      <text x="40" y="50" fill="#38bdf8" fontSize="15" style={{ fontWeight: 700 }}>ISO 128 TECHNICAL DRAWING ACADEMY SCHEMA</text>
+      <text x="40" y="50" fill="#38bdf8" fontSize="15" fontWeight="700">ISO 128 TECHNICAL DRAWING ACADEMY SCHEMA</text>
       <text x="40" y="75" fill="#94a3b8" fontSize="12">Topic Module: ISO Standard Engineering Drawing</text>
       
       <circle cx="280" cy="270" r="100" fill="none" stroke="#38bdf8" strokeWidth="2.5"/>
@@ -317,7 +317,7 @@ export function generateDomainVectorSVG({
 
       <g transform="translate(440, 140)">
         <rect x="0" y="0" width="300" height="260" fill="#0f172a" stroke="#334155" rx="8"/>
-        <text x="20" y="35" fill="#38bdf8" fontSize="13" style={{ fontWeight: 700 }}>Engineering Standards:</text>
+        <text x="20" y="35" fill="#38bdf8" fontSize="13" fontWeight="700">Engineering Standards:</text>
         <text x="20" y="70" fill="#cbd5e1" fontSize="11">- Line Weights: ISO 128-20 Type A/B</text>
         <text x="20" y="100" fill="#cbd5e1" fontSize="11">- Projection: First & Third Angle</text>
         <text x="20" y="130" fill="#cbd5e1" fontSize="11">- Dimensioning: ISO 129-1 Arrowheads</text>
