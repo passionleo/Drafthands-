@@ -32,7 +32,8 @@ import {
   Send,
   CheckCircle2,
   Spline as SplineIcon,
-  ChevronDown
+  ChevronDown,
+  Printer
 } from 'lucide-react';
 import { DrawingTopic, LineWeightType } from '../../types/curriculum';
 import { 
@@ -2838,6 +2839,23 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
             </div>
           </div>
         )}
+
+          {/* Print Drawing Button for Students & Teachers */}
+          <button
+            id="btn-print-drawing"
+            onClick={() => {
+              try {
+                window.print();
+              } catch (err) {
+                console.warn('Print error:', err);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer"
+            title="Print or export current drawing sheet (For Students & Teachers)"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Drawing</span>
+          </button>
 
           {/* Maximize Board / Fullscreen Workspace Toggle */}
           <button

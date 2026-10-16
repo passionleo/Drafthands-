@@ -27,7 +27,8 @@ import {
   ChevronDown,
   Check,
   LogOut,
-  Radio
+  Radio,
+  Printer
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
@@ -408,6 +409,23 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <PenTool className="w-3.5 h-3.5 text-emerald-400" />
           <span className="inline font-bold">{isWhiteboardOpen ? 'Exit Studio' : 'Drawing Studio'}</span>
+        </button>
+
+        {/* Global Print Drawing Button for Students & Teachers */}
+        <button
+          id="btn-global-print-drawing"
+          onClick={() => {
+            try {
+              window.print();
+            } catch (err) {
+              console.warn('Print error:', err);
+            }
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 border border-slate-700 transition-colors shadow-sm cursor-pointer"
+          title="Print or export current drawing sheet (For Students & Teachers)"
+        >
+          <Printer className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="hidden sm:inline">Print</span>
         </button>
 
         {/* Live Virtual Classroom Button */}
