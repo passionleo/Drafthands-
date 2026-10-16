@@ -63,3 +63,32 @@ svg {
 .laser-glow {
   animation: laserPulseGlow 1.2s infinite ease-in-out;
 }
+
+/* ========================================================================== */
+/* STRICT PRINT & PDF EXPORT STYLES (Isolate Pure Diagram Canvas)               */
+/* ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .printable-drawing-sheet,
+  .printable-drawing-sheet *,
+  svg.printable-svg-canvas,
+  svg.printable-svg-canvas * {
+    visibility: visible !important;
+  }
+  .printable-drawing-sheet {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

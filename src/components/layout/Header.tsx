@@ -28,7 +28,8 @@ import {
   Check,
   LogOut,
   Radio,
-  Printer
+  Printer,
+  ArrowLeft
 } from 'lucide-react';
 import { CurriculumTier } from '../../types/curriculum';
 import { TIER_CONFIG } from '../../data/curriculumData';
@@ -160,6 +161,17 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-30 select-none shrink-0 shadow-md">
       {/* Brand & Academy Title & Sidebar Toggle */}
       <div className="flex items-center gap-3 min-w-[240px]">
+        {onReturnToLanding && (
+          <button
+            id="btn-back-to-home"
+            onClick={onReturnToLanding}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 border border-slate-700 transition-colors shadow-sm cursor-pointer"
+            title="Go back to previous page / landing home"
+          >
+            <ArrowLeft className="w-4 h-4 text-cyan-400" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        )}
         {onToggleSidebar && (
           <button
             id="btn-toggle-sidebar"

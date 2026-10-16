@@ -2944,7 +2944,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       {/* Main Vector Drawing Canvas Viewport */}
       <div 
         ref={containerRef}
-        className={`flex-1 relative overflow-hidden ${
+        className={`printable-drawing-sheet flex-1 relative overflow-hidden ${
           workspaceMode === 'TRADITIONAL_BOARD'
             ? 'bg-[#181d28]' // Drawing Board Canvas
             : 'bg-[#0f172a]' // Engineering CAD Model Space Canvas
@@ -2969,7 +2969,7 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
 
         <svg
           ref={svgRef}
-          className="w-full h-full cursor-crosshair select-none"
+          className="printable-svg-canvas w-full h-full cursor-crosshair select-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
