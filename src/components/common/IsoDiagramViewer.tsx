@@ -7,8 +7,10 @@ import {
 import { 
   IsoDiagramData, 
   getIsoDiagramForTopic, 
-  ISO_STANDARDS_REFERENCE 
+  ISO_STANDARDS_REFERENCE,
+  allCurriculumTopics
 } from '../../data/curriculumData';
+import { resolveBlueprintForTopic, ResolvedBlueprint } from '../../utils/cad/universalBlueprintResolver';
 import { 
   X, 
   ZoomIn, 
@@ -64,12 +66,12 @@ export const IsoDiagramViewer: React.FC<IsoDiagramViewerProps> = ({
   viewMode = 'MODAL',
   initialTheme = 'BLUEPRINT'
 }) => {
-  // Resolve active ISO diagram
-  const activeDiagram = useMemo<IsoDiagramData>(() => {
-    if (directDiagram) return directDiagram;
-    if (topic) return getIsoDiagramForTopic(topic);
-    if (topicId) return getIsoDiagramForTopic(topicId);
-    return getIsoDiagramForTopic('ss1-bisect-line');
+  // Resolve active ISO diagram using universal blueprint resolver
+  const activeDiagram = useMemo<ResolvedBlueprint>(() => {
+    if (directDiagram) return { ...directDiagram, figureTitle: directDiagram.title, problemStatement: directDiagram.overview, procedureSteps: [], mathematicalProof: directDiagram.mathematicalProof || 'Verified by ISO standard.' };
+    if (topic) return resolveBlueprintForTopic(topic, allCurriculumTopics);
+    if (topicId) return resolveBlueprintForTopic(topicId, allCurriculumTopics);
+    return resolveBlueprintForTopic('ss1-bisect-line', allCurriculumTopics);
   }, [directDiagram, topic, topicId]);
 
   // Viewport & Pan-Zoom state
@@ -326,7 +328,7 @@ export const IsoDiagramViewer: React.FC<IsoDiagramViewerProps> = ({
                 </span>
               </div>
               <h1 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
-                {activeDiagram.title}
+                {activeDiagram.figureTitle || activeDiagram.title}
               </h1>
             </div>
           </div>
