@@ -1097,7 +1097,32 @@ export const WhiteboardStudio: React.FC<WhiteboardStudioProps> = ({
       // Convert final step or all elements
       let newElements: WhiteboardElement[] = [];
 
-      if (steps.length > 0) {
+      // 1. Check server-side aiElements if returned from Gemini prompt-to-cad endpoint
+      if ((result as any).aiElements && Array.isArray((result as any).aiElements) && (result as any).aiElements.length > 0) {
+        const aiEls = (result as any).aiElements;
+        const now = Date.now();
+        newElements = aiEls.map((el: any, i: number) => ({
+          id: `ai-server-vec-${now}-${i}`,
+          type: el.type || 'LINE',
+          layer: el.layer || 'OUTLINE_HB',
+          lineWeight: el.layer === 'DIMENSIONS' ? 'DIMENSION_LINE' : 'THICK_CONTINUOUS',
+          color: el.layer === 'DIMENSIONS' ? '#10b981' : '#f8fafc',
+          x1: el.x1 !== undefined ? Number(el.x1) : undefined,
+          y1: el.y1 !== undefined ? Number(el.y1) : undefined,
+          x2: el.x2 !== undefined ? Number(el.x2) : undefined,
+          y2: el.y2 !== undefined ? Number(el.y2) : undefined,
+          cx: el.cx !== undefined ? Number(el.cx) : undefined,
+          cy: el.cy !== undefined ? Number(el.cy) : undefined,
+          r: el.r !== undefined ? Number(el.r) : undefined,
+          rx: el.rx !== undefined ? Number(el.rx) : undefined,
+          ry: el.ry !== undefined ? Number(el.ry) : undefined,
+          width: el.width !== undefined ? Number(el.width) : undefined,
+          height: el.height !== undefined ? Number(el.height) : undefined,
+          dimensionText: el.dimensionText || ''
+        })).filter(Boolean);
+      }
+
+      if (newElements.length === 0 && steps.length > 0) {
         const finalStep = steps[steps.length - 1];
         if (finalStep && Array.isArray(finalStep.elements)) {
           newElements = convertConstructionElementsToWhiteboard(
